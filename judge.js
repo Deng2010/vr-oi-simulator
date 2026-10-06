@@ -1,22 +1,22 @@
 'use strict';
 /* =========================================================
-   Í¨ÓÃÆÀ·ÖÆ÷
-   »ùÓÚÈı¸öÎ¬¶È£º
-     - ¹Ø¼ü×ÖÃÜ¶È£¨0~40 ·Ö£©
-     - ´úÂë³¤¶È£¨0~30 ·Ö£©
-     - ½á¹¹ÍêÕû¶È£¨0~30 ·Ö£©
-   µş¼ÓÈ·¶¨ĞÔ¶¶¶¯£¨¡À10£©£¬Ó³Éäµ½ 10 ¸ö²âÊÔµã
+   é€šç”¨è¯„åˆ†å™¨
+   åŸºäºä¸‰ä¸ªç»´åº¦ï¼š
+     - å…³é”®å­—å¯†åº¦ï¼ˆ0~40 åˆ†ï¼‰
+     - ä»£ç é•¿åº¦ï¼ˆ0~30 åˆ†ï¼‰
+     - ç»“æ„å®Œæ•´åº¦ï¼ˆ0~30 åˆ†ï¼‰
+   å åŠ ç¡®å®šæ€§æŠ–åŠ¨ï¼ˆÂ±10ï¼‰ï¼Œæ˜ å°„åˆ° 10 ä¸ªæµ‹è¯•ç‚¹
    ========================================================= */
 
 function judgeUnified(code, prob, keywords){
-  /* ---------- °şÀë×¢ÊÍÓë×Ö·û´® ---------- */
+  /* ---------- å‰¥ç¦»æ³¨é‡Šä¸å­—ç¬¦ä¸² ---------- */
   const src = code
     .replace(/\/\/.*$/gm, '')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
     .replace(/'(?:[^'\\\n]|\\.)*'/g, "''");
 
-  /* ---------- CE ÅĞ¶¨ ---------- */
+  /* ---------- CE åˆ¤å®š ---------- */
   if (!/\bmain\s*\(/.test(src) || src.length < 40){
     return {
       status: 'CE', score: 0,
@@ -26,7 +26,7 @@ function judgeUnified(code, prob, keywords){
     };
   }
 
-  /* ---------- 1. ¹Ø¼ü×ÖÃÜ¶È£¨0~40£© ---------- */
+  /* ---------- 1. å…³é”®å­—å¯†åº¦ï¼ˆ0~40ï¼‰ ---------- */
   const lower = src.toLowerCase();
   let hits = 0;
   for (let i = 0; i < keywords.length; i++){
@@ -34,13 +34,13 @@ function judgeUnified(code, prob, keywords){
     const escaped = kwLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     if (new RegExp('\\b' + escaped + '\\b').test(lower)) hits++;
   }
-  const kwScore = Math.min(40, hits * 2);   // ÃüÖĞ 20 ¸ö¼´Âú·Ö
+  const kwScore = Math.min(40, hits * 2);   // å‘½ä¸­ 20 ä¸ªå³æ»¡åˆ†
 
-  /* ---------- 2. ´úÂë³¤¶È£¨0~30£© ---------- */
+  /* ---------- 2. ä»£ç é•¿åº¦ï¼ˆ0~30ï¼‰ ---------- */
   const lines = code.split('\n').length;
   const lenScore = Math.max(0, Math.min(30, (lines - 5) / 100 * 30));
 
-  /* ---------- 3. ½á¹¹ÍêÕû¶È£¨0~30£© ---------- */
+  /* ---------- 3. ç»“æ„å®Œæ•´åº¦ï¼ˆ0~30ï¼‰ ---------- */
   let structScore = 0;
   if (/int\s+main\s*\(/.test(src))                    structScore += 8;
   if (/(cin\s*>>|scanf\s*\()/.test(src))              structScore += 8;
@@ -49,12 +49,12 @@ function judgeUnified(code, prob, keywords){
 
   let baseScore = kwScore + lenScore + structScore;   // 0 ~ 100
 
-  /* ---------- 4. È·¶¨ĞÔ¶¶¶¯ ¡À10 ---------- */
+  /* ---------- 4. ç¡®å®šæ€§æŠ–åŠ¨ Â±10 ---------- */
   const rng = mulberry32(hashStr(code + '|' + prob.id));
   baseScore += (rng() - 0.5) * 20;
   baseScore = Math.max(0, Math.min(100, baseScore));
 
-  /* ---------- 5. Ó³Éäµ½ 10 ¸ö²âÊÔµã ---------- */
+  /* ---------- 5. æ˜ å°„åˆ° 10 ä¸ªæµ‹è¯•ç‚¹ ---------- */
   const passed = Math.round(baseScore / 10);
   const cases = [];
   for (let i = 0; i < 10; i++){
@@ -79,7 +79,7 @@ function judgeUnified(code, prob, keywords){
   return { status, score, cases, passed };
 }
 
-/* ---------- ¸¨Öúº¯Êı£¨ÓëÖ÷½Å±¾¼æÈİ£© ---------- */
+/* ---------- è¾…åŠ©å‡½æ•°ï¼ˆä¸ä¸»è„šæœ¬å…¼å®¹ï¼‰ ---------- */
 function hashStr(s){
   let h = 2166136261;
   for (let i = 0; i < s.length; i++){

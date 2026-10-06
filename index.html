@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>VR OI ¿¼³¡ ¡¤ Ä£ÄâÆ÷</title>
+<title>VR OI è€ƒåœº Â· æ¨¡æ‹Ÿå™¨</title>
 <style>
   :root{
     --bg:#0b0d12; --panel:#12151d; --line:#242a38; --fg:#d7dce8;
@@ -17,7 +17,7 @@
   #scene{position:fixed;inset:0;}
   .hidden{display:none !important;}
 
-  /* ---------- ¿ªÊ¼½çÃæ ---------- */
+  /* ---------- å¼€å§‹ç•Œé¢ ---------- */
   #start{
     position:fixed;inset:0;z-index:100;
     background:radial-gradient(ellipse at 50% 40%,#1b2333 0%,#07090d 70%);
@@ -138,7 +138,7 @@
   }
   #toast.show{opacity:1;}
 
-  /* Ğ¡µØÍ¼ */
+  /* å°åœ°å›¾ */
   #minimapWrap{
     position:fixed;bottom:20px;left:20px;z-index:10;
     background:rgba(10,13,20,.78);border:1px solid #2a3448;border-radius:10px;
@@ -158,7 +158,7 @@
     box-shadow:inset 0 0 160px 40px rgba(255,40,40,.45);
   }
 
-  /* ³É¾ÍÍ¨Öª */
+  /* æˆå°±é€šçŸ¥ */
   #achNotify{
     position:fixed;top:80px;right:20px;z-index:70;
     background:linear-gradient(135deg,rgba(59,109,240,.9),rgba(107,78,240,.9));
@@ -194,7 +194,7 @@
   #pauseMenu .row2{display:flex;gap:10px;margin-top:16px;}
   #pauseMenu .row2 .btn{flex:1;text-align:center;}
 
-  /* ---------- ´úÂë½çÃæ ---------- */
+  /* ---------- ä»£ç ç•Œé¢ ---------- */
   #codeUI .ide{
     width:min(1400px,96vw);height:min(880px,92vh);display:flex;flex-direction:column;
     background:#0d1017;border:1px solid #232b3a;border-radius:12px;overflow:hidden;
@@ -307,7 +307,7 @@
     background:linear-gradient(90deg,#3b6df0,#6b4ef0);
     transition:width .1s linear;}
 
-  /* ---------- ²İ¸åÖ½ ---------- */
+  /* ---------- è‰ç¨¿çº¸ ---------- */
   #paperUI .paperbox{
     width:min(880px,92vw);height:min(640px,88vh);display:flex;flex-direction:column;
     background:#0f131b;border:1px solid #232b3a;border-radius:12px;overflow:hidden;
@@ -317,7 +317,7 @@
   #paperCanvas{flex:1;background:#f5f2ea;cursor:crosshair;display:block;
     width:100%;height:100%;touch-action:none;}
 
-  /* ---------- ×ßÀÈ / Ï´ÊÖ¼ä ---------- */
+  /* ---------- èµ°å»Š / æ´—æ‰‹é—´ ---------- */
   #corridorUI .corrbox{
     position:relative;width:100vw;height:100vh;overflow:hidden;
     background:radial-gradient(ellipse 65% 70% at 50% 52%, #1d2532 0%, #0a0e15 55%, #030509 100%);
@@ -361,7 +361,7 @@
   #bathroomUI .bdots i.on{background:#5b8cff;box-shadow:0 0 8px #5b8cffaa;}
   #bathroomUI .bdots i.done{background:#38d39f;}
 
-  /* ---------- NPC µçÄÔ ---------- */
+  /* ---------- NPC ç”µè„‘ ---------- */
   #npcComputerUI .npcbox{
     width:min(760px,94vw);height:min(560px,88vh);display:flex;flex-direction:column;
     background:#0d1017;border:1px solid #232b3a;border-radius:12px;overflow:hidden;
@@ -385,7 +385,7 @@
     padding:0 18px;background:#12161f;border-top:1px solid #1e2532;flex-shrink:0;
   }
 
-  /* ---------- ¶Ô»°¿ò ---------- */
+  /* ---------- å¯¹è¯æ¡† ---------- */
   #teacherDlg .dlg{
     width:min(520px,90vw);background:#0f131b;border:1px solid #232b3a;
     border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -16px #000;
@@ -397,7 +397,7 @@
   .dlg-actions{display:flex;flex-direction:column;gap:8px;padding:0 20px 20px;}
   .dlg-actions .btn{text-align:left;}
 
-  /* ---------- ½áËã ---------- */
+  /* ---------- ç»“ç®— ---------- */
   #ending .box{
     text-align:center;max-width:620px;max-height:90vh;overflow-y:auto;
     background:#0f131b;border:1px solid #232b3a;border-radius:14px;padding:34px 40px;
@@ -434,10 +434,10 @@
 
 <div id="hud" class="hidden">
   <div id="hudTimer">04:00:00</div>
-  <div id="hudScore">×Ü·Ö <b>0</b> / 400</div>
+  <div id="hudScore">æ€»åˆ† <b>0</b> / 400</div>
   <div id="hudProbs"></div>
-  <button id="btnSettings">&#x2699; ÉèÖÃ</button>
-  <button id="btnEnd">½»¾íÀë³¡</button>
+  <button id="btnSettings">&#x2699; è®¾ç½®</button>
+  <button id="btnEnd">äº¤å·ç¦»åœº</button>
 </div>
 <div id="minimapWrap" class="hidden">
   <canvas id="minimap" width="140" height="124"></canvas>
@@ -446,103 +446,103 @@
 <div id="toast"></div>
 <div id="achNotify"></div>
 
-<!-- ===================== ¿ªÊ¼½çÃæ ===================== -->
+<!-- ===================== å¼€å§‹ç•Œé¢ ===================== -->
 <div id="start">
-  <h1>VR OI ¿¼³¡</h1>
-  <div class="sub">NATIONAL OLYMPIAD IN INFORMATICS ¡¤ VIRTUAL ARENA</div>
+  <h1>VR OI è€ƒåœº</h1>
+  <div class="sub">NATIONAL OLYMPIAD IN INFORMATICS Â· VIRTUAL ARENA</div>
   <div class="card">
-    <b>¿¼ÊÔĞëÖª</b><br>
-    ±ÈÈüÊ±³¤ <b>4 Ğ¡Ê±</b>£¬¹² <b>4 µÀÌâ</b>£¬Âú·Ö <b>400 ·Ö</b>¡£<br><br>
-    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ÒÆ¶¯ &nbsp;¡¤&nbsp;
-    <kbd>¡û</kbd><kbd>¡ú</kbd> ×óÓÒ×ªÉí &nbsp;¡¤&nbsp;
-    <kbd>¡ü</kbd><kbd>¡ı</kbd> Ì§Í· / µÍÍ·<br>
-    <kbd>Shift</kbd> ¼²×ß &nbsp;¡¤&nbsp;
-    <kbd>E</kbd> »ò <kbd>Êó±ê×ó¼ü</kbd> ½»»¥£¨µçÄÔ ¡¤ ²İ¸åÖ½ ¡¤ Ë®±­ ¡¤ ³öÃÅ£©<br>
-    <kbd>F</kbd> ¸ÉÈÅÍ¬Ñ§ &nbsp;¡¤&nbsp;
-    <kbd>¿Õ¸ñ</kbd> ³öÈ­£¨ÀÏÊ¦ / ±£°²£¬ºó¹û×Ô¸º£©&nbsp;¡¤&nbsp;
-    <kbd>H</kbd> ¾ÙÊÖºô½Ğ¼à¿¼ &nbsp;¡¤&nbsp; <kbd>Esc</kbd> ´ò¿ªÉèÖÃ<br><br>
+    <b>è€ƒè¯•é¡»çŸ¥</b><br>
+    æ¯”èµ›æ—¶é•¿ <b>4 å°æ—¶</b>ï¼Œå…± <b>4 é“é¢˜</b>ï¼Œæ»¡åˆ† <b>400 åˆ†</b>ã€‚<br><br>
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ç§»åŠ¨ &nbsp;Â·&nbsp;
+    <kbd>â†</kbd><kbd>â†’</kbd> å·¦å³è½¬èº« &nbsp;Â·&nbsp;
+    <kbd>â†‘</kbd><kbd>â†“</kbd> æŠ¬å¤´ / ä½å¤´<br>
+    <kbd>Shift</kbd> ç–¾èµ° &nbsp;Â·&nbsp;
+    <kbd>E</kbd> æˆ– <kbd>é¼ æ ‡å·¦é”®</kbd> äº¤äº’ï¼ˆç”µè„‘ Â· è‰ç¨¿çº¸ Â· æ°´æ¯ Â· å‡ºé—¨ï¼‰<br>
+    <kbd>F</kbd> å¹²æ‰°åŒå­¦ &nbsp;Â·&nbsp;
+    <kbd>ç©ºæ ¼</kbd> å‡ºæ‹³ï¼ˆè€å¸ˆ / ä¿å®‰ï¼Œåæœè‡ªè´Ÿï¼‰&nbsp;Â·&nbsp;
+    <kbd>H</kbd> ä¸¾æ‰‹å‘¼å«ç›‘è€ƒ &nbsp;Â·&nbsp; <kbd>Esc</kbd> æ‰“å¼€è®¾ç½®<br><br>
 
-    <div class="set-title">ÊÓ½ÇÊÖ¸Ğµ÷Ğ£</div>
+    <div class="set-title">è§†è§’æ‰‹æ„Ÿè°ƒæ ¡</div>
     <div class="setting-row">
-      <label>×ªÏòËÙ¶È</label>
+      <label>è½¬å‘é€Ÿåº¦</label>
       <input type="range" id="turnSliderStart" min="1" max="20" value="10">
       <span class="val" id="turnValueStart">2.2</span>
     </div>
     <div class="setting-row">
-      <label>×ªÏòÆ½»¬</label>
+      <label>è½¬å‘å¹³æ»‘</label>
       <input type="range" id="smoothSliderStart" min="0" max="90" value="35">
       <span class="val" id="smoothValueStart">35%</span>
     </div>
     <div class="setting-row">
-      <label>Ê±¼äÁ÷ËÙ</label>
+      <label>æ—¶é—´æµé€Ÿ</label>
       <input type="range" id="timeSliderStart" min="1" max="60" value="15">
-      <span class="val" id="timeValueStart">15¡Á</span>
+      <span class="val" id="timeValueStart">15Ã—</span>
     </div>
     <div class="setting-row">
-      <label>ÒôÁ¿</label>
+      <label>éŸ³é‡</label>
       <input type="range" id="volSliderStart" min="0" max="100" value="60">
       <span class="val" id="volValueStart">60%</span>
     </div>
   </div>
-  <button id="btnStart">½ø Èë ¿¼ ³¡</button>
+  <button id="btnStart">è¿› å…¥ è€ƒ åœº</button>
   <button id="btnClearSaveStart" style="margin:14px auto 0;display:block;padding:9px 26px;
     background:transparent;border:1px solid #4a3a3a;color:#c08a8a;border-radius:8px;
     font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:2px">
-  Çå¿Õ´æµµ
+  æ¸…ç©ºå­˜æ¡£
   </button>
 </div>
 
-<!-- ===================== ÔİÍ£²Ëµ¥ ===================== -->
+<!-- ===================== æš‚åœèœå• ===================== -->
 <div id="pauseMenu" class="screen hidden">
   <div class="pbox">
-    <h2>ÉèÖÃ</h2>
-    <div class="sub">±ÈÈüÊ±¼ä²»»áÒòÎª´ò¿ªÕâ¸öÃæ°å¶øÔİÍ£¡£</div>
-    <div class="set-title" style="border-top:none;margin-top:10px;padding-top:0">¼üÅÌÊÖ¸Ğ</div>
+    <h2>è®¾ç½®</h2>
+    <div class="sub">æ¯”èµ›æ—¶é—´ä¸ä¼šå› ä¸ºæ‰“å¼€è¿™ä¸ªé¢æ¿è€Œæš‚åœã€‚</div>
+    <div class="set-title" style="border-top:none;margin-top:10px;padding-top:0">é”®ç›˜æ‰‹æ„Ÿ</div>
     <div class="setting-row">
-      <label>×ªÏòËÙ¶È</label>
+      <label>è½¬å‘é€Ÿåº¦</label>
       <input type="range" id="turnSlider" min="1" max="20" value="10">
       <span class="val" id="turnValue">2.2</span>
     </div>
     <div class="setting-row">
-      <label>×ªÏòÆ½»¬</label>
+      <label>è½¬å‘å¹³æ»‘</label>
       <input type="range" id="smoothSlider" min="0" max="90" value="35">
       <span class="val" id="smoothValue">35%</span>
     </div>
-    <div class="set-title">±ÈÈü</div>
+    <div class="set-title">æ¯”èµ›</div>
     <div class="setting-row">
-      <label>Ê±¼äÁ÷ËÙ</label>
+      <label>æ—¶é—´æµé€Ÿ</label>
       <input type="range" id="timeSlider" min="1" max="60" value="15">
-      <span class="val" id="timeValue">15¡Á</span>
+      <span class="val" id="timeValue">15Ã—</span>
     </div>
     <div class="setting-row">
-      <label>ÒôÁ¿</label>
+      <label>éŸ³é‡</label>
       <input type="range" id="volSlider" min="0" max="100" value="60">
       <span class="val" id="volValue">60%</span>
     </div>
     <div class="setting-row">
-      <label>ÒôĞ§</label>
+      <label>éŸ³æ•ˆ</label>
       <span class="toggle on" id="muteToggle"></span>
     </div>
-    <div class="set-title">´æµµ</div>
+    <div class="set-title">å­˜æ¡£</div>
     <div class="row2">
-      <button class="btn" id="btnSave">ÊÖ¶¯±£´æ½ø¶È</button>
-      <button class="btn" id="btnClearSave">Çå³ı´æµµ</button>
+      <button class="btn" id="btnSave">æ‰‹åŠ¨ä¿å­˜è¿›åº¦</button>
+      <button class="btn" id="btnClearSave">æ¸…é™¤å­˜æ¡£</button>
     </div>
     <div class="row2">
-      <button class="btn primary" id="btnResume">·µ»Ø¿¼³¡</button>
-      <button class="btn" id="btnPauseEnd">½»¾íÀë³¡</button>
+      <button class="btn primary" id="btnResume">è¿”å›è€ƒåœº</button>
+      <button class="btn" id="btnPauseEnd">äº¤å·ç¦»åœº</button>
     </div>
   </div>
 </div>
 
-<!-- ===================== ´úÂë½çÃæ ===================== -->
+<!-- ===================== ä»£ç ç•Œé¢ ===================== -->
 <div id="codeUI" class="screen hidden">
   <div class="ide">
     <div class="ide-top">
       <div><span class="dot" style="background:#ff5f57"></span>
            <span class="dot" style="background:#ffbd2e"></span>
            <span class="dot" style="background:#28c840"></span>
-           &nbsp;&nbsp;NOI 2026 ¡¤ ÆÀ²â»·¾³ v3.2</div>
+           &nbsp;&nbsp;NOI 2026 Â· è¯„æµ‹ç¯å¢ƒ v3.2</div>
       <div class="ide-time" id="ideTime">04:00:00</div>
     </div>
     <div class="ide-main">
@@ -551,7 +551,7 @@
       <section class="ide-editor">
         <div class="bar">
           <span id="fileName">T1.cpp</span>
-          <span id="cursorInfo">Ln 1, Col 1 &nbsp;¡¤&nbsp; C++14 &nbsp;¡¤&nbsp; g++ -O2</span>
+          <span id="cursorInfo">Ln 1, Col 1 &nbsp;Â·&nbsp; C++14 &nbsp;Â·&nbsp; g++ -O2</span>
         </div>
         <div class="editor-wrap">
           <pre id="codeHighlight" aria-hidden="true"></pre>
@@ -561,90 +561,90 @@
       </section>
     </div>
     <div class="ide-bottom">
-      <button id="btnSubmit" class="btn primary">Ìá½»ÆÀ²â</button>
-      <button id="btnReset" class="btn">ÖØÖÃ´úÂë</button>
-      <span class="ide-hint">°´ Esc »òµã»÷ÓÒ²à°´Å¥Àë¿ªµçÄÔ</span>
-      <button id="btnLeave" class="btn">Àë¿ªµçÄÔ</button>
+      <button id="btnSubmit" class="btn primary">æäº¤è¯„æµ‹</button>
+      <button id="btnReset" class="btn">é‡ç½®ä»£ç </button>
+      <span class="ide-hint">æŒ‰ Esc æˆ–ç‚¹å‡»å³ä¾§æŒ‰é’®ç¦»å¼€ç”µè„‘</span>
+      <button id="btnLeave" class="btn">ç¦»å¼€ç”µè„‘</button>
     </div>
   </div>
   <div id="verdict" class="verdict hidden"></div>
 </div>
 
-<!-- ===================== ²İ¸åÖ½ ===================== -->
+<!-- ===================== è‰ç¨¿çº¸ ===================== -->
 <div id="paperUI" class="screen hidden">
   <div class="paperbox">
     <div class="ph">
-      <span>&#x1F4DD; ²İ¸åÖ½ ¡ª Êó±êÍÏ¶¯ÊéĞ´</span>
+      <span>&#x1F4DD; è‰ç¨¿çº¸ â€” é¼ æ ‡æ‹–åŠ¨ä¹¦å†™</span>
       <span>
-        <button class="btn" id="btnClearPaper" style="padding:4px 14px;font-size:12px">Çå¿Õ</button>
-        <button class="btn" id="btnClosePaper" style="padding:4px 14px;font-size:12px;margin-left:8px">·ÅÏÂÖ½ (Esc)</button>
+        <button class="btn" id="btnClearPaper" style="padding:4px 14px;font-size:12px">æ¸…ç©º</button>
+        <button class="btn" id="btnClosePaper" style="padding:4px 14px;font-size:12px;margin-left:8px">æ”¾ä¸‹çº¸ (Esc)</button>
       </span>
     </div>
     <canvas id="paperCanvas"></canvas>
   </div>
 </div>
 
-<!-- ===================== ×ßÀÈ ===================== -->
+<!-- ===================== èµ°å»Š ===================== -->
 <div id="corridorUI" class="screen hidden">
   <div class="corrbox">
     <div id="corrVanish">
       <div id="corrDoor">&#x1F6AA;</div>
-      <div id="corrDoorLabel">Ï´ÊÖ¼ä</div>
+      <div id="corrDoorLabel">æ´—æ‰‹é—´</div>
     </div>
     <div class="corrinfo">
-      <div id="corrStep">ÑØ×Å×ßÀÈ×ßÏòÏ´ÊÖ¼ä¡­¡­</div>
+      <div id="corrStep">æ²¿ç€èµ°å»Šèµ°å‘æ´—æ‰‹é—´â€¦â€¦</div>
       <div class="corrprogress"><i id="corrBar"></i></div>
-      <div id="corrHint">°´×¡ W Ç°½ø</div>
+      <div id="corrHint">æŒ‰ä½ W å‰è¿›</div>
     </div>
   </div>
 </div>
 
-<!-- ===================== Ï´ÊÖ¼ä ===================== -->
+<!-- ===================== æ´—æ‰‹é—´ ===================== -->
 <div id="bathroomUI" class="screen hidden">
   <div class="bathbox">
-    <h2>&#x1F6BB; Ï´ÊÖ¼ä</h2>
-    <div class="bsub" id="bathSub">µÚ 1 / 6 ²½</div>
-    <div class="bstep" id="bathStepText">×ßÏòĞ¡±ã³Ø</div>
+    <h2>&#x1F6BB; æ´—æ‰‹é—´</h2>
+    <div class="bsub" id="bathSub">ç¬¬ 1 / 6 æ­¥</div>
+    <div class="bstep" id="bathStepText">èµ°å‘å°ä¾¿æ± </div>
     <div class="bprogress"><i id="bathBar"></i></div>
-    <div class="bhint" id="bathHint">°´×¡ W Ç°½ø</div>
+    <div class="bhint" id="bathHint">æŒ‰ä½ W å‰è¿›</div>
     <div class="bdots" id="bathDots"></div>
   </div>
 </div>
 
-<!-- ===================== NPC µçÄÔ ===================== -->
+<!-- ===================== NPC ç”µè„‘ ===================== -->
 <div id="npcComputerUI" class="screen hidden">
   <div class="npcbox">
     <div class="npchead">
-      <span id="npcCompHead">&#x1F4BB; Ğ¡Ã÷µÄµçÄÔ</span>
-      <span class="tag" id="npcCompTag">Î´¾­ÔÊĞí</span>
+      <span id="npcCompHead">&#x1F4BB; å°æ˜çš„ç”µè„‘</span>
+      <span class="tag" id="npcCompTag">æœªç»å…è®¸</span>
     </div>
     <div class="npcbody" id="npcCompCode"></div>
     <div class="npcactions">
-      <button class="btn" id="btnCloseNPCComp">Àë¿ªËûµÄµçÄÔ (Esc)</button>
+      <button class="btn" id="btnCloseNPCComp">ç¦»å¼€ä»–çš„ç”µè„‘ (Esc)</button>
     </div>
   </div>
 </div>
 
-<!-- ===================== ¶Ô»° ===================== -->
+<!-- ===================== å¯¹è¯ ===================== -->
 <div id="teacherDlg" class="screen hidden">
   <div class="dlg">
-    <div class="dlg-head" id="dlgHead">&#x1F468;&#x200D;&#x1F3EB; ¼à¿¼ÀÏÊ¦</div>
-    <div class="dlg-body" id="dlgText">Í¬Ñ§£¬ÓĞÊ²Ã´ĞèÒª°ïÃ¦µÄÂğ£¿</div>
+    <div class="dlg-head" id="dlgHead">&#x1F468;&#x200D;&#x1F3EB; ç›‘è€ƒè€å¸ˆ</div>
+    <div class="dlg-body" id="dlgText">åŒå­¦ï¼Œæœ‰ä»€ä¹ˆéœ€è¦å¸®å¿™çš„å—ï¼Ÿ</div>
     <div class="dlg-actions" id="dlgActions"></div>
   </div>
 </div>
 
-<!-- ===================== ½áËã ===================== -->
+<!-- ===================== ç»“ç®— ===================== -->
 <div id="ending" class="screen hidden">
   <div class="box">
-    <h2 id="endTitle">±È Èü ½á Êø</h2>
-    <p id="endSub">ÆÀ²â»úÒÑÍ£Ö¹ÔËĞĞ£¬ÄãµÄ´úÂëÒÑ±»·â´æ¡£</p>
+    <h2 id="endTitle">æ¯” èµ› ç»“ æŸ</h2>
+    <p id="endSub">è¯„æµ‹æœºå·²åœæ­¢è¿è¡Œï¼Œä½ çš„ä»£ç å·²è¢«å°å­˜ã€‚</p>
     <div class="big" id="endScore">0</div>
     <div class="stat-grid" id="endStats"></div>
     <div id="endDetail"></div>
     <div id="endAch" class="ach-list"></div>
     <button class="btn primary" id="btnRestart"
-            style="margin-top:24px;padding:11px 40px">ÔÙÀ´Ò»³¡</button>
+            style="margin-top:24px;padding:11px 40px">å†æ¥ä¸€åœº</button>
   </div>
 </div>
 
@@ -657,19 +657,19 @@
 if (typeof THREE === 'undefined'){
   document.getElementById('start').innerHTML =
     '<div style="padding:80px 20px;text-align:center;color:#f88;font-size:16px;line-height:2">' +
-    '? Three.js ¼ÓÔØÊ§°Ü<br>' +
-    '<span style="font-size:13px;color:#aaa">Çë¼ì²éÍøÂçÄÜ·ñ·ÃÎÊ cdn.jsdelivr.net£¬' +
-    '»òÏÂÔØ three.min.js µ½±¾µØºó¸ÄÓÃÏà¶ÔÂ·¾¶</span></div>';
+    '? Three.js åŠ è½½å¤±è´¥<br>' +
+    '<span style="font-size:13px;color:#aaa">è¯·æ£€æŸ¥ç½‘ç»œèƒ½å¦è®¿é—® cdn.jsdelivr.netï¼Œ' +
+    'æˆ–ä¸‹è½½ three.min.js åˆ°æœ¬åœ°åæ”¹ç”¨ç›¸å¯¹è·¯å¾„</span></div>';
   throw new Error('THREE not loaded');
 }
 </script>
 <script>
 'use strict';
 /* =========================================================
-   VR OI ¿¼³¡ ¡¤ Ä£ÄâÆ÷
+   VR OI è€ƒåœº Â· æ¨¡æ‹Ÿå™¨
    ========================================================= */
 
-/* ---------- ¹¤¾ßº¯Êı ---------- */
+/* ---------- å·¥å…·å‡½æ•° ---------- */
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -682,7 +682,7 @@ function fmtTime(sec){
   return `${h}:${m}:${s}`;
 }
 
-/* È·¶¨ĞÔËæ»ú£ºÓÃ´úÂë hash ×÷ÎªÖÖ×Ó£¬±ÜÃâ·´¸´Ìá½»Ë¢·Ö */
+/* ç¡®å®šæ€§éšæœºï¼šç”¨ä»£ç  hash ä½œä¸ºç§å­ï¼Œé¿å…åå¤æäº¤åˆ·åˆ† */
 function hashStr(s){
   let h = 2166136261;
   for (let i = 0; i < s.length; i++){
@@ -700,7 +700,7 @@ function mulberry32(seed){
   };
 }
 
-/* ---------- È«¾Ö×´Ì¬ ---------- */
+/* ---------- å…¨å±€çŠ¶æ€ ---------- */
 const CONTEST_LEN = 4 * 3600;
 
 const state = {
@@ -712,17 +712,17 @@ const state = {
   keys: {},
   code: {}, score: {}, curProb: '', totalScore: 0,
   problems: [],
-  npcProbId: '',       // ±¾¾ÖËùÓĞ NPC Õ¹Ê¾µÄÌâÄ¿ id
+  npcProbId: '',       // æœ¬å±€æ‰€æœ‰ NPC å±•ç¤ºçš„é¢˜ç›® id
   bob: 0,
   warnCount: 0, wanderTimer: 0,
   teacherWarnActive: false, bathroomApproved: false,
   guardKills: 0, submitCount: {}, achievements: new Set(),
   startTime: 0,
-  wanderCount: 0,              // Àë¿ª×ùÎ»´¥·¢¾¯¸æµÄ´ÎÊı
-  wanderPenaltyApplied: false  // ÊÇ·ñÒÑ´¥·¢"Ê±¼äËø¶¨"³Í·£
+  wanderCount: 0,              // ç¦»å¼€åº§ä½è§¦å‘è­¦å‘Šçš„æ¬¡æ•°
+  wanderPenaltyApplied: false  // æ˜¯å¦å·²è§¦å‘"æ—¶é—´é”å®š"æƒ©ç½š
 };
 
-/* ---------- ĞÔÄÜ£º¼¸ºÎ / ²ÄÖÊ»º´æ ---------- */
+/* ---------- æ€§èƒ½ï¼šå‡ ä½• / æè´¨ç¼“å­˜ ---------- */
 const geoCache = new Map();
 const matCache = new Map();
 
@@ -755,7 +755,7 @@ function box(w, h, d, color, x, y, z, parent, opts){
   return m;
 }
 
-/* ---------- Åö×²ÕÏ°­ ---------- */
+/* ---------- ç¢°æ’éšœç¢ ---------- */
 const obstacles = []; // {x, z, hw, hd}
 function addObstacle(x, z, hw, hd){ obstacles.push({ x, z, hw, hd }); }
 function collides(x, z, r){
@@ -766,7 +766,7 @@ function collides(x, z, r){
   return false;
 }
 
-/* ---------- ÒôÆµ ---------- */
+/* ---------- éŸ³é¢‘ ---------- */
 const audio = {
   ctx: null, master: null, muted: false, volume: 0.6,
   init(){
@@ -840,15 +840,15 @@ const audio = {
   }
 };
 
-/* ---------- È«¾ÖÒıÓÃ ---------- */
+/* ---------- å…¨å±€å¼•ç”¨ ---------- */
 let scene, camera, renderer, clock;
 const raycaster = new THREE.Raycaster();
 const CENTER = new THREE.Vector2(0, 0);
 let interactables = [];
-const deskScreens = [];   // Ã¿Ì¨ÏÔÊ¾Æ÷µÄ { ctx, tex }£¬ÓÃÓÚºóĞøË¢ĞÂ
-let actionE = null;       // E ¼ü¶¯×÷£º½»»¥£¨µçÄÔ/Ë®±­/²İ¸åÖ½/³ö¿Ú£©
-let actionF = null;       // F ¼ü¶¯×÷£º¸ÉÈÅÍ¬Ñ§
-let actionSpace = null;   // ¿Õ¸ñ¼ü¶¯×÷£º´òÀÏÊ¦ / ´ò±£°²
+const deskScreens = [];   // æ¯å°æ˜¾ç¤ºå™¨çš„ { ctx, tex }ï¼Œç”¨äºåç»­åˆ·æ–°
+let actionE = null;       // E é”®åŠ¨ä½œï¼šäº¤äº’ï¼ˆç”µè„‘/æ°´æ¯/è‰ç¨¿çº¸/å‡ºå£ï¼‰
+let actionF = null;       // F é”®åŠ¨ä½œï¼šå¹²æ‰°åŒå­¦
+let actionSpace = null;   // ç©ºæ ¼é”®åŠ¨ä½œï¼šæ‰“è€å¸ˆ / æ‰“ä¿å®‰
 let npcs = [], teacher = null;
 let toastTimer = null, achTimer = null;
 
@@ -869,7 +869,7 @@ const minimapWrap = $('minimapWrap');
 const minimap = $('minimap'), mmCtx = minimap.getContext('2d');
 const achNotify = $('achNotify');
 
-/* ---------- ÊÓ½Ç²ÎÊı ---------- */
+/* ---------- è§†è§’å‚æ•° ---------- */
 const TURN_MIN = 0.6, TURN_MAX = 4.0;
 let turnSpeed = 2.2, smoothAmount = 0.35, timeScale = 15;
 let yawTarget = 0, pitchTarget = 0;
@@ -908,14 +908,14 @@ function syncViewUI(){
   ['smoothSliderStart', 'smoothSlider'].forEach(id => { const e = $(id); if (e) e.value = smv; });
   ['smoothValueStart', 'smoothValue'].forEach(id => { const e = $(id); if (e) e.textContent = smv + '%'; });
   ['timeSliderStart', 'timeSlider'].forEach(id => { const e = $(id); if (e) e.value = timeScale; });
-  ['timeValueStart', 'timeValue'].forEach(id => { const e = $(id); if (e) e.textContent = Math.round(timeScale) + '¡Á'; });
+  ['timeValueStart', 'timeValue'].forEach(id => { const e = $(id); if (e) e.textContent = Math.round(timeScale) + 'Ã—'; });
   ['volSliderStart', 'volSlider'].forEach(id => { const e = $(id); if (e) e.value = volv; });
   ['volValueStart', 'volValue'].forEach(id => { const e = $(id); if (e) e.textContent = volv + '%'; });
   const mt = $('muteToggle');
   if (mt) mt.classList.toggle('on', !audio.muted);
 }
 
-/* ---------- Toast / ³É¾Í ---------- */
+/* ---------- Toast / æˆå°± ---------- */
 function toast(text, ms){
   toastEl.textContent = text;
   toastEl.classList.add('show');
@@ -924,17 +924,17 @@ function toast(text, ms){
 }
 
 const ACHIEVEMENTS = {
-  first_ac:   { name: '³õ´Î AC',   desc: 'ÄÃµ½µÚÒ»µÀÌâµÄ Accepted' },
-  full_score: { name: 'Âú·Ö´óÉñ',   desc: 'ËÄµÀÌâÈ«²¿ AC' },
-  guard_5:    { name: '¸ñ¶·´óÊ¦',   desc: '»÷µ¹ 5 Ãû±£°²' },
-  clean_run:  { name: '°²·ÖÊØ¼º',   desc: 'Áã¾¯¸æÍêÈü' },
-  zero_king:  { name: 'Áã·Ö´«Ææ',   desc: '½»¾íÊ± 0 ·Ö' },
-  trouble:    { name: 'Ğ£Ô°°ÔÍõ',   desc: '¸ÉÈÅ 3 ÃûÑ¡ÊÖ' },
-  speedrun:   { name: 'ÉñËÙ½»¾í',   desc: '1 Ğ¡Ê±ÄÚ½»¾í' },
-  banned:     { name: 'Ê§ÑÔÕß',     desc: 'ÒòÆÁ±Î´Ê±»È¡Ïû³É¼¨' },
-  teacher_hit:{ name: 'Ï®Ê¦Õß',     desc: 'Å¹´òÁË¼à¿¼ÀÏÊ¦' },
-  explorer:   { name: '²ŞËùÂÃĞĞ¼Ò', desc: 'ÍêÕûÈ¥¹ıÒ»´ÎÏ´ÊÖ¼ä' },
-  wanderer: { name: 'ºìÈ¦ÎåÁ¬', desc: 'Í¬Ò»³¡¿¼ÊÔ£¬Îå´ÎËæÒâ×ß¶¯' }
+  first_ac:   { name: 'åˆæ¬¡ AC',   desc: 'æ‹¿åˆ°ç¬¬ä¸€é“é¢˜çš„ Accepted' },
+  full_score: { name: 'æ»¡åˆ†å¤§ç¥',   desc: 'å››é“é¢˜å…¨éƒ¨ AC' },
+  guard_5:    { name: 'æ ¼æ–—å¤§å¸ˆ',   desc: 'å‡»å€’ 5 åä¿å®‰' },
+  clean_run:  { name: 'å®‰åˆ†å®ˆå·±',   desc: 'é›¶è­¦å‘Šå®Œèµ›' },
+  zero_king:  { name: 'é›¶åˆ†ä¼ å¥‡',   desc: 'äº¤å·æ—¶ 0 åˆ†' },
+  trouble:    { name: 'æ ¡å›­éœ¸ç‹',   desc: 'å¹²æ‰° 3 åé€‰æ‰‹' },
+  speedrun:   { name: 'ç¥é€Ÿäº¤å·',   desc: '1 å°æ—¶å†…äº¤å·' },
+  banned:     { name: 'å¤±è¨€è€…',     desc: 'å› å±è”½è¯è¢«å–æ¶ˆæˆç»©' },
+  teacher_hit:{ name: 'è¢­å¸ˆè€…',     desc: 'æ®´æ‰“äº†ç›‘è€ƒè€å¸ˆ' },
+  explorer:   { name: 'å•æ‰€æ—…è¡Œå®¶', desc: 'å®Œæ•´å»è¿‡ä¸€æ¬¡æ´—æ‰‹é—´' },
+  wanderer: { name: 'çº¢åœˆäº”è¿', desc: 'åŒä¸€åœºè€ƒè¯•ï¼Œäº”æ¬¡éšæ„èµ°åŠ¨' }
 };
 
 function unlockAch(id){
@@ -943,7 +943,7 @@ function unlockAch(id){
   const a = ACHIEVEMENTS[id];
   if (!a) return;
   clearTimeout(achTimer);
-  achNotify.innerHTML = `<div class="at">\u{1F3C6} ³É¾Í½âËø</div><div class="an">${a.name}</div>
+  achNotify.innerHTML = `<div class="at">\u{1F3C6} æˆå°±è§£é”</div><div class="an">${a.name}</div>
                          <div style="font-size:11.5px;opacity:.85;margin-top:4px">${a.desc}</div>`;
   achNotify.classList.add('show');
   achTimer = setTimeout(() => achNotify.classList.remove('show'), 3200);
@@ -953,7 +953,7 @@ function unlockAch(id){
 
 
 /* =========================================================
-   ³¡¾°´î½¨
+   åœºæ™¯æ­å»º
    ========================================================= */
 const ROOM_W = 16, ROOM_D = 14, ROOM_H = 3.4;
 
@@ -989,13 +989,13 @@ function buildRoom(){
   mkWall(D, H, -W/2, H/2, 0, Math.PI/2);
   mkWall(D, H,  W/2, H/2, 0, -Math.PI/2);
 
-  /* Ç½ÃæÕÏ°­ */
+  /* å¢™é¢éšœç¢ */
   addObstacle(-W/2 - 0.5, 0, 0.5, D/2 + 1);
   addObstacle( W/2 + 0.5, 0, 0.5, D/2 + 1);
   addObstacle(0, -D/2 - 0.5, W/2 + 1, 0.5);
   addObstacle(0,  D/2 + 0.5, W/2 + 1, 0.5);
 
-  /* µõµÆ */
+  /* åŠç¯ */
   for (let i = -1; i <= 1; i++){
     const lamp = new THREE.Mesh(
       getBoxGeo(3.4, 0.06, 0.42),
@@ -1008,7 +1008,7 @@ function buildRoom(){
     scene.add(pl);
   }
 
-  /* ºÚ°å */
+  /* é»‘æ¿ */
   box(6, 2.0, 0.06, 0xf2f4f0, 0, 1.85, -D/2 + 0.05, scene,
     { roughness: 0.35, emissive: 0x1a1c1e, emissiveIntensity: 0.4 });
   box(6.16, 2.16, 0.03, 0x3a4150, 0, 1.85, -D/2 + 0.03, scene);
@@ -1018,11 +1018,11 @@ function buildRoom(){
   const bx = bc.getContext('2d');
   bx.fillStyle = '#f2f4f0'; bx.fillRect(0, 0, 1024, 320);
   bx.fillStyle = '#c0392b'; bx.font = 'bold 54px "Microsoft YaHei", sans-serif';
-  bx.fillText('NOI 2026  ¾ºÈüÊØÔò', 60, 90);
+  bx.fillText('NOI 2026  ç«èµ›å®ˆåˆ™', 60, 90);
   bx.fillStyle = '#2c3e50'; bx.font = '30px "Microsoft YaHei", sans-serif';
-  bx.fillText('1. ½ûÖ¹ËæÒâ×ß¶¯¡¢½ûÖ¹½»Í·½Ó¶ú¡¢½ûÖ¹¸ÉÈÅËûÈË', 60, 160);
-  bx.fillText('2. ÈçĞèÈ¥Ï´ÊÖ¼äÇë¾ÙÊÖÊ¾Òâ¼à¿¼ÀÏÊ¦', 60, 205);
-  bx.fillText('3. ×ğÖØ¼à¿¼ÀÏÊ¦£¬½ûÖ¹ÈÎºÎĞÎÊ½µÄ±©Á¦ĞĞÎª', 60, 250);
+  bx.fillText('1. ç¦æ­¢éšæ„èµ°åŠ¨ã€ç¦æ­¢äº¤å¤´æ¥è€³ã€ç¦æ­¢å¹²æ‰°ä»–äºº', 60, 160);
+  bx.fillText('2. å¦‚éœ€å»æ´—æ‰‹é—´è¯·ä¸¾æ‰‹ç¤ºæ„ç›‘è€ƒè€å¸ˆ', 60, 205);
+  bx.fillText('3. å°Šé‡ç›‘è€ƒè€å¸ˆï¼Œç¦æ­¢ä»»ä½•å½¢å¼çš„æš´åŠ›è¡Œä¸º', 60, 250);
   const boardTex = new THREE.CanvasTexture(bc);
   boardTex.anisotropy = 4;
   const boardFace = new THREE.Mesh(
@@ -1032,7 +1032,7 @@ function buildRoom(){
   boardFace.position.set(0, 1.85, -D/2 + 0.085);
   scene.add(boardFace);
 
-  /* ¹ÒÖÓ */
+  /* æŒ‚é’Ÿ */
   const clockBody = new THREE.Mesh(
     new THREE.CylinderGeometry(0.32, 0.32, 0.07, 32),
     mat(0xe8ecf2, { roughness: 0.4 })
@@ -1050,7 +1050,7 @@ function buildRoom(){
   const mm = box(0.018, 0.23, 0.01, 0x333333, 6.2, 2.71, -D/2 + 0.145, scene);
   hh.rotation.z = 0.6; mm.rotation.z = -1.1;
 
-  /* ÃÅ */
+  /* é—¨ */
   box(0.07, 2.15, 0.95, 0x4a3a2e, W/2 - 0.04, 1.075, 0, scene, { roughness: 0.7 });
   const handle = new THREE.Mesh(
     new THREE.CylinderGeometry(0.022, 0.022, 0.16, 10),
@@ -1065,7 +1065,7 @@ function buildRoom(){
   const sx = signC.getContext('2d');
   sx.fillStyle = '#1f6b4a'; sx.fillRect(0, 0, 256, 96);
   sx.fillStyle = '#fff'; sx.font = 'bold 46px "Microsoft YaHei"';
-  sx.textAlign = 'center'; sx.fillText('³ö ¿Ú', 128, 64);
+  sx.textAlign = 'center'; sx.fillText('å‡º å£', 128, 64);
   const sign = new THREE.Mesh(
     new THREE.PlaneGeometry(0.5, 0.19),
     new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(signC) })
@@ -1074,7 +1074,7 @@ function buildRoom(){
   sign.rotation.y = -Math.PI / 2;
   scene.add(sign);
 
-  /* ´° */
+  /* çª— */
   box(0.06, 1.6, 3.0, 0x3a4150, -W/2 + 0.04, 1.9, 0, scene);
   const winGlass = new THREE.Mesh(
     new THREE.PlaneGeometry(2.8, 1.42),
@@ -1084,7 +1084,7 @@ function buildRoom(){
   winGlass.rotation.y = Math.PI / 2;
   scene.add(winGlass);
 
-  /* ÒûË®»ú */
+  /* é¥®æ°´æœº */
   const cooler = new THREE.Group();
   cooler.position.set(-6.6, 0, 5.6);
   scene.add(cooler);
@@ -1102,7 +1102,7 @@ function drawDeskScreen(cx, w, h){
   cx.fillStyle = '#8ea6d8'; cx.font = 'bold 16px Consolas, monospace';
   cx.fillText('NOI 2026  Contest Environment', 14, 23);
 
-  /* ÌâÄ¿ÁĞ±í */
+  /* é¢˜ç›®åˆ—è¡¨ */
   cx.fillStyle = '#1a2330'; cx.fillRect(12, 48, w - 24, 100);
   cx.font = '15px Consolas, monospace';
   const probs = (state.problems && state.problems.length) ? state.problems : [];
@@ -1112,16 +1112,16 @@ function drawDeskScreen(cx, w, h){
     const label = (p.id + '  ' + p.name).slice(0, 24);
     const pad = ' '.repeat(Math.max(1, 24 - label.length));
     let status, color;
-    if (sc >= maxScore)      { status = '[ ÒÑ AC ]';  color = '#4fd1c5'; }
-    else if (sc > 0)         { status = '[ ²¿·Ö·Ö ]'; color = '#ffcc57'; }
-    else                     { status = '[ Î´Ìá½» ]'; color = '#8a92a5'; }
+    if (sc >= maxScore)      { status = '[ å·² AC ]';  color = '#4fd1c5'; }
+    else if (sc > 0)         { status = '[ éƒ¨åˆ†åˆ† ]'; color = '#ffcc57'; }
+    else                     { status = '[ æœªæäº¤ ]'; color = '#8a92a5'; }
     cx.fillStyle = color;
     cx.fillText(label + pad + status, 26, 76 + i * 24);
   });
 
   cx.fillStyle = '#3a4456'; cx.fillRect(12, 152, w - 24, 2);
 
-  /* ´úÂëÔ¤ÀÀ£ºµ±Ç°µÚÒ»ÌâµÄ starter Ç° 9 ĞĞ */
+  /* ä»£ç é¢„è§ˆï¼šå½“å‰ç¬¬ä¸€é¢˜çš„ starter å‰ 9 è¡Œ */
   cx.font = '14px Consolas, monospace';
   const first = probs[0];
   const lines = (first && first.starter)
@@ -1156,7 +1156,7 @@ function buildDesk(x, z, withMonitor){
       box(0.06, 0.74, 0.06, 0x2b303b, dx, 0.37, dz, g);
   box(1.9, 0.4, 0.03, 0x50596a, 0, 0.55, -0.44, g);
 
-  /* ×À×ÓÅö×²£¨×ÀÍÈ·¶Î§£© */
+  /* æ¡Œå­ç¢°æ’ï¼ˆæ¡Œè…¿èŒƒå›´ï¼‰ */
   addObstacle(x, z, 0.92, 0.45);
 
   if (withMonitor){
@@ -1164,7 +1164,7 @@ function buildDesk(x, z, withMonitor){
     box(0.07, 0.34, 0.07, 0x2e3440, 0, 0.95, -0.30, g);
     box(0.80, 0.48, 0.035, 0x15181f, 0, 1.26, -0.30, g);
 
-    /* ÆÁÄ»ÌùÍ¼ */
+    /* å±å¹•è´´å›¾ */
     const sc = document.createElement('canvas');
     sc.width = 640; sc.height = 384;
     const sx = sc.getContext('2d');
@@ -1178,14 +1178,14 @@ function buildDesk(x, z, withMonitor){
     face.position.set(0, 1.26, -0.278);
     g.add(face);
 
-    /* ¼ÇÂ¼ÒÔ±ãºóĞøË¢ĞÂ£¨ÇĞÌâ / µÃ·Ö / ¶ÁµµÊ±ÖØĞÂ»æÖÆ£© */
+    /* è®°å½•ä»¥ä¾¿åç»­åˆ·æ–°ï¼ˆåˆ‡é¢˜ / å¾—åˆ† / è¯»æ¡£æ—¶é‡æ–°ç»˜åˆ¶ï¼‰ */
     deskScreens.push({ ctx: sx, tex: tex });
 
     const glow = new THREE.PointLight(0x6fa8ff, 0.35, 2.6, 2);
     glow.position.set(0, 1.26, -0.1);
     g.add(glow);
 
-    /* ¼üÅÌ */
+    /* é”®ç›˜ */
     const kbC = document.createElement('canvas');
     kbC.width = 512; kbC.height = 180;
     const kx = kbC.getContext('2d');
@@ -1206,7 +1206,7 @@ function buildDesk(x, z, withMonitor){
 
     box(0.065, 0.028, 0.105, 0x1e222a, 0.38, 0.778, 0.10, g, { roughness: 0.6 });
 
-    /* Ë®±­ */
+    /* æ°´æ¯ */
     const cup = new THREE.Mesh(
       new THREE.CylinderGeometry(0.035, 0.03, 0.10, 16),
       new THREE.MeshStandardMaterial({
@@ -1215,10 +1215,10 @@ function buildDesk(x, z, withMonitor){
     );
     cup.position.set(0.66, 0.82, -0.02);
     g.add(cup);
-    cup.userData.interact = { label: 'ºÈË®', action: () => drinkWater() };
+    cup.userData.interact = { label: 'å–æ°´', action: () => drinkWater() };
     interactables.push(cup);
 
-    /* ²İ¸åÖ½ */
+    /* è‰ç¨¿çº¸ */
     const paper = new THREE.Mesh(
       new THREE.PlaneGeometry(0.30, 0.42),
       new THREE.MeshStandardMaterial({
@@ -1229,10 +1229,10 @@ function buildDesk(x, z, withMonitor){
     paper.rotation.z = 0.14;
     paper.position.set(-0.62, 0.772, 0.06);
     g.add(paper);
-    paper.userData.interact = { label: '²é¿´²İ¸åÖ½', action: () => openPaper() };
+    paper.userData.interact = { label: 'æŸ¥çœ‹è‰ç¨¿çº¸', action: () => openPaper() };
     interactables.push(paper);
 
-    /* ±Ê */
+    /* ç¬” */
     const pen = new THREE.Mesh(
       new THREE.CylinderGeometry(0.006, 0.006, 0.15, 8),
       mat(0x2a2f3a, { roughness: 0.5 })
@@ -1242,11 +1242,11 @@ function buildDesk(x, z, withMonitor){
     pen.position.set(-0.62, 0.782, 0.20);
     g.add(pen);
 
-    face.userData.interact = { label: 'Ê¹ÓÃµçÄÔ', action: () => openCode() };
+    face.userData.interact = { label: 'ä½¿ç”¨ç”µè„‘', action: () => openCode() };
     interactables.push(face);
   }
 
-  /* ÒÎ×Ó */
+  /* æ¤…å­ */
   const chair = new THREE.Group();
   chair.position.set(0, 0, 0.92);
   g.add(chair);
@@ -1265,7 +1265,7 @@ function buildPerson(x, z, shirtColor, rotY, startPose){
 
   const skin = 0xd8a878, pants = 0x2a3140;
 
-  // ×ø×ËÍÈ×é
+  // åå§¿è…¿ç»„
   const legsSit = new THREE.Group();
   box(0.17, 0.17, 0.44, pants, -0.115, 0.52, 0.22, legsSit);
   box(0.17, 0.17, 0.44, pants,  0.115, 0.52, 0.22, legsSit);
@@ -1273,7 +1273,7 @@ function buildPerson(x, z, shirtColor, rotY, startPose){
   box(0.16, 0.44, 0.16, pants,  0.115, 0.24, 0.42, legsSit);
   g.add(legsSit);
 
-  // Õ¾×ËÍÈ×é£¨´¹Ö±ÏòÏÂ£©
+  // ç«™å§¿è…¿ç»„ï¼ˆå‚ç›´å‘ä¸‹ï¼‰
   const legsStand = new THREE.Group();
   box(0.17, 0.9, 0.17, pants, -0.115, 0.45, 0, legsStand);
   box(0.17, 0.9, 0.17, pants,  0.115, 0.45, 0, legsStand);
@@ -1309,20 +1309,20 @@ function buildSecurityGuard(x, z){
   const uniform = 0x1c2a44;
   const pants = 0x141e30;
 
-  /* ---------- ÍÈ ---------- */
+  /* ---------- è…¿ ---------- */
   box(0.18, 0.17, 0.46, pants, -0.115, 0.52, 0.22, g);
   box(0.18, 0.17, 0.46, pants,  0.115, 0.52, 0.22, g);
   box(0.17, 0.46, 0.17, pants, -0.115, 0.24, 0.42, g);
   box(0.17, 0.46, 0.17, pants,  0.115, 0.24, 0.42, g);
 
-  /* ---------- ÖÆ·ş ---------- */
+  /* ---------- åˆ¶æœ ---------- */
   box(0.50, 0.62, 0.29, uniform, 0, 1.10, 0.01, g);
   box(0.52, 0.035, 0.31, 0xffcc33, 0, 0.90, 0.01, g);
   box(0.52, 0.035, 0.31, 0xffcc33, 0, 1.28, 0.01, g);
   box(0.52, 0.045, 0.31, 0x0a1525, 0, 1.40, 0.01, g);
   box(0.52, 0.05, 0.31, 0x080808, 0, 0.80, 0.01, g);
 
-  /* ---------- ÊÖ±Û£º¶ÀÁ¢¼¸ºÎ + ¶ÀÁ¢²ÄÖÊ ---------- */
+  /* ---------- æ‰‹è‡‚ï¼šç‹¬ç«‹å‡ ä½• + ç‹¬ç«‹æè´¨ ---------- */
   const armL = new THREE.Mesh(
     new THREE.BoxGeometry(0.14, 0.55, 0.14),
     new THREE.MeshStandardMaterial({ color: uniform, roughness: 0.88, metalness: 0.04 })
@@ -1339,7 +1339,7 @@ function buildSecurityGuard(x, z){
   armR.rotation.x = -0.2;
   g.add(armR);
 
-  /* ---------- Í· ---------- */
+  /* ---------- å¤´ ---------- */
   const head = new THREE.Mesh(
     new THREE.SphereGeometry(0.16, 16, 12),
     new THREE.MeshStandardMaterial({ color: skin, roughness: 0.75, metalness: 0.04 })
@@ -1347,7 +1347,7 @@ function buildSecurityGuard(x, z){
   head.position.set(0, 1.58, 0.02);
   g.add(head);
 
-  /* ---------- Ã±×Ó ---------- */
+  /* ---------- å¸½å­ ---------- */
   const cap = new THREE.Mesh(
     new THREE.CylinderGeometry(0.17, 0.17, 0.06, 16),
     new THREE.MeshStandardMaterial({ color: 0x0a1525, roughness: 0.5, metalness: 0.04 })
@@ -1355,7 +1355,7 @@ function buildSecurityGuard(x, z){
   cap.position.set(0, 1.76, 0.02);
   g.add(cap);
 
-  /* ---------- Ã±éÜ ---------- */
+  /* ---------- å¸½æª ---------- */
   const brim = new THREE.Mesh(
     new THREE.BoxGeometry(0.22, 0.02, 0.18),
     new THREE.MeshStandardMaterial({ color: 0x050c18, roughness: 0.5, metalness: 0.04 })
@@ -1363,7 +1363,7 @@ function buildSecurityGuard(x, z){
   brim.position.set(0, 1.73, 0.13);
   g.add(brim);
 
-  /* ---------- »ÕÕÂ ---------- */
+  /* ---------- å¾½ç«  ---------- */
   const badge = new THREE.Mesh(
     new THREE.CylinderGeometry(0.02, 0.02, 0.01, 8),
     new THREE.MeshStandardMaterial({ color: 0xffcc33, roughness: 0.3, metalness: 0.8 })
@@ -1372,7 +1372,7 @@ function buildSecurityGuard(x, z){
   badge.position.set(0, 1.76, 0.15);
   g.add(badge);
 
-  /* ---------- Í·¶¥¾¯¸æµÆ ---------- */
+  /* ---------- å¤´é¡¶è­¦å‘Šç¯ ---------- */
   const warnLight = new THREE.Mesh(
     getSphereGeo(0.05, 8, 8),
     new THREE.MeshBasicMaterial({ color: 0xff3333 })
@@ -1386,7 +1386,7 @@ function buildSecurityGuard(x, z){
   };
 }
 
-/* ---------- ±£°²ÏµÍ³ ---------- */
+/* ---------- ä¿å®‰ç³»ç»Ÿ ---------- */
 const securityGuards = [];
 const GUARD_SPEED_BASE = 0.55;
 const GUARD_SPAWN_DIST = 5.0;
@@ -1431,7 +1431,7 @@ function spawnTwoGuards(){
   }
 }
 
-/* ---------- ¹¹½¨ÊÀ½ç ---------- */
+/* ---------- æ„å»ºä¸–ç•Œ ---------- */
 function buildWorld(){
   buildRoom();
   buildDesk(0, -3, true);
@@ -1443,7 +1443,7 @@ function buildWorld(){
     { x:  0.0, z:  2.5, color: 0x7a6a3a },
     { x:  4.5, z:  2.5, color: 0x5a4a8a }
   ];
-  const NPC_NAMES = ['Ğ¡Ã÷', 'Ğ¡ºì', 'Ğ¡¸Õ', 'Ğ¡Ç¿', 'Ğ¡Àö'];
+  const NPC_NAMES = ['å°æ˜', 'å°çº¢', 'å°åˆš', 'å°å¼º', 'å°ä¸½'];
   seats.forEach((s, i) => {
       buildDesk(s.x, s.z, true);
       const p = buildPerson(s.x, s.z + 0.92, s.color, Math.PI);
@@ -1460,7 +1460,7 @@ function buildWorld(){
 }
 
 /* =========================================================
-   ½»»¥ÅĞ¶¨
+   äº¤äº’åˆ¤å®š
    ========================================================= */
 let lastInteractKey = '';
 
@@ -1472,34 +1472,34 @@ function updateInteract(){
 
   if (state.view !== 'world' || !state.started || state.ended || state.frozen) return;
 
-  /* ÓÅÏÈ£º±£°² ¡ú ¿Õ¸ñ */
+  /* ä¼˜å…ˆï¼šä¿å®‰ â†’ ç©ºæ ¼ */
   for (let i = 0; i < securityGuards.length; i++){
     const g = securityGuards[i];
     if (!g.userData.alive) continue;
     const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
     if (d < GUARD_PUNCH_RANGE){
       actionSpace = { fn: () => punchGuard(i) };
-      const txt = `[ ¿Õ¸ñ ] Å¹´ò±£°²£¨¾àÀë ${d.toFixed(1)}m£©`;
+      const txt = `[ ç©ºæ ¼ ] æ®´æ‰“ä¿å®‰ï¼ˆè·ç¦» ${d.toFixed(1)}mï¼‰`;
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
       promptEl.classList.remove('hidden');
       return;
     }
   }
 
-  /* ÀÏÊ¦ ¡ú ¿Õ¸ñ */
+  /* è€å¸ˆ â†’ ç©ºæ ¼ */
   if (teacher && !teacher.userData.leaving){
     const d = Math.hypot(state.pos.x - teacher.group.position.x,
                          state.pos.z - teacher.group.position.z);
     if (d < 2.4 && teacher.userData.mode !== 'warn'){
       actionSpace = { fn: punchTeacher };
-      const txt = '[ ¿Õ¸ñ ] Å¹´ò¼à¿¼ÀÏÊ¦£¨ºó¹û×Ô¸º£©';
+      const txt = '[ ç©ºæ ¼ ] æ®´æ‰“ç›‘è€ƒè€å¸ˆï¼ˆåæœè‡ªè´Ÿï¼‰';
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
       promptEl.classList.remove('hidden');
       return;
     }
   }
 
-  /* ÆäËûÑ¡ÊÖ£º×ø×ÅµÄ ¡ú F ¸ÉÈÅ£»Àë¿ªµÄ ¡ú E ÓÃµçÄÔ */
+  /* å…¶ä»–é€‰æ‰‹ï¼šåç€çš„ â†’ F å¹²æ‰°ï¼›ç¦»å¼€çš„ â†’ E ç”¨ç”µè„‘ */
   for (let i = 0; i < npcs.length; i++){
     const n = npcs[i];
     const ud = n.userData;
@@ -1508,13 +1508,13 @@ function updateInteract(){
     if (d < 2.3){
       if (ud.state === 'seated'){
         actionF = { fn: () => disturbNPC(i) };
-        const txt = `[ F ] ¸ÉÈÅ${ud.name}£¨Ëû¿ÉÄÜ»á±¨¸æÀÏÊ¦£©`;
+        const txt = `[ F ] å¹²æ‰°${ud.name}ï¼ˆä»–å¯èƒ½ä¼šæŠ¥å‘Šè€å¸ˆï¼‰`;
         if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
         promptEl.classList.remove('hidden');
         return;
       } else if (ud.state === 'walking_away' || ud.state === 'away'){
         actionE = { fn: () => useNPCComputer(i) };
-        const txt = `[ E ] Ê¹ÓÃ${ud.name}µÄµçÄÔ`;
+        const txt = `[ E ] ä½¿ç”¨${ud.name}çš„ç”µè„‘`;
         if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
         promptEl.classList.remove('hidden');
         return;
@@ -1522,22 +1522,22 @@ function updateInteract(){
     }
   }
 
-  /* ³ö¿Ú ¡ú E */
+  /* å‡ºå£ â†’ E */
   const dDoor = Math.hypot(state.pos.x - 7.85, state.pos.z - 0);
   if (dDoor < 3.0){
     if (state.bathroomApproved){
       actionE = { fn: () => enterCorridor('toilet') };
-      const txt = '[ E ] Àë¿ª¿¼³¡È¥Ï´ÊÖ¼ä';
+      const txt = '[ E ] ç¦»å¼€è€ƒåœºå»æ´—æ‰‹é—´';
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
     } else {
-      const txt = 'Àë¿ª¿¼³¡ĞèÒªÏÈ°´ H ¾ÙÊÖÕ÷µÃÀÏÊ¦Í¬Òâ';
+      const txt = 'ç¦»å¼€è€ƒåœºéœ€è¦å…ˆæŒ‰ H ä¸¾æ‰‹å¾å¾—è€å¸ˆåŒæ„';
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
     }
     promptEl.classList.remove('hidden');
     return;
   }
 
-  /* ×ÀÉÏÎïÆ·£¨ÉäÏßÊ°È¡£© ¡ú E */
+  /* æ¡Œä¸Šç‰©å“ï¼ˆå°„çº¿æ‹¾å–ï¼‰ â†’ E */
   raycaster.setFromCamera(CENTER, camera);
   raycaster.far = 3.2;
   const hits = raycaster.intersectObjects(interactables, false);
@@ -1560,11 +1560,11 @@ function doInteract(key){
 function drinkWater(){
   audio.beep(520, 0.08, 0.05);
   setTimeout(() => audio.beep(420, 0.1, 0.04), 110);
-  toast('\u{1F964} ÄãºÈÁËÒ»¿ÚË®£¬¸Ğ¾õÇåĞÑÁËÒ»Ğ©¡£', 1600);
+  toast('\u{1F964} ä½ å–äº†ä¸€å£æ°´ï¼Œæ„Ÿè§‰æ¸…é†’äº†ä¸€äº›ã€‚', 1600);
 }
 
 /* =========================================================
-   ´òÀÏÊ¦ / ´ò±£°²
+   æ‰“è€å¸ˆ / æ‰“ä¿å®‰
    ========================================================= */
 function punchTeacher(){
   if (state.view !== 'world' || state.ended || state.frozen) return;
@@ -1575,7 +1575,7 @@ function punchTeacher(){
                        state.pos.z - teacher.group.position.z);
   if (d > 2.4){
     teacher.userData.leaving = false;
-    toast('ÄãÀë¼à¿¼ÀÏÊ¦Ì«Ô¶ÁË¡£', 1400);
+    toast('ä½ ç¦»ç›‘è€ƒè€å¸ˆå¤ªè¿œäº†ã€‚', 1400);
     return;
   }
 
@@ -1589,7 +1589,7 @@ function punchTeacher(){
   redFlash.style.opacity = '0.62';
   setTimeout(() => redFlash.style.opacity = '0', 160);
 
-  toast('\u{1F44A} ÄãÒ»È­´òÔÚÁË¼à¿¼ÀÏÊ¦µÄ¸ì²²ÉÏ¡­¡­', 1600);
+  toast('\u{1F44A} ä½ ä¸€æ‹³æ‰“åœ¨äº†ç›‘è€ƒè€å¸ˆçš„èƒ³è†Šä¸Šâ€¦â€¦', 1600);
   unlockAch('teacher_hit');
 
   setTimeout(() => {
@@ -1597,14 +1597,14 @@ function punchTeacher(){
       scene.remove(teacher.group);
       teacher = null;
     }
-    toast('¼à¿¼ÀÏÊ¦¶áÃÅ¶ø³ö£¬½ĞÀ´ÁË±£°²£¡', 2200);
+    toast('ç›‘è€ƒè€å¸ˆå¤ºé—¨è€Œå‡ºï¼Œå«æ¥äº†ä¿å®‰ï¼', 2200);
     audio.beep(880, 0.15, 0.05, 'sawtooth');
     audio.beep(440, 0.25, 0.05, 'sawtooth');
 
     setTimeout(() => {
       if (state.ended) return;
       spawnTwoGuards();
-      toast('\u26A0 Á½Ãû±£°²´ÓÃÅ¿Ú³åÁË½øÀ´£¡', 2600);
+      toast('\u26A0 ä¸¤åä¿å®‰ä»é—¨å£å†²äº†è¿›æ¥ï¼', 2600);
       audio.beep(140, 0.4, 0.07, 'sawtooth');
     }, 700);
   }, 800);
@@ -1616,7 +1616,7 @@ function punchGuard(idx){
 
   const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
   if (d > GUARD_PUNCH_RANGE + 0.3){
-    toast('ÄãÀë±£°²Ì«Ô¶ÁË¡£', 1200);
+    toast('ä½ ç¦»ä¿å®‰å¤ªè¿œäº†ã€‚', 1200);
     return;
   }
 
@@ -1628,19 +1628,19 @@ function punchGuard(idx){
   redFlash.style.opacity = '0.4';
   setTimeout(() => redFlash.style.opacity = '0', 130);
 
-  toast('\u{1F44A} Ò»È­ÁÌµ¹ÁËÒ»¸ö±£°²£¡', 1500);
+  toast('\u{1F44A} ä¸€æ‹³æ’‚å€’äº†ä¸€ä¸ªä¿å®‰ï¼', 1500);
   if (state.guardKills >= 5) unlockAch('guard_5');
 
   setTimeout(() => {
     if (state.ended) return;
     spawnTwoGuards();
-    toast('ÃÅ¿ÚÓÖ³å½øÀ´Á½ÃûÌæ²¹±£°²¡­¡­', 1700);
+    toast('é—¨å£åˆå†²è¿›æ¥ä¸¤åæ›¿è¡¥ä¿å®‰â€¦â€¦', 1700);
     audio.beep(200, 0.3, 0.06, 'sawtooth');
   }, 900);
 }
 
 /* =========================================================
-   ±£°² AI + Åö×²
+   ä¿å®‰ AI + ç¢°æ’
    ========================================================= */
 function updateGuards(realDt, t){
   if (state.ended || state.frozen || state.view !== 'world') return;
@@ -1668,14 +1668,14 @@ function updateGuards(realDt, t){
       g.group.rotation.y = Math.atan2(dx, dz);
     }
 
-    /* ÕâÀïÔ­À´Ğ´µÄÊÇ g.userData.phase£¬¸Ä³É g.phase */
+    /* è¿™é‡ŒåŸæ¥å†™çš„æ˜¯ g.userData.phaseï¼Œæ”¹æˆ g.phase */
     const v = Math.sin(t * 3.5 + g.phase) * 0.25;
     g.armL.rotation.x = -0.25 + v;
     g.armR.rotation.x = -0.25 - v;
     g.head.rotation.y = Math.sin(t * 2 + g.phase) * 0.25;
 
     if (g.warnLight){
-      /* ÕâÀïÒ²Ò»Ñù */
+      /* è¿™é‡Œä¹Ÿä¸€æ · */
       const blink = 0.5 + 0.5 * Math.sin(t * 6 + g.phase);
       g.warnLight.material.color.setRGB(1, blink * 0.4, blink * 0.4);
     }
@@ -1695,11 +1695,11 @@ function endByGuards(){
   audio.beep(110, 0.5, 0.08, 'sawtooth');
   audio.beep(80, 0.7, 0.06, 'sawtooth');
 
-  $('endTitle').textContent = '±» ±£ °² ×¥ ×ß';
-  $('endSub').textContent = 'Á½Ãû±£°²Ò»×óÒ»ÓÒ¼Ü×¡ÁËÄã£¬Äã±»ÍÏ³öÁË¿¼³¡¡£';
-  showEnding(0, 'ÄãÔÚ¿¼³¡ÉÏ¹«È»Å¹´ò¼à¿¼ÀÏÊ¦£¬ĞÔÖÊ¶ñÁÓ¡£\n' +
-    '±¾´Î±ÈÈü³É¼¨×÷·Ï£¬²¢¼ÇÈë³ÏĞÅµµ°¸¡£\n\n' +
-    '×ñÊØ¿¼³¡¼ÍÂÉ£¬ÈËÈËÓĞÔğ¡£\nÏÂ´Î±ğÔÙ´òÀÏÊ¦ÁË¡£');
+  $('endTitle').textContent = 'è¢« ä¿ å®‰ æŠ“ èµ°';
+  $('endSub').textContent = 'ä¸¤åä¿å®‰ä¸€å·¦ä¸€å³æ¶ä½äº†ä½ ï¼Œä½ è¢«æ‹–å‡ºäº†è€ƒåœºã€‚';
+  showEnding(0, 'ä½ åœ¨è€ƒåœºä¸Šå…¬ç„¶æ®´æ‰“ç›‘è€ƒè€å¸ˆï¼Œæ€§è´¨æ¶åŠ£ã€‚\n' +
+    'æœ¬æ¬¡æ¯”èµ›æˆç»©ä½œåºŸï¼Œå¹¶è®°å…¥è¯šä¿¡æ¡£æ¡ˆã€‚\n\n' +
+    'éµå®ˆè€ƒåœºçºªå¾‹ï¼Œäººäººæœ‰è´£ã€‚\nä¸‹æ¬¡åˆ«å†æ‰“è€å¸ˆäº†ã€‚');
 }
 
 function hideAllPanels(){
@@ -1712,14 +1712,14 @@ function hideAllPanels(){
 }
 
 /* =========================================================
-   ÆÁ±Î´Ê
+   å±è”½è¯
    ========================================================= */
 const BANNED_WORDS = [
   'fuck', 'fucking', 'fucker', 'fucked',
   'shit', 'bullshit', 'bitch', 'asshole', 'bastard',
   'ccf', 'ccccf',
-  'Éµ±Æ', 'ÂèµÄ', '²ÙÄã', 'ÄáÂê', 'ÄãÂè',
-  '¹öµ°', 'À¬»ø³öÌâÈË', 'À¬»ø±ÈÈü'
+  'å‚»é€¼', 'å¦ˆçš„', 'æ“ä½ ', 'å°¼ç›', 'ä½ å¦ˆ',
+  'æ»šè›‹', 'åƒåœ¾å‡ºé¢˜äºº', 'åƒåœ¾æ¯”èµ›'
 ];
 function containsBannedWord(code){
   const lower = code.toLowerCase();
@@ -1730,18 +1730,18 @@ function containsBannedWord(code){
 }
 
 function showBannedWordDialog(word){
-  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ¼à¿¼ÀÏÊ¦';
+  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ç›‘è€ƒè€å¸ˆ';
   const display = word.toUpperCase();
   dlgText.textContent =
-    `µÈµÈ¡­¡­\n\n` +
-    `ÎÒÔÚÄãµÄ´úÂëÀï¿´µ½ÁË "${display}"¡£\n\n` +
-    `ÕâÊÇ±©ìåÓïÑÔ¡£¸ù¾İ¡¶NOI ¾ºÈü¼ÍÂÉ¡·£¬¿¼ÊÔÆÚ¼äÈÎºÎĞÎÊ½µÄ\n` +
-    `²»ÎÄÃ÷ÓÃÓï¶¼»á±»¼ÇÂ¼£¬²¢È¡Ïû±¾´Î±ÈÈü³É¼¨¡£\n\n` +
-    `Çë¸úÎÒÈ¥¿¼Îñ°ì¹«ÊÒ¡£`;
+    `ç­‰ç­‰â€¦â€¦\n\n` +
+    `æˆ‘åœ¨ä½ çš„ä»£ç é‡Œçœ‹åˆ°äº† "${display}"ã€‚\n\n` +
+    `è¿™æ˜¯æš´æˆ¾è¯­è¨€ã€‚æ ¹æ®ã€ŠNOI ç«èµ›çºªå¾‹ã€‹ï¼Œè€ƒè¯•æœŸé—´ä»»ä½•å½¢å¼çš„\n` +
+    `ä¸æ–‡æ˜ç”¨è¯­éƒ½ä¼šè¢«è®°å½•ï¼Œå¹¶å–æ¶ˆæœ¬æ¬¡æ¯”èµ›æˆç»©ã€‚\n\n` +
+    `è¯·è·Ÿæˆ‘å»è€ƒåŠ¡åŠå…¬å®¤ã€‚`;
   dlgActions.innerHTML = '';
   const b = document.createElement('button');
   b.className = 'btn';
-  b.textContent = '¡­¡­£¨ÎŞ·¨±ç½â£©';
+  b.textContent = 'â€¦â€¦ï¼ˆæ— æ³•è¾©è§£ï¼‰';
   b.onclick = () => endByBannedWord(word);
   dlgActions.appendChild(b);
   teacherDlg.classList.remove('hidden');
@@ -1760,22 +1760,22 @@ function endByBannedWord(word){
   securityGuards.length = 0;
   unlockAch('banned');
 
-  $('endTitle').textContent = 'È¡ Ïû ³É ¼¨';
-  $('endSub').textContent = `ÄãµÄ´úÂëÖĞ°üº¬±©ìåÓïÑÔ "${word.toUpperCase()}"¡£`;
+  $('endTitle').textContent = 'å– æ¶ˆ æˆ ç»©';
+  $('endSub').textContent = `ä½ çš„ä»£ç ä¸­åŒ…å«æš´æˆ¾è¯­è¨€ "${word.toUpperCase()}"ã€‚`;
   showEnding(0,
-    `¼à¿¼ÀÏÊ¦°ÑÄãµÄ´úÂë½ØÁËÍ¼£¬×÷ÎªÖ¤¾İ¸½ÔÚÎ¥¼Í¼ÇÂ¼Àï¡£\n` +
-    `±¾´Î±ÈÈü³É¼¨×÷·Ï¡£\n\n` +
-    `Èü³¡ÉÏ¿ÉÒÔ´ò±©Á¦£¬²»ÄÜ´ò×ìÅÚ¡£\nÏÂ´ÎÇë×¢ÒâÎÄÃ÷ÓÃÓï¡£`);
+    `ç›‘è€ƒè€å¸ˆæŠŠä½ çš„ä»£ç æˆªäº†å›¾ï¼Œä½œä¸ºè¯æ®é™„åœ¨è¿çºªè®°å½•é‡Œã€‚\n` +
+    `æœ¬æ¬¡æ¯”èµ›æˆç»©ä½œåºŸã€‚\n\n` +
+    `èµ›åœºä¸Šå¯ä»¥æ‰“æš´åŠ›ï¼Œä¸èƒ½æ‰“å˜´ç‚®ã€‚\nä¸‹æ¬¡è¯·æ³¨æ„æ–‡æ˜ç”¨è¯­ã€‚`);
 }
 
 /* =========================================================
-   ¸ÉÈÅÑ¡ÊÖ
+   å¹²æ‰°é€‰æ‰‹
    ========================================================= */
 const DISTURB_LINES = [
-  '¸ÉÂï°¡Äã£¿±ğ¶¯ÎÒ¼üÅÌ£¡',
-  '¡­¡­Äã×ß¿ª£¬ÎÒÕıÔÚÏëÌâ¡£',
-  'ÎØÎØÎØ£¬ÎÒÒª¾ÙÊÖÁË£¡',
-  'ÀÏÊ¦£¡£¡ÓĞÈËµ·ÂÒ£¡£¡'
+  'å¹²å˜›å•Šä½ ï¼Ÿåˆ«åŠ¨æˆ‘é”®ç›˜ï¼',
+  'â€¦â€¦ä½ èµ°å¼€ï¼Œæˆ‘æ­£åœ¨æƒ³é¢˜ã€‚',
+  'å‘œå‘œå‘œï¼Œæˆ‘è¦ä¸¾æ‰‹äº†ï¼',
+  'è€å¸ˆï¼ï¼æœ‰äººæ£ä¹±ï¼ï¼'
 ];
 
 function disturbNPC(i){
@@ -1795,16 +1795,16 @@ function disturbNPC(i){
   setTimeout(() => { n.head.rotation.x = 0; }, 350);
 
   const line = DISTURB_LINES[Math.min(ud.anger - 1, DISTURB_LINES.length - 1)];
-  toast(`${ud.name}£º¡°${line}¡±`, 1700);
+  toast(`${ud.name}ï¼šâ€œ${line}â€`, 1700);
   state.wanderTimer = Math.max(0, state.wanderTimer - 1.5);
 
-  /* ¸ÉÈÅ 3 ÈË½âËø */
+  /* å¹²æ‰° 3 äººè§£é” */
   if (npcs.filter(x => x.userData.anger > 0).length >= 3) unlockAch('trouble');
 
   if (ud.anger >= 3){
     ud.state = 'walking_away';
     ud.timer = 0;
-    toast(`${ud.name} ÃÍµØÕ¾ÆğÀ´£¬³¯¼à¿¼ÀÏÊ¦×ßÈ¥ÁË¡­¡­`, 2200);
+    toast(`${ud.name} çŒ›åœ°ç«™èµ·æ¥ï¼Œæœç›‘è€ƒè€å¸ˆèµ°å»äº†â€¦â€¦`, 2200);
     audio.beep(660, 0.1, 0.05);
   }
 }
@@ -1814,13 +1814,13 @@ function useNPCComputer(i){
   if (!n) return;
   const ud = n.userData;
   if (ud.state !== 'walking_away' && ud.state !== 'away'){
-    toast('Ëû»¹ÔÚ×ùÎ»ÉÏ£¬Äã²»ºÃ¶¯ÊÖ¡£', 1500);
+    toast('ä»–è¿˜åœ¨åº§ä½ä¸Šï¼Œä½ ä¸å¥½åŠ¨æ‰‹ã€‚', 1500);
     return;
   }
   state.view = 'npcComputer';
   crosshair.classList.add('hidden');
   promptEl.classList.add('hidden');
-  $('npcCompHead').textContent = `\u{1F4BB} ${ud.name}µÄµçÄÔ`;
+  $('npcCompHead').textContent = `\u{1F4BB} ${ud.name}çš„ç”µè„‘`;
   $('npcCompCode').textContent = genNpcCode(ud.name, state.npcProbId);
   npcComputerUI.classList.remove('hidden');
   audio.beep(520, 0.06, 0.035);
@@ -1829,7 +1829,7 @@ function useNPCComputer(i){
   if (Math.random() < 0.28){
     setTimeout(() => {
       if (state.view === 'npcComputer'){
-        toast('Ô¶´¦´«À´½Å²½Éù¡­¡­ÓĞÈË»ØÀ´ÁË¡£', 2200);
+        toast('è¿œå¤„ä¼ æ¥è„šæ­¥å£°â€¦â€¦æœ‰äººå›æ¥äº†ã€‚', 2200);
       }
     }, 3200);
   }
@@ -1841,18 +1841,18 @@ function closeNPCComputer(){
   crosshair.classList.remove('hidden');
 }
 
-/* ---------- Í¶Ëß ---------- */
+/* ---------- æŠ•è¯‰ ---------- */
 function triggerNPCComplaint(name){
-  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ¼à¿¼ÀÏÊ¦';
+  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ç›‘è€ƒè€å¸ˆ';
   dlgText.textContent =
-    `${name}¾ÙÊÖ±¨¸æ£º¡°ÀÏÊ¦£¡ËûÒ»Ö±ÔÚ¸ÉÈÅÎÒ´ğÌâ£¡¡±\n\n` +
-    `¼à¿¼ÀÏÊ¦ÖåÃ¼¿´ÏòÄã£º\n` +
-    `¡°Í¬Ñ§£¬±ÈÈüÆÚ¼ä½ûÖ¹¸ÉÈÅÆäËûÑ¡ÊÖ¡£` +
-    `ÕâÊÇµÚ ${state.warnCount + 1} ´Î¾¯¸æ£¬ÔÙÓĞÏÂ´Î¾Í¼ÇÂ¼Î¥¼ÍÁË¡£¡±`;
+    `${name}ä¸¾æ‰‹æŠ¥å‘Šï¼šâ€œè€å¸ˆï¼ä»–ä¸€ç›´åœ¨å¹²æ‰°æˆ‘ç­”é¢˜ï¼â€\n\n` +
+    `ç›‘è€ƒè€å¸ˆçš±çœ‰çœ‹å‘ä½ ï¼š\n` +
+    `â€œåŒå­¦ï¼Œæ¯”èµ›æœŸé—´ç¦æ­¢å¹²æ‰°å…¶ä»–é€‰æ‰‹ã€‚` +
+    `è¿™æ˜¯ç¬¬ ${state.warnCount + 1} æ¬¡è­¦å‘Šï¼Œå†æœ‰ä¸‹æ¬¡å°±è®°å½•è¿çºªäº†ã€‚â€`;
   dlgActions.innerHTML = '';
   const b = document.createElement('button');
   b.className = 'btn primary';
-  b.textContent = 'ÎÒÖªµÀÁË';
+  b.textContent = 'æˆ‘çŸ¥é“äº†';
   b.onclick = () => {
     closeTeacherDialog();
     state.warnCount++;
@@ -1867,7 +1867,7 @@ function triggerNPCComplaint(name){
 }
 
 /* =========================================================
-   NPC ×´Ì¬»ú
+   NPC çŠ¶æ€æœº
    ========================================================= */
 function updateNPCs(realDt, t){
   for (let i = 0; i < npcs.length; i++){
@@ -1897,7 +1897,7 @@ function updateNPCs(realDt, t){
         ud.state = 'away';
         ud.timer = 5.0;
         if (teacher) triggerNPCComplaint(ud.name);
-        else toast(`${ud.name} ÅÜµ½¼à¿¼´¦£¬·¢ÏÖÀÏÊ¦²»¼ûÁË¡­¡­`, 2200);
+        else toast(`${ud.name} è·‘åˆ°ç›‘è€ƒå¤„ï¼Œå‘ç°è€å¸ˆä¸è§äº†â€¦â€¦`, 2200);
       } else {
         const sp = 1.6 * realDt;
         n.group.position.x += (dx / d) * sp;
@@ -1942,13 +1942,13 @@ function updateNPCs(realDt, t){
 }
 
 /* =========================================================
-   ÀÏÊ¦¾¯¸æ
+   è€å¸ˆè­¦å‘Š
    ========================================================= */
 const WARNINGS = [
-  'Í¬Ñ§£¬±ÈÈüÆÚ¼äÇë²»ÒªËæÒâ×ß¶¯£¬»Øµ½×Ô¼º×ùÎ»ÉÏ¡£',
-  'ÎÒ¸Õ²ÅÌáĞÑ¹ıÄãÁË¡£ÔÙ×ß¶¯ÎÒÒª¼ÇÂ¼Î¥¼ÍÁË¡£',
-  'ÕâÊÇ×îºóÒ»´Î¿ÚÍ·¾¯¸æ£¬ÇëÁ¢¿Ì»Øµ½×ùÎ»¡£',
-  '¡­¡­ÄãÔÙÂÒ×ß£¬ÎÒ¾ÍÖ»ÄÜ°´¿¼³¡¼ÍÂÉ´¦ÀíÁË¡£'
+  'åŒå­¦ï¼Œæ¯”èµ›æœŸé—´è¯·ä¸è¦éšæ„èµ°åŠ¨ï¼Œå›åˆ°è‡ªå·±åº§ä½ä¸Šã€‚',
+  'æˆ‘åˆšæ‰æé†’è¿‡ä½ äº†ã€‚å†èµ°åŠ¨æˆ‘è¦è®°å½•è¿çºªäº†ã€‚',
+  'è¿™æ˜¯æœ€åä¸€æ¬¡å£å¤´è­¦å‘Šï¼Œè¯·ç«‹åˆ»å›åˆ°åº§ä½ã€‚',
+  'â€¦â€¦ä½ å†ä¹±èµ°ï¼Œæˆ‘å°±åªèƒ½æŒ‰è€ƒåœºçºªå¾‹å¤„ç†äº†ã€‚'
 ];
 
 function triggerTeacherWarning(){
@@ -1963,37 +1963,37 @@ function applyWanderPenalty(){
   if (state.wanderPenaltyApplied) return;
   state.wanderPenaltyApplied = true;
 
-  /* Ê£ÓàĞéÄâÊ±¼äÇ¿ÖÆ»Ø 10 ·ÖÖÓ */
+  /* å‰©ä½™è™šæ‹Ÿæ—¶é—´å¼ºåˆ¶å› 10 åˆ†é’Ÿ */
   state.elapsed = CONTEST_LEN - 600;
 
-  /* Á÷ËÙ£ºÈÃÕâ 10 ·ÖÖÓĞéÄâÊ±¼äÔÚÊµ¼Ê 20 ÃëÄÚÅÜÍê */
+  /* æµé€Ÿï¼šè®©è¿™ 10 åˆ†é’Ÿè™šæ‹Ÿæ—¶é—´åœ¨å®é™… 20 ç§’å†…è·‘å®Œ */
   timeScale = 30;
 
-  /* Ëø¶¨»¬Ìõ£¨¿ªÊ¼½çÃæ + ÔİÍ£²Ëµ¥£© */
+  /* é”å®šæ»‘æ¡ï¼ˆå¼€å§‹ç•Œé¢ + æš‚åœèœå•ï¼‰ */
   ['timeSliderStart', 'timeSlider'].forEach(id => {
     const e = $(id);
     if (e){ e.disabled = true; e.style.opacity = '0.4'; }
   });
   const sv1 = $('timeValueStart');
-  if (sv1) sv1.textContent = 'Ëø¶¨';
+  if (sv1) sv1.textContent = 'é”å®š';
   const sv2 = $('timeValue');
-  if (sv2) sv2.textContent = 'Ëø¶¨';
+  if (sv2) sv2.textContent = 'é”å®š';
 
-  /* Ä£ºıÌáÊ¾£º²»±©Â¶ÕæÕıÔ­Òò£¬µ«°µÊ¾ÓĞ¼ÇÂ¼ + Ê±¼äÒì¶¯ */
-  toast('¼à¿¼ÀÏÊ¦µÍÍ·ÔÚ¼ÇÂ¼±¾ÉÏĞ´ÁËĞ©Ê²Ã´¡£µÈÄãÔÙÌ§Í·Ê±£¬' +
-        '¹ÒÖÓµÄÖ¸Õë²»ÖªÎªºÎÌøÁËÒ»´ó¸ñ¡£', 5000);
+  /* æ¨¡ç³Šæç¤ºï¼šä¸æš´éœ²çœŸæ­£åŸå› ï¼Œä½†æš—ç¤ºæœ‰è®°å½• + æ—¶é—´å¼‚åŠ¨ */
+  toast('ç›‘è€ƒè€å¸ˆä½å¤´åœ¨è®°å½•æœ¬ä¸Šå†™äº†äº›ä»€ä¹ˆã€‚ç­‰ä½ å†æŠ¬å¤´æ—¶ï¼Œ' +
+        'æŒ‚é’Ÿçš„æŒ‡é’ˆä¸çŸ¥ä¸ºä½•è·³äº†ä¸€å¤§æ ¼ã€‚', 5000);
   audio.beep(220, 0.5, 0.05, 'sawtooth');
   setTimeout(() => audio.beep(160, 0.6, 0.05, 'sawtooth'), 250);
 }
 
 function showTeacherWarning(){
   const idx = Math.min(state.warnCount - 1, WARNINGS.length - 1);
-  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ¼à¿¼ÀÏÊ¦£¨µÚ ' + state.warnCount + ' ´Î¾¯¸æ£©';
+  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ç›‘è€ƒè€å¸ˆï¼ˆç¬¬ ' + state.warnCount + ' æ¬¡è­¦å‘Šï¼‰';
   dlgText.textContent = WARNINGS[idx];
   dlgActions.innerHTML = '';
   const b = document.createElement('button');
   b.className = 'btn primary';
-  b.textContent = 'ºÃµÄÀÏÊ¦£¬ÎÒÂíÉÏ»ØÈ¥£¡';
+  b.textContent = 'å¥½çš„è€å¸ˆï¼Œæˆ‘é©¬ä¸Šå›å»ï¼';
   b.onclick = () => {
     closeTeacherDialog();
     if (teacher) teacher.userData.mode = 'returning';
@@ -2008,7 +2008,7 @@ function showTeacherWarning(){
 }
 
 /* =========================================================
-   ×ßÀÈ
+   èµ°å»Š
    ========================================================= */
 let corridorPhase = 'toilet';
 let corridorProgress = 0;
@@ -2026,13 +2026,13 @@ function enterCorridor(phase){
 
   const stepEl = $('corrStep'), hintEl = $('corrHint'), labelEl = $('corrDoorLabel');
   if (phase === 'toilet'){
-    stepEl.textContent = 'ÑØ×Å×ßÀÈ×ßÏòÏ´ÊÖ¼ä¡­¡­';
-    hintEl.textContent = '°´×¡ W Ç°½ø';
-    labelEl.textContent = 'Ï´ÊÖ¼ä';
+    stepEl.textContent = 'æ²¿ç€èµ°å»Šèµ°å‘æ´—æ‰‹é—´â€¦â€¦';
+    hintEl.textContent = 'æŒ‰ä½ W å‰è¿›';
+    labelEl.textContent = 'æ´—æ‰‹é—´';
   } else {
-    stepEl.textContent = 'ÑØ×Å×ßÀÈ×ß»Ø¿¼³¡¡­¡­';
-    hintEl.textContent = '°´×¡ W Ç°½ø';
-    labelEl.textContent = '¿¼³¡';
+    stepEl.textContent = 'æ²¿ç€èµ°å»Šèµ°å›è€ƒåœºâ€¦â€¦';
+    hintEl.textContent = 'æŒ‰ä½ W å‰è¿›';
+    labelEl.textContent = 'è€ƒåœº';
   }
   updateCorridorUI();
 }
@@ -2066,7 +2066,7 @@ function updateCorridor(realDt){
         state.bathroomApproved = false;
         state.wanderTimer = 0;
         state.teacherWarnActive = false;
-        toast('Äã»Øµ½ÁË×ùÎ»ÉÏ£¬¼ÌĞø´ğÌâ¡£', 2000);
+        toast('ä½ å›åˆ°äº†åº§ä½ä¸Šï¼Œç»§ç»­ç­”é¢˜ã€‚', 2000);
         unlockAch('explorer');
       }
     }, 500);
@@ -2076,15 +2076,15 @@ function updateCorridor(realDt){
 }
 
 /* =========================================================
-   Ï´ÊÖ¼ä
+   æ´—æ‰‹é—´
    ========================================================= */
 const BATHROOM_STEPS = [
-  { text: '×ßÏòĞ¡±ã³Ø',       key: 'w',     hold: 1.8, hint: '°´×¡ W Ç°½ø' },
-  { text: '½âÊÖ',             key: 'space', hold: 3.0, hint: '°´×¡ ¿Õ¸ñ ½âÊÖ' },
-  { text: '×ßÏòÏ´ÊÖ³Ø',       key: 'w',     hold: 1.6, hint: '°´×¡ W Ç°½ø' },
-  { text: 'Ï´ÊÖ',             key: 'space', hold: 2.5, hint: '°´×¡ ¿Õ¸ñ Ï´ÊÖ' },
-  { text: '²Á¸ÉË«ÊÖ',         key: 'space', hold: 1.5, hint: '°´×¡ ¿Õ¸ñ ²Á¸É' },
-  { text: 'ÕûÀíÒÂÎï£¬×¼±¸·µ»Ø', key: 'e',   hold: 0,   hint: '°´ E Àë¿ªÏ´ÊÖ¼ä' }
+  { text: 'èµ°å‘å°ä¾¿æ± ',       key: 'w',     hold: 1.8, hint: 'æŒ‰ä½ W å‰è¿›' },
+  { text: 'è§£æ‰‹',             key: 'space', hold: 3.0, hint: 'æŒ‰ä½ ç©ºæ ¼ è§£æ‰‹' },
+  { text: 'èµ°å‘æ´—æ‰‹æ± ',       key: 'w',     hold: 1.6, hint: 'æŒ‰ä½ W å‰è¿›' },
+  { text: 'æ´—æ‰‹',             key: 'space', hold: 2.5, hint: 'æŒ‰ä½ ç©ºæ ¼ æ´—æ‰‹' },
+  { text: 'æ“¦å¹²åŒæ‰‹',         key: 'space', hold: 1.5, hint: 'æŒ‰ä½ ç©ºæ ¼ æ“¦å¹²' },
+  { text: 'æ•´ç†è¡£ç‰©ï¼Œå‡†å¤‡è¿”å›', key: 'e',   hold: 0,   hint: 'æŒ‰ E ç¦»å¼€æ´—æ‰‹é—´' }
 ];
 
 let bathroomStepIdx = 0;
@@ -2106,7 +2106,7 @@ function updateBathroomUI(){
   if (!step) return;
   bathStepText.textContent = step.text;
   bathHint.textContent = step.hint;
-  bathSub.textContent = `µÚ ${bathroomStepIdx + 1} / ${BATHROOM_STEPS.length} ²½`;
+  bathSub.textContent = `ç¬¬ ${bathroomStepIdx + 1} / ${BATHROOM_STEPS.length} æ­¥`;
   if (step.key === 'e'){
     bathBar.style.width = '100%';
   } else {
@@ -2152,7 +2152,7 @@ function finishBathroom(){
 }
 
 /* =========================================================
-   Ãæ°å¹ÜÀí
+   é¢æ¿ç®¡ç†
    ========================================================= */
 function openPauseMenu(){
   if (state.view !== 'world' || !state.started || state.ended || state.frozen) return;
@@ -2191,7 +2191,7 @@ function renderProblemList(){
     div.className = 'pitem' + (p.id === state.curProb ? ' active' : '') + (sc >= p.max ? ' ac' : '');
     div.innerHTML = `<div class="pn"><span>${p.id} ${p.name}</span></div>
                      <div class="pn" style="margin-top:4px">
-                       <span style="font-size:11px;opacity:.6">${p.max} ·Ö</span>
+                       <span style="font-size:11px;opacity:.6">${p.max} åˆ†</span>
                        <span class="sc">${sc}</span>
                      </div>`;
     div.onclick = () => {
@@ -2208,8 +2208,8 @@ function loadProblem(id){
   if (!p) return;
   if (state.code[id] === undefined) state.code[id] = p.starter;
   $('problemPane').innerHTML = `
-    <h3>${p.id} ¡¤ ${p.name}</h3>
-    <div class="meta">Ê±¼äÏŞÖÆ ${p.tl} &nbsp;|&nbsp; ÄÚ´æÏŞÖÆ ${p.ml} &nbsp;|&nbsp; Âú·Ö ${p.max}</div>
+    <h3>${p.id} Â· ${p.name}</h3>
+    <div class="meta">æ—¶é—´é™åˆ¶ ${p.tl} &nbsp;|&nbsp; å†…å­˜é™åˆ¶ ${p.ml} &nbsp;|&nbsp; æ»¡åˆ† ${p.max}</div>
     <pre>${p.desc.replace(/</g, '&lt;')}</pre>`;
   codeArea.value = state.code[id];
   $('fileName').textContent = p.id + '.cpp';
@@ -2222,7 +2222,7 @@ function saveCode(){
 }
 
 /* =========================================================
-   Óï·¨¸ßÁÁ
+   è¯­æ³•é«˜äº®
    ========================================================= */
 const codeHighlight = $('codeHighlight');
 
@@ -2281,9 +2281,9 @@ function hlRender(code){
 
   s = hlEscape(s);
 
-  /* ÏÈ×ö¹Ø¼ü×ÖÌæ»»£¬ÔÙ×öÊı×ÖÌæ»»£º
-     ·ñÔòµÚ 2 ²½²åÈëµÄ `<span class="tok-n">` ÀïµÄ class
-     »á±»µÚ 3 ²½µÄ¹Ø¼ü×Ö¹æÔòÔÙ´Î°üÒ»²ã£¬ÆÆ»µ HTML */
+  /* å…ˆåšå…³é”®å­—æ›¿æ¢ï¼Œå†åšæ•°å­—æ›¿æ¢ï¼š
+     å¦åˆ™ç¬¬ 2 æ­¥æ’å…¥çš„ `<span class="tok-n">` é‡Œçš„ class
+     ä¼šè¢«ç¬¬ 3 æ­¥çš„å…³é”®å­—è§„åˆ™å†æ¬¡åŒ…ä¸€å±‚ï¼Œç ´å HTML */
   s = s.replace(/\b([A-Za-z_]\w*)\b/g, m => {
     if (HL_KEYWORDS.has(m)) return `<span class="tok-k">${m}</span>`;
     return m;
@@ -2296,7 +2296,7 @@ function hlRender(code){
 
 
 /* =========================================================
-   ÆÀ²âÆ÷£¨È·¶¨ĞÔ£©
+   è¯„æµ‹å™¨ï¼ˆç¡®å®šæ€§ï¼‰
    ========================================================= */
 function judgeCode(code, prob){
   return judgeUnified(code, prob, KEYWORDS_LIST);
@@ -2318,8 +2318,8 @@ function submitCode(){
 
   verdictEl.classList.remove('hidden');
   verdictEl.innerHTML = `
-    <h4>ÆÀ²âÖĞ¡­ <span style="color:#5b8cff">${prob.id}</span></h4>
-    <div class="judging">ÕıÔÚ±àÒë & ÔËĞĞ²âÊÔÊı¾İ¡­</div>
+    <h4>è¯„æµ‹ä¸­â€¦ <span style="color:#5b8cff">${prob.id}</span></h4>
+    <div class="judging">æ­£åœ¨ç¼–è¯‘ & è¿è¡Œæµ‹è¯•æ•°æ®â€¦</div>
     <div class="barwrap"><i id="jbar"></i></div>
   `;
   audio.beep(680, 0.06, 0.04);
@@ -2357,14 +2357,14 @@ function renderVerdict(prob, res){
                 res.status === 'CE' ? '#8b95a9' :
                 res.status === 'PART' ? '#ffcc57' : '#ff5f6d';
   verdictEl.innerHTML = `
-    <h4>${prob.id} ÆÀ²â½á¹û <span style="color:${color}">${res.score} ·Ö</span></h4>
+    <h4>${prob.id} è¯„æµ‹ç»“æœ <span style="color:${color}">${res.score} åˆ†</span></h4>
     <div style="color:${color};font-size:12px;margin-bottom:12px;font-family:monospace">${statusText}</div>
     <div class="cases">${res.cases.map(c =>
       `<div class="case ${c.status}">#${c.id}<br>${c.status}</div>`).join('')}</div>
     <div style="margin-top:12px;font-size:11px;color:#5d6880">
-      ${res.status === 'CE' ? 'ÌáÊ¾£º´úÂëÖĞÎ´ÕÒµ½ main º¯Êı»ò´úÂë¹ı¶Ì¡£' : ''}
-      ${res.status !== 'AC' && res.status !== 'CE' ? 'ÌáÊ¾£º¼ì²éËã·¨¸´ÔÓ¶ÈÓë±ß½çÇé¿ö¡£' : ''}
-      ${res.status === 'AC' ? '\u{1F389} ¹§Ï²£¡ÕâµÀÌâÄãÄÃµ½ÁËÂú·Ö¡£' : ''}
+      ${res.status === 'CE' ? 'æç¤ºï¼šä»£ç ä¸­æœªæ‰¾åˆ° main å‡½æ•°æˆ–ä»£ç è¿‡çŸ­ã€‚' : ''}
+      ${res.status !== 'AC' && res.status !== 'CE' ? 'æç¤ºï¼šæ£€æŸ¥ç®—æ³•å¤æ‚åº¦ä¸è¾¹ç•Œæƒ…å†µã€‚' : ''}
+      ${res.status === 'AC' ? '\u{1F389} æ­å–œï¼è¿™é“é¢˜ä½ æ‹¿åˆ°äº†æ»¡åˆ†ã€‚' : ''}
     </div>`;
 }
 
@@ -2388,7 +2388,7 @@ function renderHudProbs(){
 }
 
 /* =========================================================
-   ²İ¸åÖ½
+   è‰ç¨¿çº¸
    ========================================================= */
 let paperCtx = null, drawing = false, lastPt = null;
 let paperBackup = null;
@@ -2427,7 +2427,7 @@ function paintPaperBackground(){
   paperCtx.beginPath(); paperCtx.moveTo(70, 0); paperCtx.lineTo(70, c.height); paperCtx.stroke();
 }
 function closePaper(){
-  /* ±¸·İÄÚÈİ£¬resize ºó»¹Ô­ */
+  /* å¤‡ä»½å†…å®¹ï¼Œresize åè¿˜åŸ */
   const c = paperCanvas;
   paperBackup = document.createElement('canvas');
   paperBackup.width = c.width;
@@ -2484,38 +2484,38 @@ function initPaperEvents(){
 }
 
 /* =========================================================
-   ¾ÙÊÖ¶Ô»°
+   ä¸¾æ‰‹å¯¹è¯
    ========================================================= */
 function callTeacher(){
   if (state.view !== 'world' || state.ended || state.frozen) return;
   if (!teacher){
-    toast('¼à¿¼ÀÏÊ¦ÒÑ¾­ÅÜÁË¡­¡­Ã»ÈËÄÜ°ïÄãÁË¡£', 2000);
+    toast('ç›‘è€ƒè€å¸ˆå·²ç»è·‘äº†â€¦â€¦æ²¡äººèƒ½å¸®ä½ äº†ã€‚', 2000);
     return;
   }
   const opts = [];
   if (!state.bathroomApproved){
     opts.push({
-      text: 'ÀÏÊ¦£¬ÎÒÏëÈ¥Ï´ÊÖ¼ä',
-      reply: 'ºÃ£¬È¥°É¡£³öÃÅÓÒ×ª×ßµ½Í·¾ÍÊÇ¡£¿ìÈ¥¿ì»Ø£¬±ğµ¢ÎóÌ«¾Ã¡£',
+      text: 'è€å¸ˆï¼Œæˆ‘æƒ³å»æ´—æ‰‹é—´',
+      reply: 'å¥½ï¼Œå»å§ã€‚å‡ºé—¨å³è½¬èµ°åˆ°å¤´å°±æ˜¯ã€‚å¿«å»å¿«å›ï¼Œåˆ«è€½è¯¯å¤ªä¹…ã€‚',
       action: () => {
         state.bathroomApproved = true;
-        toast('ÀÏÊ¦Í¬ÒâÁË¡£×ßµ½ÃÅ¿Ú°´ E Àë¿ª¿¼³¡¡£', 3000);
+        toast('è€å¸ˆåŒæ„äº†ã€‚èµ°åˆ°é—¨å£æŒ‰ E ç¦»å¼€è€ƒåœºã€‚', 3000);
       }
     });
   } else {
     opts.push({
-      text: 'ÎÒÒÑ¾­»ñµÃĞí¿ÉÁË',
-      reply: 'àÅ£¬ÄÇÄãÈ¥°É£¬¿ìÈ¥¿ì»Ø¡£'
+      text: 'æˆ‘å·²ç»è·å¾—è®¸å¯äº†',
+      reply: 'å—¯ï¼Œé‚£ä½ å»å§ï¼Œå¿«å»å¿«å›ã€‚'
     });
   }
   opts.push(
-    { text: 'ÎÒÕâµÀÌâ¶Á²»¶®ÌâÒâ', reply: 'ÄãÏÈ×Ô¼ºÔÙ¶ÁÒ»±éÌâÃæ¡£Èç¹ûÈ·ÊµÊÇÌâÄ¿ÃèÊöÓĞÆçÒå£¬ÎÒ»á°ïÄã¼ÇÂ¼£¬µ«²»½âÊÍËã·¨¡£' },
-    { text: 'ÎÒµÄµçÄÔºÃÏñÓĞµãÎÊÌâ', reply: 'ÉÔµÈ£¬ÎÒ¿´¿´¡­¡­àÅ£¬ÖØÆôÒ»ÏÂ±àÒëÆ÷ÊÔÊÔ£¿²»ĞĞµÄ»°ÎÒ¸øÄã»»Ì¨»úÆ÷¡£' },
-    { text: 'ÎÒÏëÔÙÒªÒ»ÕÅ²İ¸åÖ½', reply: 'ºÃµÄ£¬Ò»»á¶ù¸øÄãËÍ¹ıÀ´¡£' },
-    { text: 'Ã»ÊÂÁË£¬Ğ»Ğ»ÀÏÊ¦', reply: 'ºÃµÄ£¬¼ÌĞø¼ÓÓÍ¡£' }
+    { text: 'æˆ‘è¿™é“é¢˜è¯»ä¸æ‡‚é¢˜æ„', reply: 'ä½ å…ˆè‡ªå·±å†è¯»ä¸€éé¢˜é¢ã€‚å¦‚æœç¡®å®æ˜¯é¢˜ç›®æè¿°æœ‰æ­§ä¹‰ï¼Œæˆ‘ä¼šå¸®ä½ è®°å½•ï¼Œä½†ä¸è§£é‡Šç®—æ³•ã€‚' },
+    { text: 'æˆ‘çš„ç”µè„‘å¥½åƒæœ‰ç‚¹é—®é¢˜', reply: 'ç¨ç­‰ï¼Œæˆ‘çœ‹çœ‹â€¦â€¦å—¯ï¼Œé‡å¯ä¸€ä¸‹ç¼–è¯‘å™¨è¯•è¯•ï¼Ÿä¸è¡Œçš„è¯æˆ‘ç»™ä½ æ¢å°æœºå™¨ã€‚' },
+    { text: 'æˆ‘æƒ³å†è¦ä¸€å¼ è‰ç¨¿çº¸', reply: 'å¥½çš„ï¼Œä¸€ä¼šå„¿ç»™ä½ é€è¿‡æ¥ã€‚' },
+    { text: 'æ²¡äº‹äº†ï¼Œè°¢è°¢è€å¸ˆ', reply: 'å¥½çš„ï¼Œç»§ç»­åŠ æ²¹ã€‚' }
   );
-  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ¼à¿¼ÀÏÊ¦';
-  showTeacherDialog('Í¬Ñ§£¬ÓĞÊ²Ã´ÊÂÂğ£¿', opts);
+  dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} ç›‘è€ƒè€å¸ˆ';
+  showTeacherDialog('åŒå­¦ï¼Œæœ‰ä»€ä¹ˆäº‹å—ï¼Ÿ', opts);
 }
 
 function showTeacherDialog(text, options){
@@ -2535,7 +2535,7 @@ function showTeacherDialog(text, options){
       dlgActions.innerHTML = '';
       const c = document.createElement('button');
       c.className = 'btn primary';
-      c.textContent = 'ºÃµÄ';
+      c.textContent = 'å¥½çš„';
       c.onclick = closeTeacherDialog;
       dlgActions.appendChild(c);
     };
@@ -2548,10 +2548,10 @@ function closeTeacherDialog(){
   state.view = 'world';
   crosshair.classList.remove('hidden');
 
-  /* ¹Ø¼üĞŞ¸´£º
-     Èç¹ûÓÃ Esc ¹Øµô¾¯¸æ¶Ô»°¿ò£¨¶ø²»ÊÇµã°´Å¥£©£¬
-     teacherWarnActive »áÒ»Ö±Í£ÔÚ true£¬ÀÏÊ¦Ò²»á¿¨ÔÚ 'warn' Ä£Ê½£¬
-     µ¼ÖÂÖ®ºóÀë¿ª×ùÎ»ÔÙÒ²¼ì²â²»µ½¡£ÕâÀïÍ³Ò»¶µµ×»Ö¸´¡£ */
+  /* å…³é”®ä¿®å¤ï¼š
+     å¦‚æœç”¨ Esc å…³æ‰è­¦å‘Šå¯¹è¯æ¡†ï¼ˆè€Œä¸æ˜¯ç‚¹æŒ‰é’®ï¼‰ï¼Œ
+     teacherWarnActive ä¼šä¸€ç›´åœåœ¨ trueï¼Œè€å¸ˆä¹Ÿä¼šå¡åœ¨ 'warn' æ¨¡å¼ï¼Œ
+     å¯¼è‡´ä¹‹åç¦»å¼€åº§ä½å†ä¹Ÿæ£€æµ‹ä¸åˆ°ã€‚è¿™é‡Œç»Ÿä¸€å…œåº•æ¢å¤ã€‚ */
   if (state.teacherWarnActive){
     state.teacherWarnActive = false;
     state.wanderTimer = 0;
@@ -2562,7 +2562,7 @@ function closeTeacherDialog(){
 }
 
 /* =========================================================
-   ÊÓ½Ç / Íæ¼Ò
+   è§†è§’ / ç©å®¶
    ========================================================= */
 function applyLook(dt){
   let kYaw = 0, kPitch = 0;
@@ -2594,7 +2594,7 @@ const KEYMAP = {
 
 function updatePlayer(dt){
   const sprinting = !!state.keys['shift'];
-  const speed = sprinting ? 5.0 : 3.1;   // Shift ¼ÓËÙ
+  const speed = sprinting ? 5.0 : 3.1;   // Shift åŠ é€Ÿ
   const fwd = new THREE.Vector3(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
   const right = new THREE.Vector3(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
   const move = new THREE.Vector3();
@@ -2608,11 +2608,11 @@ function updatePlayer(dt){
     move.normalize().multiplyScalar(speed * dt);
     const nx = clamp(state.pos.x + move.x, -7.5, 7.5);
     const nz = clamp(state.pos.z + move.z, -6.5, 6.5);
-    /* ·ÖÖá»¬¶¯Åö×² */
+    /* åˆ†è½´æ»‘åŠ¨ç¢°æ’ */
     if (!collides(nx, state.pos.z, 0.28)) state.pos.x = nx;
     if (!collides(state.pos.x, nz, 0.28)) state.pos.z = nz;
 
-    state.bob += dt * (sprinting ? 15 : 11);   // ¼²×ßÊ±½Å²½¸ü¼±´Ù
+    state.bob += dt * (sprinting ? 15 : 11);   // ç–¾èµ°æ—¶è„šæ­¥æ›´æ€¥ä¿ƒ
     if (Math.sin(state.bob) > 0.96 && Math.random() < 0.4) audio.step();
   } else {
     state.bob += dt * 1.2;
@@ -2623,7 +2623,7 @@ function updatePlayer(dt){
 }
 
 /* =========================================================
-   Ğ¡µØÍ¼
+   å°åœ°å›¾
    ========================================================= */
 let mmFrameSkip = 0;
 function drawMinimap(){
@@ -2633,12 +2633,12 @@ function drawMinimap(){
   ctx.fillStyle = 'rgba(10,13,20,.85)';
   ctx.fillRect(0, 0, W, H);
 
-  /* ÊÀ½ç£ºx¡Ê[-8,8], z¡Ê[-7,7] */
+  /* ä¸–ç•Œï¼šxâˆˆ[-8,8], zâˆˆ[-7,7] */
   const sx = W / 16, sy = H / 14;
   const tx = x => (x + 8) * sx;
   const ty = z => (z + 7) * sy;
 
-  /* ÕÏ°­ */
+  /* éšœç¢ */
   ctx.fillStyle = '#2a3242';
   for (const o of obstacles){
     ctx.fillRect(
@@ -2657,7 +2657,7 @@ function drawMinimap(){
     ctx.fill();
   }
 
-  /* ÀÏÊ¦ */
+  /* è€å¸ˆ */
   if (teacher){
     ctx.fillStyle = '#ffcc57';
     ctx.beginPath();
@@ -2665,7 +2665,7 @@ function drawMinimap(){
     ctx.fill();
   }
 
-  /* ±£°² */
+  /* ä¿å®‰ */
   for (const g of securityGuards){
     if (!g.userData.alive) continue;
     const pulse = 0.7 + 0.3 * Math.sin(performance.now() * 0.01);
@@ -2675,7 +2675,7 @@ function drawMinimap(){
     ctx.fill();
   }
 
-  /* Íæ¼Ò + ³¯Ïò */
+  /* ç©å®¶ + æœå‘ */
   const px = tx(state.pos.x), py = ty(state.pos.z);
   ctx.fillStyle = '#5b8cff';
   ctx.beginPath();
@@ -2690,7 +2690,7 @@ function drawMinimap(){
 }
 
 /* =========================================================
-   ´æµµ
+   å­˜æ¡£
    ========================================================= */
 const SAVE_KEY = 'oi_save_v8';
 let autoSaveTimer = null;
@@ -2748,15 +2748,15 @@ function clearSave(){
 }
 
 /* =========================================================
-   ½áËã
+   ç»“ç®—
    ========================================================= */
 function showEnding(score, detailHtml){
   const stats = $('endStats');
   const elapsedSec = state.elapsed / Math.max(1, timeScale);
   stats.innerHTML = `
-    <div class="stat"><div class="sv">${fmtTime(elapsedSec)}</div><div class="sl">Êµ¼ÊÓÃÊ±</div></div>
-    <div class="stat"><div class="sv">${state.warnCount}</div><div class="sl">¾¯¸æ´ÎÊı</div></div>
-    <div class="stat"><div class="sv">${state.guardKills}</div><div class="sl">»÷µ¹±£°²</div></div>
+    <div class="stat"><div class="sv">${fmtTime(elapsedSec)}</div><div class="sl">å®é™…ç”¨æ—¶</div></div>
+    <div class="stat"><div class="sv">${state.warnCount}</div><div class="sl">è­¦å‘Šæ¬¡æ•°</div></div>
+    <div class="stat"><div class="sv">${state.guardKills}</div><div class="sl">å‡»å€’ä¿å®‰</div></div>
   `;
   const achList = $('endAch');
   if (state.achievements.size){
@@ -2774,7 +2774,7 @@ function showEnding(score, detailHtml){
 function endContest(manual){
   if (state.ended) return;
 
-  /* ±¾³¡ÔøÀë¿ª×ùÎ» 5 ´Î ¡ú È¡Ïû³É¼¨ */
+  /* æœ¬åœºæ›¾ç¦»å¼€åº§ä½ 5 æ¬¡ â†’ å–æ¶ˆæˆç»© */
   if (state.wanderPenaltyApplied){
     state.ended = true;
     state.view = 'world';
@@ -2783,12 +2783,12 @@ function endContest(manual){
     securityGuards.length = 0;
     unlockAch('wanderer');
 
-    $('endTitle').textContent = '³É ¼¨ ÒÑ È¡ Ïû';
-    $('endSub').textContent = '±ÈÈü½áÊø¡£ÆÀ²â¼ÇÂ¼ÒÑ·â´æ¡£';
+    $('endTitle').textContent = 'æˆ ç»© å·² å– æ¶ˆ';
+    $('endSub').textContent = 'æ¯”èµ›ç»“æŸã€‚è¯„æµ‹è®°å½•å·²å°å­˜ã€‚';
     showEnding(0,
-      '¼à¿¼ÀÏÊ¦·­¿ª¼ÇÂ¼±¾£¬ÉÏÃæÍêÕû¼Ç×ÅÄãÎå´ÎËæÒâ×ß¶¯µÄÊ±µã¡£\n' +
-      'ÒÀ¾İ¡¶NOI ¾ºÈü¼ÍÂÉ¡·£¬±¾´Î³É¼¨×÷·Ï¡£\n\n' +
-      'ÏÂ´Î¼ÇµÃ£¬¿¼³¡ÀïÃ¿Ò»²½¶¼ÔÚ¾µÍ·ÏÂ¡£');
+      'ç›‘è€ƒè€å¸ˆç¿»å¼€è®°å½•æœ¬ï¼Œä¸Šé¢å®Œæ•´è®°ç€ä½ äº”æ¬¡éšæ„èµ°åŠ¨çš„æ—¶ç‚¹ã€‚\n' +
+      'ä¾æ®ã€ŠNOI ç«èµ›çºªå¾‹ã€‹ï¼Œæœ¬æ¬¡æˆç»©ä½œåºŸã€‚\n\n' +
+      'ä¸‹æ¬¡è®°å¾—ï¼Œè€ƒåœºé‡Œæ¯ä¸€æ­¥éƒ½åœ¨é•œå¤´ä¸‹ã€‚');
     clearSave();
     return;
   }
@@ -2804,38 +2804,38 @@ function endContest(manual){
   state.problems.forEach(p => {
     const sc = state.score[p.id] || 0;
     total += sc;
-    detail.push(`${p.id} ${p.name}£º${sc} / ${p.max}`);
+    detail.push(`${p.id} ${p.name}ï¼š${sc} / ${p.max}`);
   });
 
   if (total === 0) unlockAch('zero_king');
   if (state.warnCount === 0) unlockAch('clean_run');
   if (state.elapsed / timeScale <= 3600) unlockAch('speedrun');
 
-  $('endTitle').textContent = '±È Èü ½á Êø';
-  $('endSub').textContent = 'ÆÀ²â»úÒÑÍ£Ö¹ÔËĞĞ£¬ÄãµÄ´úÂëÒÑ±»·â´æ¡£';
+  $('endTitle').textContent = 'æ¯” èµ› ç»“ æŸ';
+  $('endSub').textContent = 'è¯„æµ‹æœºå·²åœæ­¢è¿è¡Œï¼Œä½ çš„ä»£ç å·²è¢«å°å­˜ã€‚';
   showEnding(total,
     detail.join('\n') +
-    `\n\nÓÃÊ± ${fmtTime(state.elapsed)}¡¡¡¤¡¡±»¾¯¸æ ${state.warnCount} ´Î` +
-    (manual ? '\n£¨ÌáÇ°½»¾í£©' : '\n£¨Ê±¼äµ½£¬×Ô¶¯½»¾í£©')
+    `\n\nç”¨æ—¶ ${fmtTime(state.elapsed)}ã€€Â·ã€€è¢«è­¦å‘Š ${state.warnCount} æ¬¡` +
+    (manual ? '\nï¼ˆæå‰äº¤å·ï¼‰' : '\nï¼ˆæ—¶é—´åˆ°ï¼Œè‡ªåŠ¨äº¤å·ï¼‰')
   );
   clearSave();
 }
 
 /* =========================================================
-   ÊÂ¼ş°ó¶¨
+   äº‹ä»¶ç»‘å®š
    ========================================================= */
 function bindEvents(){
   renderer.domElement.addEventListener('click', () => { doInteract('e'); });
 
   document.addEventListener('keydown', e => {
-    /* ×ßÀÈ */
+    /* èµ°å»Š */
     if (state.view === 'corridor'){
       if (e.code === 'KeyW' || e.code === 'ArrowUp'){
         state.keys['w'] = true; e.preventDefault();
       }
       return;
     }
-    /* Ï´ÊÖ¼ä */
+    /* æ´—æ‰‹é—´ */
     if (state.view === 'bathroom'){
       if (e.code === 'KeyW'){ state.keys['w'] = true; e.preventDefault(); }
       if (e.code === 'Space'){ state.keys['space'] = true; e.preventDefault(); }
@@ -2845,14 +2845,14 @@ function bindEvents(){
       }
       return;
     }
-    /* NPC µçÄÔ */
+    /* NPC ç”µè„‘ */
     if (state.view === 'npcComputer'){
       if (e.code === 'Escape' || e.code === 'KeyE'){
         closeNPCComputer(); e.preventDefault();
       }
       return;
     }
-    /* Esc ¹Ø±ÕÃæ°å */
+    /* Esc å…³é—­é¢æ¿ */
     if (e.code === 'Escape'){
       if (state.view === 'pause'){ closePauseMenu(); return; }
       if (state.view === 'code'){ closeCode(); return; }
@@ -2896,7 +2896,7 @@ function bindEvents(){
     renderer.setSize(innerWidth, innerHeight);
   });
 
-  /* »¬Ìõ */
+  /* æ»‘æ¡ */
   function bindSlider(id, apply){
     const el = $(id);
     if (!el) return;
@@ -2915,7 +2915,7 @@ function bindEvents(){
   bindSlider('volSliderStart',    v => audio.setVolume(v / 100));
   bindSlider('volSlider',         v => audio.setVolume(v / 100));
 
-  /* ¾²Òô¿ª¹Ø */
+  /* é™éŸ³å¼€å…³ */
   const mt = $('muteToggle');
   if (mt){
     mt.classList.toggle('on', !audio.muted);
@@ -2926,21 +2926,21 @@ function bindEvents(){
     };
   }
 
-  /* ÔİÍ£²Ëµ¥°´Å¥ */
+  /* æš‚åœèœå•æŒ‰é’® */
   $('btnResume').onclick = closePauseMenu;
   $('btnPauseEnd').onclick = () => {
-    if (confirm('È·¶¨ÒªÌáÇ°½»¾íÀë³¡Âğ£¿')){
+    if (confirm('ç¡®å®šè¦æå‰äº¤å·ç¦»åœºå—ï¼Ÿ')){
       pauseMenu.classList.add('hidden');
       endContest(true);
     }
   };
-  $('btnSave').onclick = () => { persistSave(); toast('½ø¶ÈÒÑ±£´æ', 1200); };
-  $('btnClearSave').onclick = () => { clearSave(); toast('´æµµÒÑÇå³ı', 1200); };
+  $('btnSave').onclick = () => { persistSave(); toast('è¿›åº¦å·²ä¿å­˜', 1200); };
+  $('btnClearSave').onclick = () => { clearSave(); toast('å­˜æ¡£å·²æ¸…é™¤', 1200); };
 
   $('btnSettings').onclick = openPauseMenu;
   $('btnCloseNPCComp').onclick = closeNPCComputer;
 
-  /* ´úÂë±à¼­Æ÷ */
+  /* ä»£ç ç¼–è¾‘å™¨ */
   codeArea.addEventListener('input', () => {
     saveCode();
     scheduleHighlight();
@@ -2972,14 +2972,14 @@ function bindEvents(){
     const v = codeArea.value.substring(0, codeArea.selectionStart);
     const lines = v.split('\n');
     $('cursorInfo').textContent =
-      `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}  ¡¤  C++14  ¡¤  g++ -O2`;
+      `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}  Â·  C++14  Â·  g++ -O2`;
   }
 
   $('btnSubmit').onclick = submitCode;
   $('btnLeave').onclick = closeCode;
   $('btnReset').onclick = () => {
     const p = state.problems.find(x => x.id === state.curProb);
-    if (confirm('È·¶¨ÒªÖØÖÃ±¾Ìâ´úÂëÂğ£¿')){
+    if (confirm('ç¡®å®šè¦é‡ç½®æœ¬é¢˜ä»£ç å—ï¼Ÿ')){
       codeArea.value = p.starter;
       state.code[state.curProb] = p.starter;
       scheduleHighlight();
@@ -2987,7 +2987,7 @@ function bindEvents(){
   };
   $('btnEnd').onclick = () => {
     if (state.ended) return;
-    if (confirm('È·¶¨ÒªÌáÇ°½»¾íÀë³¡Âğ£¿')) endContest(true);
+    if (confirm('ç¡®å®šè¦æå‰äº¤å·ç¦»åœºå—ï¼Ÿ')) endContest(true);
   };
   $('btnRestart').onclick = () => {
     clearSave();
@@ -2995,9 +2995,9 @@ function bindEvents(){
   };
 
   $('btnClearSaveStart').onclick = () => {
-    if (confirm('È·¶¨ÒªÇå¿Õ´æµµÂğ£¿ÒÑ±£´æµÄ´úÂëºÍ½ø¶È¶¼»á¶ªÊ§¡£')){
+    if (confirm('ç¡®å®šè¦æ¸…ç©ºå­˜æ¡£å—ï¼Ÿå·²ä¿å­˜çš„ä»£ç å’Œè¿›åº¦éƒ½ä¼šä¸¢å¤±ã€‚')){
       clearSave();
-      toast('´æµµÒÑÇå³ı', 1500);
+      toast('å­˜æ¡£å·²æ¸…é™¤', 1500);
     }
   };
 
@@ -3012,14 +3012,14 @@ function bindEvents(){
     state.startTime = performance.now();
     yawTarget = state.yaw; pitchTarget = state.pitch;
     clock.getDelta();
-    toast('±ÈÈü¿ªÊ¼£¡·½Ïò¼ü×ªÉí£¬WASD ÒÆ¶¯£¬E ½»»¥¡£', 2600);
-    /* ³¢ÊÔ»Ö¸´´æµµ */
-    if (tryLoadSave()) toast('ÒÑ»Ö¸´ÉÏ´ÎµÄ´ğÌâ½ø¶È¡£', 2200);
+    toast('æ¯”èµ›å¼€å§‹ï¼æ–¹å‘é”®è½¬èº«ï¼ŒWASD ç§»åŠ¨ï¼ŒE äº¤äº’ã€‚', 2600);
+    /* å°è¯•æ¢å¤å­˜æ¡£ */
+    if (tryLoadSave()) toast('å·²æ¢å¤ä¸Šæ¬¡çš„ç­”é¢˜è¿›åº¦ã€‚', 2200);
   };
 }
 
 /* =========================================================
-   Ö÷Ñ­»·
+   ä¸»å¾ªç¯
    ========================================================= */
 let lastInteractUpdate = 0;
 
@@ -3043,7 +3043,7 @@ function animate(){
 
   updateNPCs(realDt, t);
 
-  /* ÀÏÊ¦ AI */
+  /* è€å¸ˆ AI */
   if (teacher && !state.frozen){
     const tm = teacher.userData;
     const pos = teacher.group.position;
@@ -3099,10 +3099,10 @@ function animate(){
     }
   }
 
-  /* ±£°² */
+  /* ä¿å®‰ */
   updateGuards(realDt, t);
 
-  /* ×ß¶¯¾¯¸æ¼ì²â */
+  /* èµ°åŠ¨è­¦å‘Šæ£€æµ‹ */
   if (state.started && !state.ended && state.view === 'world' && !state.frozen
       && !state.bathroomApproved && !state.teacherWarnActive && teacher
       && teacher.userData.mode === 'patrol'
@@ -3117,13 +3117,13 @@ function animate(){
       state.wanderTimer = 0;
     }
   }
-  /* Àë¿ª×ùÎ» 5 ´Î ¡ú ´¥·¢Ê±¼äËø¶¨ */
+  /* ç¦»å¼€åº§ä½ 5 æ¬¡ â†’ è§¦å‘æ—¶é—´é”å®š */
   if (state.started && !state.ended && !state.wanderPenaltyApplied
     && state.wanderCount >= 5){
     applyWanderPenalty();
   }
 
-  /* ½»»¥ÌáÊ¾£ºÖ»ÔÚ±ØÒªÊ±Ë¢ĞÂ£¨Ã¿ 80ms£© */
+  /* äº¤äº’æç¤ºï¼šåªåœ¨å¿…è¦æ—¶åˆ·æ–°ï¼ˆæ¯ 80msï¼‰ */
   const now = performance.now();
   if (now - lastInteractUpdate > 80){
     lastInteractUpdate = now;
@@ -3145,11 +3145,11 @@ function animate(){
     if (hudScore.dataset.key !== key){
       hudScore.dataset.key = key;
       const guardInfo = alive > 0
-        ? `¡¡<span style="color:#ff6b78;font-size:11px">\u26A0 ±£°² ${alive}</span>`
+        ? `ã€€<span style="color:#ff6b78;font-size:11px">\u26A0 ä¿å®‰ ${alive}</span>`
         : '';
       hudScore.innerHTML =
-        `×Ü·Ö <b>${state.totalScore}</b> / 400¡¡` +
-        `<span style="color:#5d6880;font-size:11px">¾¯¸æ ${state.warnCount} ´Î</span>${guardInfo}`;
+        `æ€»åˆ† <b>${state.totalScore}</b> / 400ã€€` +
+        `<span style="color:#5d6880;font-size:11px">è­¦å‘Š ${state.warnCount} æ¬¡</span>${guardInfo}`;
     }
     drawMinimap();
   }
@@ -3158,7 +3158,7 @@ function animate(){
 }
 
 /* =========================================================
-   ³õÊ¼»¯
+   åˆå§‹åŒ–
    ========================================================= */
 function init(){
   loadViewSettings();
@@ -3207,7 +3207,7 @@ try {
     const d = document.createElement('div');
     d.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);' +
       'background:#3a1a1a;color:#f88;padding:12px 22px;border-radius:8px;z-index:999;font-size:13px';
-    d.textContent = '³õÊ¼»¯Ê§°Ü£º' + e.message + '£¨°´ F12 ²é¿´ÏêÇé£©';
+    d.textContent = 'åˆå§‹åŒ–å¤±è´¥ï¼š' + e.message + 'ï¼ˆæŒ‰ F12 æŸ¥çœ‹è¯¦æƒ…ï¼‰';
     document.body.appendChild(d);
   }
 }

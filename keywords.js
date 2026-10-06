@@ -1,39 +1,39 @@
 'use strict';
 /* =========================================================
-   È«¾Ö¹Ø¼ü×ÖÁĞ±í
-   ËùÓĞÌâÄ¿¹²ÓÃÕâÒ»·İ£¬¼ÓÌâÊ±²»ĞèÒªĞŞ¸ÄÕâÀï
+   å…¨å±€å…³é”®å­—åˆ—è¡¨
+   æ‰€æœ‰é¢˜ç›®å…±ç”¨è¿™ä¸€ä»½ï¼ŒåŠ é¢˜æ—¶ä¸éœ€è¦ä¿®æ”¹è¿™é‡Œ
    ========================================================= */
 
 const KEYWORDS_LIST = [
-  /* »ù±¾ÀàĞÍ */
+  /* åŸºæœ¬ç±»å‹ */
   'int', 'long', 'char', 'float', 'double', 'bool', 'void', 'auto',
   'const', 'unsigned',
 
-  /* ¿ØÖÆÁ÷ */
+  /* æ§åˆ¶æµ */
   'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break',
   'continue', 'return', 'try', 'throw',
 
-  /* ¶¨Òå / ÃüÃû¿Õ¼ä */
+  /* å®šä¹‰ / å‘½åç©ºé—´ */
   'class', 'struct', 'enum', 'template', 'typename',
   'public', 'private', 'namespace', 'using', 'typedef',
 
-  /* STL ÈİÆ÷ */
+  /* STL å®¹å™¨ */
   'vector', 'map', 'set', 'queue', 'stack', 'deque',
   'pair', 'string', 'array',
   'unordered_map', 'unordered_set', 'priority_queue',
 
-  /* STL Ëã·¨ / ²Ù×÷ */
+  /* STL ç®—æ³• / æ“ä½œ */
   'sort', 'reverse', 'unique', 'lower_bound', 'upper_bound',
   'push_back', 'emplace_back', 'begin', 'end', 'size',
 
-  /* ÊäÈëÊä³ö */
+  /* è¾“å…¥è¾“å‡º */
   'cin', 'cout', 'scanf', 'printf', 'endl', 'puts',
   'memset', 'sizeof',
 
-  /* ÊıÑ§ */
+  /* æ•°å­¦ */
   'gcd', 'abs', 'sqrt', 'pow', 'min', 'max',
 
-  /* Ëã·¨¸ÅÄî */
+  /* ç®—æ³•æ¦‚å¿µ */
   'dp', 'dfs', 'bfs', 'lca', 'dijkstra', 'kruskal',
   'dist', 'dep', 'fa', 'prefix', 'mod', 'INF'
 ];
