@@ -899,6 +899,15 @@ function saveViewSettings(){
     }));
   } catch(e){}
 }
+/* 防抖：拖动滑块时避免每次 input 都同步写 localStorage */
+let saveSettingsTimer = null;
+function scheduleSaveViewSettings(){
+  if (saveSettingsTimer) return;
+  saveSettingsTimer = setTimeout(() => {
+    saveSettingsTimer = null;
+    saveViewSettings();
+  }, 400);
+}
 
 function syncViewUI(){
   const tv = turnToSlider(turnSpeed);
@@ -996,7 +1005,7 @@ function buildRoom(){
   addObstacle(0, -D/2 - 0.5, W/2 + 1, 0.5);
   addObstacle(0,  D/2 + 0.5, W/2 + 1, 0.5);
 
-  /* 吊灯 */
+  /* 吊灯（只保留 3 个 PointLight，显示器不再单独挂灯） */
   for (let i = -1; i <= 1; i++){
     const lamp = new THREE.Mesh(
       getBoxGeo(3.4, 0.06, 0.42),
@@ -1145,6 +1154,16 @@ function updateAllDeskScreens(){
   }
 }
 
+/* 合并短时间内的多次调用（例如连续提交），避免 6 张画布反复全量重绘 */
+let deskScreenTimer = null;
+function scheduleDeskScreensUpdate(){
+  if (deskScreenTimer) return;
+  deskScreenTimer = setTimeout(() => {
+    deskScreenTimer = null;
+    updateAllDeskScreens();
+  }, 80);
+}
+
 function buildDesk(x, z, withMonitor){
   const g = new THREE.Group();
   g.position.set(x, 0, z);
@@ -1182,9 +1201,16 @@ function buildDesk(x, z, withMonitor){
     /* 记录以便后续刷新（切题 / 得分 / 读档时重新绘制） */
     deskScreens.push({ ctx: sx, tex: tex });
 
-    const glow = new THREE.PointLight(0x6fa8ff, 0.35, 2.6, 2);
-    glow.position.set(0, 1.26, -0.1);
-    g.add(glow);
+    /* 原先每台显示器一盏 PointLight，累计 6 盏，会把光照 shader 拖慢；
+       这里换成一块微弱自发光平面，零光照开销。 */
+    const glowPanel = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.55, 0.34),
+      new THREE.MeshBasicMaterial({
+        color: 0x35507f, transparent: true, opacity: 0.18, depthWrite: false
+      })
+    );
+    glowPanel.position.set(0, 1.26, -0.06);
+    g.add(glowPanel);
 
     /* 键盘 */
     const kbC = document.createElement('canvas');
@@ -1400,8 +1426,17 @@ function aliveGuardCount(){
   return n;
 }
 
+/* 清理已死亡的保安，防止数组无限增长导致每帧遍历膨胀 */
+function pruneDeadGuards(){
+  for (let i = securityGuards.length - 1; i >= 0; i--){
+    if (!securityGuards[i].userData.alive) securityGuards.splice(i, 1);
+  }
+}
+
 function spawnTwoGuards(){
   if (state.ended) return;
+  pruneDeadGuards();
+
   const baseAngles = [
     Math.random() * Math.PI * 2,
     Math.random() * Math.PI * 2 + Math.PI
@@ -1479,7 +1514,7 @@ function updateInteract(){
     if (!g.userData.alive) continue;
     const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
     if (d < GUARD_PUNCH_RANGE){
-      actionSpace = { fn: () => punchGuard(i) };
+      actionSpace = { fn: () => punchGuard(g) };
       const txt = `[ 空格 ] 殴打保安（距离 ${d.toFixed(1)}m）`;
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
       promptEl.classList.remove('hidden');
@@ -1611,8 +1646,8 @@ function punchTeacher(){
   }, 800);
 }
 
-function punchGuard(idx){
-  const g = securityGuards[idx];
+/* 用引用而非索引：避免数组被 prune 后索引错位 */
+function punchGuard(g){
   if (!g || !g.userData.alive) return;
 
   const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
@@ -1669,14 +1704,12 @@ function updateGuards(realDt, t){
       g.group.rotation.y = Math.atan2(dx, dz);
     }
 
-    /* 这里原来写的是 g.userData.phase，改成 g.phase */
     const v = Math.sin(t * 3.5 + g.phase) * 0.25;
     g.armL.rotation.x = -0.25 + v;
     g.armR.rotation.x = -0.25 - v;
     g.head.rotation.y = Math.sin(t * 2 + g.phase) * 0.25;
 
     if (g.warnLight){
-      /* 这里也一样 */
       const blink = 0.5 + 0.5 * Math.sin(t * 6 + g.phase);
       g.warnLight.material.color.setRGB(1, blink * 0.4, blink * 0.4);
     }
@@ -2090,6 +2123,7 @@ const BATHROOM_STEPS = [
 
 let bathroomStepIdx = 0;
 let bathroomHold = 0;
+let lastBathroomStepIdx = -1;    // 只在步骤切换时重建 dots / 文本
 
 function startBathroom(){
   state.view = 'bathroom';
@@ -2099,29 +2133,37 @@ function startBathroom(){
   bathroomUI.classList.remove('hidden');
   bathroomStepIdx = 0;
   bathroomHold = 0;
+  lastBathroomStepIdx = -1;
   updateBathroomUI();
 }
 
 function updateBathroomUI(){
   const step = BATHROOM_STEPS[bathroomStepIdx];
   if (!step) return;
-  bathStepText.textContent = step.text;
-  bathHint.textContent = step.hint;
-  bathSub.textContent = `第 ${bathroomStepIdx + 1} / ${BATHROOM_STEPS.length} 步`;
+
+  /* 仅在步骤切换时写文本、重建圆点 */
+  if (bathroomStepIdx !== lastBathroomStepIdx){
+    lastBathroomStepIdx = bathroomStepIdx;
+    bathStepText.textContent = step.text;
+    bathHint.textContent = step.hint;
+    bathSub.textContent = `第 ${bathroomStepIdx + 1} / ${BATHROOM_STEPS.length} 步`;
+
+    let html = '';
+    for (let i = 0; i < BATHROOM_STEPS.length; i++){
+      let cls = '';
+      if (i < bathroomStepIdx) cls = 'done';
+      else if (i === bathroomStepIdx) cls = 'on';
+      html += `<i class="${cls}"></i>`;
+    }
+    bathDots.innerHTML = html;
+  }
+
+  /* 每帧只更新进度条宽度 */
   if (step.key === 'e'){
     bathBar.style.width = '100%';
   } else {
     bathBar.style.width = Math.min(100, (bathroomHold / step.hold) * 100) + '%';
   }
-
-  let html = '';
-  for (let i = 0; i < BATHROOM_STEPS.length; i++){
-    let cls = '';
-    if (i < bathroomStepIdx) cls = 'done';
-    else if (i === bathroomStepIdx) cls = 'on';
-    html += `<i class="${cls}"></i>`;
-  }
-  bathDots.innerHTML = html;
 }
 
 function updateBathroom(realDt){
@@ -2238,16 +2280,25 @@ const HL_KEYWORDS = new Set([
   'scanf','printf','puts','putchar','getchar'
 ]);
 
+/* 占位符 & 正则提到模块级，避免每次高亮都重新构造 */
+const HL_TOK = '\x00T';
+const HL_TOK_RE = /\x00T(\d+)\x00/g;
+
+/* 节流：连续输入时最多每 50ms 重建一次高亮 DOM */
 let hlPending = false;
+let hlLastRun = 0;
 function scheduleHighlight(){
   if (hlPending) return;
   hlPending = true;
-  requestAnimationFrame(() => {
+  const now = performance.now();
+  const delay = Math.max(0, 50 - (now - hlLastRun));
+  setTimeout(() => {
     hlPending = false;
+    hlLastRun = performance.now();
     codeHighlight.innerHTML = hlRender(codeArea.value) + '\n';
     codeHighlight.scrollTop = codeArea.scrollTop;
     codeHighlight.scrollLeft = codeArea.scrollLeft;
-  });
+  }, delay);
 }
 
 function hlEscape(s){
@@ -2256,7 +2307,7 @@ function hlEscape(s){
 
 function hlRender(code){
   const tokens = [];
-  const TOK = '\x00T';
+  const TOK = HL_TOK;
   let s = code;
 
   s = s.replace(/\/\*[\s\S]*?\*\//g, m => {
@@ -2291,7 +2342,7 @@ function hlRender(code){
   });
   s = s.replace(/\b(0x[0-9a-fA-F]+|\d+\.?\d*[fFlL]?)\b/g, '<span class="tok-n">$1</span>');
 
-  s = s.replace(new RegExp(TOK + '(\\d+)\\x00','g'), (_,i) => tokens[+i]);
+  s = s.replace(HL_TOK_RE, (_,i) => tokens[+i]);
   return s;
 }
 
@@ -2338,7 +2389,8 @@ function submitCode(){
       recalcScore();
       renderVerdict(prob, res);
       renderProblemList();
-      updateAllDeskScreens();
+      /* 桌面显示器贴图重绘合并到一次调度里 */
+      scheduleDeskScreensUpdate();
       btn.disabled = false;
       if (res.score >= prob.max){
         audio.beep(880, 0.15, 0.05);
@@ -2593,22 +2645,27 @@ const KEYMAP = {
   ArrowUp: 'lookU', ArrowDown: 'lookD',
 };
 
+/* 复用的临时向量，避免每帧 new Vector3 触发 GC */
+const _fwd = new THREE.Vector3();
+const _right = new THREE.Vector3();
+const _move = new THREE.Vector3();
+
 function updatePlayer(dt){
   const sprinting = !!state.keys['shift'];
   const speed = sprinting ? 5.0 : 3.1;   // Shift 加速
-  const fwd = new THREE.Vector3(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
-  const right = new THREE.Vector3(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
-  const move = new THREE.Vector3();
-  if (state.keys['w']) move.add(fwd);
-  if (state.keys['s']) move.sub(fwd);
-  if (state.keys['d']) move.add(right);
-  if (state.keys['a']) move.sub(right);
+  _fwd.set(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
+  _right.set(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
+  _move.set(0, 0, 0);
+  if (state.keys['w']) _move.add(_fwd);
+  if (state.keys['s']) _move.sub(_fwd);
+  if (state.keys['d']) _move.add(_right);
+  if (state.keys['a']) _move.sub(_right);
 
-  const moving = move.lengthSq() > 0;
+  const moving = _move.lengthSq() > 0;
   if (moving){
-    move.normalize().multiplyScalar(speed * dt);
-    const nx = clamp(state.pos.x + move.x, -7.5, 7.5);
-    const nz = clamp(state.pos.z + move.z, -6.5, 6.5);
+    _move.normalize().multiplyScalar(speed * dt);
+    const nx = clamp(state.pos.x + _move.x, -7.5, 7.5);
+    const nz = clamp(state.pos.z + _move.z, -6.5, 6.5);
     /* 分轴滑动碰撞 */
     if (!collides(nx, state.pos.z, 0.28)) state.pos.x = nx;
     if (!collides(state.pos.x, nz, 0.28)) state.pos.z = nz;
@@ -2723,7 +2780,7 @@ function tryLoadSave(){
     const o = JSON.parse(raw);
     if (!o || typeof o !== 'object') return false;
     if (Array.isArray(o.problems) && o.problems.length === 4){
-      const restored = o.problems.map(id => PROBLEM_POOL.find(p => p.id === id)).filter(Boolean);
+      const restored = o.problems.map(id => PROBLEM_BY_ID.get(id)).filter(Boolean);
       if (restored.length === 4){
         state.problems = restored;
         state.curProb = restored[0].id;
@@ -2891,10 +2948,16 @@ function bindEvents(){
 
   window.addEventListener('blur', () => { state.keys = {}; });
 
+  /* resize 防抖：拖窗口时避免反复重建 drawing buffer */
+  let resizeTimer = null;
   window.addEventListener('resize', () => {
-    camera.aspect = innerWidth / innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      forceRedraw = true;
+    }, 150);
   });
 
   /* 滑条 */
@@ -2903,7 +2966,7 @@ function bindEvents(){
     if (!el) return;
     el.addEventListener('input', () => {
       apply(parseFloat(el.value));
-      saveViewSettings();
+      scheduleSaveViewSettings();
       syncViewUI();
     });
   }
@@ -3023,6 +3086,13 @@ function bindEvents(){
    主循环
    ========================================================= */
 let lastInteractUpdate = 0;
+let forceRedraw = false;
+
+/* 这些视图下，3D 世界不可见（被全屏覆盖层盖住），可以跳过 render；
+   其中 code/paper/corridor/bathroom/npcComputer 也跳过世界逻辑更新。 */
+const VIEW_NO_RENDER = new Set([
+  'code','paper','corridor','bathroom','npcComputer','ending','pause','dialog'
+]);
 
 function animate(){
   requestAnimationFrame(animate);
@@ -3034,7 +3104,9 @@ function animate(){
     if (state.elapsed >= CONTEST_LEN) endContest(false);
   }
 
-  if (state.started && !state.ended && state.view === 'world' && !state.frozen){
+  const inWorld = state.view === 'world';
+
+  if (inWorld && state.started && !state.ended && !state.frozen){
     applyLook(realDt);
     updatePlayer(realDt);
   }
@@ -3042,93 +3114,96 @@ function animate(){
   if (state.view === 'corridor') updateCorridor(realDt);
   if (state.view === 'bathroom') updateBathroom(realDt);
 
-  updateNPCs(realDt, t);
+  /* 世界逻辑：只在世界视图下运行，避免在 IDE / 草稿纸里空跑 NPC 与 AI */
+  if (inWorld){
+    updateNPCs(realDt, t);
 
-  /* 老师 AI */
-  if (teacher && !state.frozen){
-    const tm = teacher.userData;
-    const pos = teacher.group.position;
+    /* 老师 AI */
+    if (teacher && !state.frozen){
+      const tm = teacher.userData;
+      const pos = teacher.group.position;
 
-    if (tm.mode === 'patrol'){
-      const theta = t * 0.15;
-      const a = 6.5, b = 5.5, n = 0.7;
-      const c1 = Math.cos(theta), s1 = Math.sin(theta);
-      const c2 = Math.cos(theta + 0.02), s2 = Math.sin(theta + 0.02);
-      const x1 = a * Math.sign(c1) * Math.pow(Math.abs(c1), n);
-      const z1 = b * Math.sign(s1) * Math.pow(Math.abs(s1), n);
-      const x2 = a * Math.sign(c2) * Math.pow(Math.abs(c2), n);
-      const z2 = b * Math.sign(s2) * Math.pow(Math.abs(s2), n);
-      pos.x = x1;
-      pos.z = z1;
-      teacher.group.rotation.y = Math.atan2(x2 - x1, z2 - z1);
-      pos.y = Math.abs(Math.sin(t * 4)) * 0.008;
-    } else if (tm.mode === 'approach'){
-      const dx = state.pos.x - pos.x;
-      const dz = state.pos.z - pos.z;
-      const d = Math.hypot(dx, dz);
-      if (d < 1.4){
-        tm.mode = 'warn';
+      if (tm.mode === 'patrol'){
+        const theta = t * 0.15;
+        const a = 6.5, b = 5.5, n = 0.7;
+        const c1 = Math.cos(theta), s1 = Math.sin(theta);
+        const c2 = Math.cos(theta + 0.02), s2 = Math.sin(theta + 0.02);
+        const x1 = a * Math.sign(c1) * Math.pow(Math.abs(c1), n);
+        const z1 = b * Math.sign(s1) * Math.pow(Math.abs(s1), n);
+        const x2 = a * Math.sign(c2) * Math.pow(Math.abs(c2), n);
+        const z2 = b * Math.sign(s2) * Math.pow(Math.abs(s2), n);
+        pos.x = x1;
+        pos.z = z1;
+        teacher.group.rotation.y = Math.atan2(x2 - x1, z2 - z1);
+        pos.y = Math.abs(Math.sin(t * 4)) * 0.008;
+      } else if (tm.mode === 'approach'){
+        const dx = state.pos.x - pos.x;
+        const dz = state.pos.z - pos.z;
+        const d = Math.hypot(dx, dz);
+        if (d < 1.4){
+          tm.mode = 'warn';
+          teacher.group.rotation.y = Math.atan2(dx, dz);
+          showTeacherWarning();
+        } else {
+          const sp = 3.2 * realDt;
+          const nx = pos.x + (dx / d) * sp;
+          const nz = pos.z + (dz / d) * sp;
+          if (!collides(nx, pos.z, 0.3)) pos.x = nx;
+          if (!collides(pos.x, nz, 0.3)) pos.z = nz;
+          teacher.group.rotation.y = Math.atan2(dx, dz);
+        }
+      } else if (tm.mode === 'warn'){
+        const dx = state.pos.x - pos.x;
+        const dz = state.pos.z - pos.z;
         teacher.group.rotation.y = Math.atan2(dx, dz);
-        showTeacherWarning();
+      } else if (tm.mode === 'returning'){
+        const theta = t * 0.15;
+        const a = 6.5, b = 5.5, n = 0.7;
+        const c = Math.cos(theta), s = Math.sin(theta);
+        const targetX = a * Math.sign(c) * Math.pow(Math.abs(c), n);
+        const targetZ = b * Math.sign(s) * Math.pow(Math.abs(s), n);
+        const dx = targetX - pos.x;
+        const dz = targetZ - pos.z;
+        const d = Math.hypot(dx, dz);
+        if (d < 0.3) tm.mode = 'patrol';
+        else {
+          const sp = 3.0 * realDt;
+          pos.x += (dx / d) * sp; pos.z += (dz / d) * sp;
+          teacher.group.rotation.y = Math.atan2(dx, dz);
+        }
+      }
+    }
+
+    /* 保安 */
+    updateGuards(realDt, t);
+
+    /* 走动警告检测 */
+    if (state.started && !state.ended && !state.frozen
+        && !state.bathroomApproved && !state.teacherWarnActive && teacher
+        && teacher.userData.mode === 'patrol'
+        && securityGuards.length === 0){
+      const dx = state.pos.x - 0;
+      const dz = state.pos.z - (-3);
+      const distFromSeat = Math.hypot(dx, dz);
+      if (distFromSeat > 3.5){
+        state.wanderTimer += realDt;
+        if (state.wanderTimer > 2.0) triggerTeacherWarning();
       } else {
-        const sp = 3.2 * realDt;
-        const nx = pos.x + (dx / d) * sp;
-        const nz = pos.z + (dz / d) * sp;
-        if (!collides(nx, pos.z, 0.3)) pos.x = nx;
-        if (!collides(pos.x, nz, 0.3)) pos.z = nz;
-        teacher.group.rotation.y = Math.atan2(dx, dz);
-      }
-    } else if (tm.mode === 'warn'){
-      const dx = state.pos.x - pos.x;
-      const dz = state.pos.z - pos.z;
-      teacher.group.rotation.y = Math.atan2(dx, dz);
-    } else if (tm.mode === 'returning'){
-      const theta = t * 0.15;
-      const a = 6.5, b = 5.5, n = 0.7;
-      const c = Math.cos(theta), s = Math.sin(theta);
-      const targetX = a * Math.sign(c) * Math.pow(Math.abs(c), n);
-      const targetZ = b * Math.sign(s) * Math.pow(Math.abs(s), n);
-      const dx = targetX - pos.x;
-      const dz = targetZ - pos.z;
-      const d = Math.hypot(dx, dz);
-      if (d < 0.3) tm.mode = 'patrol';
-      else {
-        const sp = 3.0 * realDt;
-        pos.x += (dx / d) * sp; pos.z += (dz / d) * sp;
-        teacher.group.rotation.y = Math.atan2(dx, dz);
+        state.wanderTimer = 0;
       }
     }
-  }
-
-  /* 保安 */
-  updateGuards(realDt, t);
-
-  /* 走动警告检测 */
-  if (state.started && !state.ended && state.view === 'world' && !state.frozen
-      && !state.bathroomApproved && !state.teacherWarnActive && teacher
-      && teacher.userData.mode === 'patrol'
-      && securityGuards.length === 0){
-    const dx = state.pos.x - 0;
-    const dz = state.pos.z - (-3);
-    const distFromSeat = Math.hypot(dx, dz);
-    if (distFromSeat > 3.5){
-      state.wanderTimer += realDt;
-      if (state.wanderTimer > 2.0) triggerTeacherWarning();
-    } else {
-      state.wanderTimer = 0;
+    /* 离开座位 5 次 → 触发时间锁定 */
+    if (state.started && !state.ended && !state.wanderPenaltyApplied
+      && state.wanderCount >= 5){
+      applyWanderPenalty();
     }
-  }
-  /* 离开座位 5 次 → 触发时间锁定 */
-  if (state.started && !state.ended && !state.wanderPenaltyApplied
-    && state.wanderCount >= 5){
-    applyWanderPenalty();
-  }
 
-  /* 交互提示：只在必要时刷新（每 80ms） */
-  const now = performance.now();
-  if (now - lastInteractUpdate > 80){
-    lastInteractUpdate = now;
-    updateInteract();
+    /* 交互提示：只在必要时刷新（每 80ms） */
+    const now = performance.now();
+    if (now - lastInteractUpdate > 80){
+      lastInteractUpdate = now;
+      updateInteract();
+    }
   }
 
   /* HUD */
@@ -3155,7 +3230,11 @@ function animate(){
     drawMinimap();
   }
 
-  renderer.render(scene, camera);
+  /* 关键优化：IDE / 草稿纸 / 走廊等视图下跳过渲染 */
+  if (!VIEW_NO_RENDER.has(state.view) || forceRedraw){
+    renderer.render(scene, camera);
+    forceRedraw = false;
+  }
 }
 
 /* =========================================================
@@ -3170,7 +3249,8 @@ function init(){
     antialias: true,
     powerPreference: 'high-performance'
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  /* DPR 上限改为 1.5：视觉差异极小，但填充率大幅下降 */
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(innerWidth, innerHeight);
   if (THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
 

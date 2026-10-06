@@ -4,6 +4,10 @@
    加题：往 PROBLEM_POOL 数组末尾 push 一个新对象即可
    每题字段：id / name / desc / starter
    所有题面来自洛谷原题，数据范围完整
+
+   优化点：
+     1. 新增 PROBLEM_BY_ID（Map 索引），按 id 查找从 O(n) 降为 O(1)
+     2. pickProblems 改用部分 Fisher-Yates 洗牌
    ========================================================= */
 
 const STARTER_TEMPLATE = `#include <bits/stdc++.h>
@@ -1192,15 +1196,22 @@ Subtask #4 | 2×10^5 | 2×10^5 | 1000 | 无 | 30
 ];
 
 /* =========================================================
+   按 id 索引：O(1) 查找（供 tryLoadSave / 未来功能使用）
+   ========================================================= */
+const PROBLEM_BY_ID = new Map(PROBLEM_POOL.map(p => [p.id, p]));
+
+/* =========================================================
    抽题：从题库随机抽 4 道
+   部分 Fisher-Yates 洗牌：只洗前 count 个，避免 splice 的 O(n) 挪动
    ========================================================= */
 function pickProblems(){
 	const pool = PROBLEM_POOL.slice();
-	const picked = [];
 	const count = Math.min(4, pool.length);
 	for (let i = 0; i < count; i++){
-		const idx = Math.floor(Math.random() * pool.length);
-		picked.push(pool.splice(idx, 1)[0]);
+		const j = i + Math.floor(Math.random() * (pool.length - i));
+		const tmp = pool[i];
+		pool[i] = pool[j];
+		pool[j] = tmp;
 	}
-	return picked;
+	return pool.slice(0, count);
 }
