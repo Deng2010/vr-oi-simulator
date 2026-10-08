@@ -54,6 +54,7 @@ const state = {
   bob: 0,
   warnCount: 0, wanderTimer: 0,
   teacherWarnActive: false, bathroomApproved: false,
+  teacherDown: false,             // 是否已打倒监考（决定同学可否被攻击）
   guardKills: 0, submitCount: {}, achievements: new Set(),
   guardsSpawned: 0,
   defiance: 0,                // 违抗保安通报的次数（推高紧张值）

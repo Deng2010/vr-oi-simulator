@@ -33,8 +33,10 @@ function updateInteract(){
     if (!g.userData.alive) continue;
     const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
     if (d < GUARD_PUNCH_RANGE){
-      actionSpace = { fn: () => punchGuard(g) };
-      const txt = `[ 左键 ] 殴打保安（距离 ${d.toFixed(1)}m）`;
+      /* 扇形窗口内才判定命中；出拳会扫倒范围内全部保安 */
+      if (!inAttackArc(g.group.position.x, g.group.position.z)) continue;
+      actionSpace = { fn: punchGuardsArc };
+      const txt = `[ 左键 ] 出拳（拳锋 ${GUARD_PUNCH_RANGE.toFixed(1)}m · 前方扇形）`;
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
       promptEl.classList.remove('hidden');
       return;
@@ -45,7 +47,9 @@ function updateInteract(){
   if (teacher && !teacher.userData.leaving){
     const d = Math.hypot(state.pos.x - teacher.group.position.x,
                          state.pos.z - teacher.group.position.z);
-    if (d < 2.4 && teacher.userData.mode !== 'warn'){
+    /* 同样要求落在视角扇形窗口内 */
+    if (d < 2.4 && teacher.userData.mode !== 'warn' &&
+        inAttackArc(teacher.group.position.x, teacher.group.position.z)){
       actionSpace = { fn: punchTeacher };
       const txt = '[ 左键 ] 殴打监考老师（后果自负）';
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
@@ -62,6 +66,19 @@ function updateInteract(){
     const d = Math.hypot(state.pos.x - ud.seatX, state.pos.z - ud.seatZ);
     if (d < 2.3){
       if (ud.state === 'seated'){
+        /* 监考倒台之后，同学也进入可攻击范围（此前不应有此交互） */
+        if (state.teacherDown){
+          const dBody = Math.hypot(state.pos.x - n.group.position.x,
+                                   state.pos.z - n.group.position.z);
+          if (dBody <= GUARD_PUNCH_RANGE &&
+              inAttackArc(n.group.position.x, n.group.position.z)){
+            actionSpace = { fn: () => downNPC(n) };
+            const txt = `[ 左键 ] 殴打同学 ${ud.name}（他已经不敢告老师了）`;
+            if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
+            promptEl.classList.remove('hidden');
+            return;
+          }
+        }
         /* 干扰的判定从"座位 2.3m"收紧到"他的人"：以身体实际位置为圆心 */
         const dBody = Math.hypot(state.pos.x - n.group.position.x,
                                  state.pos.z - n.group.position.z);

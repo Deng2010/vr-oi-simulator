@@ -18,6 +18,12 @@ function punchTeacher(){
     toast('你离监考老师太远了。', 1400);
     return;
   }
+  /* 同样受视角扇形窗口约束 */
+  if (!inAttackArc(teacher.group.position.x, teacher.group.position.z)){
+    teacher.userData.leaving = false;
+    toast('你一拳打向了空气——对准老师再来。', 1300);
+    return;
+  }
 
   const dx = state.pos.x - teacher.group.position.x;
   const dz = state.pos.z - teacher.group.position.z;
@@ -34,6 +40,8 @@ function punchTeacher(){
 
   toast('\u{1F44A} 你一拳打在了监考老师的胳膊上……', 1600);
   unlockAch('teacher_hit');
+  /* 监考已倒：从这一刻起同学也可以打了 */
+  state.teacherDown = true;
 
   setTimeout(() => {
     if (teacher){
@@ -53,50 +61,82 @@ function punchTeacher(){
   }, 800);
 }
 
+/* ---------- 攻击判定窗口 ----------
+   距离之外再加视角扇形：只有落在准星前 GUARD_PUNCH_ARC 弧度内的
+   目标才算"在拳范围内"。半角 0.9rad ≈ 51°，比 360° 球判定收紧很多。 */
+const GUARD_PUNCH_ARC = 0.9;
+
+function inAttackArc(x, z){
+  const fx = -Math.sin(state.yaw), fz = -Math.cos(state.yaw);
+  const tx = x - state.pos.x, tz = z - state.pos.z;
+  const len = Math.hypot(tx, tz);
+  if (len < 1e-4) return true;                 // 贴身也算
+  return (fx * tx + fz * tz) / len > Math.cos(GUARD_PUNCH_ARC);
+}
+
+/* 统计当前拳范围内（距离 + 扇形）的活保安 */
+function guardsInPunchRange(){
+  const out = [];
+  for (const g of securityGuards){
+    if (!g.userData.alive) continue;
+    const d = Math.hypot(state.pos.x - g.group.position.x,
+                         state.pos.z - g.group.position.z);
+    if (d <= GUARD_PUNCH_RANGE + 0.3 &&
+        inAttackArc(g.group.position.x, g.group.position.z)) out.push(g);
+  }
+  return out;
+}
+
 /* 用引用而非索引：避免数组被 prune 后索引错位 */
-function punchGuard(g){
-  if (!g || !g.userData.alive) return;
-
-  const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
-  if (d > GUARD_PUNCH_RANGE + 0.3){
-    toast('你离保安太远了。', 1200);
-    return;
-  }
-
+/* 击倒单个保安（扫拳的单元）。返回 false 表示本回合已结束（隐藏结局） */
+function killGuard(g){
+  if (!g || !g.userData.alive) return true;
   g.userData.alive = false;
-  state.guardKills++;
-  /* 打完全部名额 → 隐藏结局 */
-  if (state.guardKills >= GUARD_MAX_TOTAL){
-    spawnBodyDebris(g.group, { speed: 3.9 });
-    scene.remove(g.group);
-    audio.punch();
-    kickView(0.06, (Math.random() - 0.5) * 0.06);
-    hitStop = 0.09;
-    endByTotalVictory();
-    return;
-  }
   /* 先炸散再移除组：部件已摘到场景里，带物理飞走 */
   spawnBodyDebris(g.group, { speed: 3.9 });
   scene.remove(g.group);
+  state.guardKills++;
+  if (state.guardKills >= GUARD_MAX_TOTAL){
+    endByTotalVictory();
+    return false;
+  }
+  return true;
+}
 
+/* 一拳扫倒拳范围内所有保安（不是只有一个） */
+function punchGuardsArc(){
+  const victims = guardsInPunchRange();
+  if (!victims.length){
+    toast('你的拳头抡了个空。', 1100);
+    return;
+  }
+
+  let n = 0;
+  for (const g of victims){
+    if (!killGuard(g)){ n++; break; }     // 触发隐藏结局，停止结算
+    n++;
+  }
+  if (state.ended) return;
+
+  /* 打击感：视角回弹 + 顿帧（比打老师更重），多杀更猛 */
   audio.punch();
-
-  /* 打击感：视角回弹 + 顿帧（比打老师更重） */
   kickView(0.06, (Math.random() - 0.5) * 0.06);
-  hitStop = 0.09;
+  hitStop = 0.09 + Math.min(0.06, n * 0.02);
 
-  /* 击杀里程碑成就 + 随机保安警告窗 */
+  toast(n > 1 ? `\u{1F44A} 一拳放倒了 ${n} 名保安！` : '\u{1F44A} 一拳撂倒了一个保安！', 1500);
   checkGuardKillMilestones(state.guardKills);
+  /* 一整拳只掷一次警告，避免连杀弹出一堆面板 */
   maybeGuardWarning();
 
-  toast('\u{1F44A} 一拳撂倒了一个保安！', 1500);
-
-  setTimeout(() => {
-    if (state.ended) return;
-    spawnTwoGuards();
-    toast('门口又冲进来两名替补保安……', 1700);
-    audio.beep(200, 0.3, 0.06, 'sawtooth');
-  }, 900);
+  /* 每倒一名补一批，错开进场避免叠在一起 */
+  for (let i = 0; i < n; i++){
+    setTimeout(() => {
+      if (state.ended) return;
+      spawnTwoGuards();
+      if (i === 0) toast('门口又冲进来两名替补保安……', 1700);
+      audio.beep(200, 0.3, 0.06, 'sawtooth');
+    }, 900 + i * 260);
+  }
 }
 
 /* =========================================================

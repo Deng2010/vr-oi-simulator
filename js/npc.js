@@ -135,6 +135,17 @@ function closeNPCComputer(){
   requestLock();
 }
 
+/* 放倒同学（监考倒台后才可用）：部件炸散、组退场。
+   ud.state 置为 'down'，updateNPCs 的状态机不认识该状态，会自然跳过。 */
+function downNPC(n){
+  if (!n || n.userData.state === 'down') return false;
+  spawnBodyDebris(n.group, { speed: 3.2 });
+  scene.remove(n.group);
+  n.userData.state = 'down';
+  n.userData.anger = 0;
+  return true;
+}
+
 /* ---------- 投诉 ---------- */
 function triggerNPCComplaint(name){
   /* 同学告老师：3D 悬浮弹窗，点"我知道了"消除，鼠标吸附不中断 */
