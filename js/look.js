@@ -1,0 +1,159 @@
+'use strict';
+/* =========================================================
+   look —— FPS 视角 / 指针锁定 / 玩家移动 / 小地图
+   （自 index.html 内联脚本拆出）
+   ========================================================= */
+/* =========================================================
+   视角 / 玩家
+   ========================================================= */
+function applyLook(dt){
+  /* 旋转输入由 mousemove（指针锁定）写入 yawTarget / pitchTarget，
+     这里只负责平滑插值与俯仰限位 */
+  pitchTarget = clamp(pitchTarget, -1.35, 1.35);
+
+  if (smoothAmount < 0.01){
+    state.yaw = yawTarget;
+    state.pitch = pitchTarget;
+  } else {
+    const tau = smoothAmount * 0.16;
+    const k = 1 - Math.exp(-dt / Math.max(tau, 0.001));
+    state.yaw   += (yawTarget   - state.yaw)   * k;
+    state.pitch += (pitchTarget - state.pitch) * k;
+  }
+}
+
+/* =========================================================
+   指针锁定：FPS 式鼠标捕获
+   ========================================================= */
+const LOOK_VIEWS = new Set(['world']);   // 仅世界视图捕获鼠标（走廊/IDE/面板一律释放）
+const MAX_MOUSE_STEP = 80;               // 单次位移钳制（px），防异常跳变
+let pointerLocked = false;
+let lastLockAt = 0;
+
+function lockElement(){
+  return renderer ? renderer.domElement : document.body;
+}
+function canLockView(){
+  return LOOK_VIEWS.has(state.view) && state.started && !state.ended;
+}
+function requestLock(){
+  if (pointerLocked || !renderer || !canLockView()) return;
+  const el = lockElement();
+  if (!el.requestPointerLock) return;
+  try {
+    /* 新版 Chrome 返回 Promise；Esc 后短时间内申请会被拒绝，静默即可 */
+    const r = el.requestPointerLock();
+    if (r && typeof r.catch === 'function') r.catch(() => {});
+  } catch(e){}
+}
+function releaseLock(){
+  if (!pointerLocked) return;
+  try { document.exitPointerLock(); } catch(e){}
+}
+
+const KEYMAP = {
+  KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd',
+  ShiftLeft: 'shift', ShiftRight: 'shift',
+};
+
+/* 复用的临时向量，避免每帧 new Vector3 触发 GC */
+const _fwd = new THREE.Vector3();
+const _right = new THREE.Vector3();
+const _move = new THREE.Vector3();
+
+function updatePlayer(dt){
+  const sprinting = !!state.keys['shift'];
+  const speed = sprinting ? 5.0 : 3.1;   // Shift 加速
+  _fwd.set(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
+  _right.set(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
+  _move.set(0, 0, 0);
+  if (state.keys['w']) _move.add(_fwd);
+  if (state.keys['s']) _move.sub(_fwd);
+  if (state.keys['d']) _move.add(_right);
+  if (state.keys['a']) _move.sub(_right);
+
+  const moving = _move.lengthSq() > 0;
+  if (moving){
+    _move.normalize().multiplyScalar(speed * dt);
+    const nx = clamp(state.pos.x + _move.x, -7.5, 7.5);
+    const nz = clamp(state.pos.z + _move.z, -6.5, 6.5);
+    /* 分轴滑动碰撞 */
+    if (!collides(nx, state.pos.z, 0.28)) state.pos.x = nx;
+    if (!collides(state.pos.x, nz, 0.28)) state.pos.z = nz;
+
+    state.bob += dt * (sprinting ? 15 : 11);   // 疾走时脚步更急促
+    if (Math.sin(state.bob) > 0.96 && Math.random() < 0.4) audio.step();
+  } else {
+    state.bob += dt * 1.2;
+  }
+  const bobY = moving ? Math.sin(state.bob) * 0.022 : Math.sin(state.bob) * 0.004;
+  camera.position.set(state.pos.x, 1.65 + bobY, state.pos.z);
+  camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
+}
+
+/* =========================================================
+   小地图
+   ========================================================= */
+let mmFrameSkip = 0;
+function drawMinimap(){
+  if (++mmFrameSkip % 4 !== 0) return;
+  const c = minimap, ctx = mmCtx;
+  const W = c.width, H = c.height;
+  ctx.fillStyle = 'rgba(10,13,20,.85)';
+  ctx.fillRect(0, 0, W, H);
+
+  /* 世界：x∈[-8,8], z∈[-7,7] */
+  const sx = W / 16, sy = H / 14;
+  const tx = x => (x + 8) * sx;
+  const ty = z => (z + 7) * sy;
+
+  /* 障碍 */
+  ctx.fillStyle = '#2a3242';
+  for (const o of obstacles){
+    ctx.fillRect(
+      tx(o.x - o.hw), ty(o.z - o.hd),
+      o.hw * 2 * sx, o.hd * 2 * sy
+    );
+  }
+
+  /* NPC */
+  for (const n of npcs){
+    const ud = n.userData;
+    if (!ud) continue;
+    ctx.fillStyle = ud.state === 'seated' ? '#6a7a9a' : '#c08050';
+    ctx.beginPath();
+    ctx.arc(tx(n.group.position.x), ty(n.group.position.z), 2.2, 0, 7);
+    ctx.fill();
+  }
+
+  /* 老师 */
+  if (teacher){
+    ctx.fillStyle = '#ffcc57';
+    ctx.beginPath();
+    ctx.arc(tx(teacher.group.position.x), ty(teacher.group.position.z), 2.8, 0, 7);
+    ctx.fill();
+  }
+
+  /* 保安 */
+  for (const g of securityGuards){
+    if (!g.userData.alive) continue;
+    const pulse = 0.7 + 0.3 * Math.sin(performance.now() * 0.01);
+    ctx.fillStyle = `rgba(255,68,68,${pulse})`;
+    ctx.beginPath();
+    ctx.arc(tx(g.group.position.x), ty(g.group.position.z), 3.2, 0, 7);
+    ctx.fill();
+  }
+
+  /* 玩家 + 朝向 */
+  const px = tx(state.pos.x), py = ty(state.pos.z);
+  ctx.fillStyle = '#5b8cff';
+  ctx.beginPath();
+  ctx.arc(px, py, 3.4, 0, 7);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(91,140,255,.85)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px - Math.sin(state.yaw) * 9, py - Math.cos(state.yaw) * 9);
+  ctx.stroke();
+}
