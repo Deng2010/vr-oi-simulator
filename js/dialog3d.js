@@ -34,10 +34,14 @@ const DLG_SPAWN_YAW   = 0.15;   // 生成时相对准心的随机偏航（弧度
 const DLG_SPAWN_PITCH = 0.11;   // 生成时相对准心的随机俯仰（弧度，约 ±6.3°）
 const DLG_CANVAS_W    = 1000;   // 画布像素尺寸（决定文字清晰度）
 const DLG_CANVAS_H    = 600;
-const DLG_WORLD_H     = 0.62;   // 画板世界高度（米），宽度按画布比例推算
+const DLG_WORLD_H     = 0.744;  // 画板世界高度（米），宽度按画布比例推算
 const DLG_STIFFNESS   = 90;     // 弹簧刚度（欠阻尼 → 轻微过冲回摆）
 const DLG_DAMPING     = 9;
 const DLG_MAX_LEAN    = 0.32;   // 转身带来的最大附加滚转角（弧度）
+const DLG_DWELL_TIME  = 1.0;    // 视线停留确认时长（秒）
+const DLG_DWELL_DECAY = 0.32;   // 未对准时进度倒退速度（秒清空）
+const DLG_DWELL_LOCK  = 0.45;   // 触发后的冷却，防止同按钮立刻重复触发
+const DLG_STACK_STEP  = 0.22;   // 叠放时每层半径增量
 
 /* 面板配色，与 CSS 变量保持一致 */
 const DLG_COL = {
@@ -50,6 +54,10 @@ const DLG_COL = {
 const dialogs = [];              // 现存弹窗（通常同时只有一个）
 const dlgGeo = new THREE.PlaneGeometry(1, 1);   // 共享几何，按 mesh.scale 缩放到目标尺寸
 let dlgHoverBtn = null;          // 当前准心/鼠标指向的 { dlg, idx }
+let dwellProgress = 0;           // 视线停留进度 0..1
+let dwellKey = '';               // 当前停留的按钮标识（序号:索引）
+let dwellCooldown = 0;           // 触发后的剩余冷却，防止立刻重复触发
+let dlgSeq = 0;                  // 弹窗序号（仅用于 dwellKey 标识）
 const dlgMouseNdc = new THREE.Vector2(0, 0);    // 未锁指针时的鼠标位置（NDC）
 const _dlgFwd    = new THREE.Vector3();
 const _dlgEuler  = new THREE.Euler();
@@ -61,9 +69,6 @@ const _dlgAcc    = new THREE.Vector3();
    打开 / 关闭
    ========================================================= */
 function openDialog(opts){
-  /* 同时只保留一个弹窗：旧的立刻收起（不触发其按钮回调） */
-  while (dialogs.length) closeDialog(dialogs[0]);
-
   /* canvas + 贴图 + 画板 */
   const canvas = document.createElement('canvas');
   canvas.width = DLG_CANVAS_W;
@@ -80,10 +85,17 @@ function openDialog(opts){
   mesh.frustumCulled = false;
   scene.add(mesh);
 
-  /* 生成方向：当前准心方向叠加小幅随机偏移，之后固定在世界系 */
+  /* 生成方向：当前准心方向叠加小幅随机偏移，之后固定在世界系。
+     叠放：第 si 块面板按奇偶向两侧扇形展开、逐层后退，互不遮挡 */
+  const si = dialogs.length;
+  const side = si % 2 ? 1 : -1;
+  const layer = (si / 2) | 0;
+  const rad = DLG_RADIUS + DLG_STACK_STEP * si;
   _dlgFwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
-  _dlgEuler.set((Math.random() * 2 - 1) * DLG_SPAWN_PITCH,
-                (Math.random() * 2 - 1) * DLG_SPAWN_YAW, 0, 'YXZ');
+  _dlgEuler.set((Math.random() * 2 - 1) * DLG_SPAWN_PITCH +
+                  (layer % 2 ? 1 : -1) * 0.09 * (layer + 1),
+                (Math.random() * 2 - 1) * DLG_SPAWN_YAW +
+                  side * (0.34 + 0.22 * layer), 0, 'YXZ');
   _dlgQuat.setFromEuler(_dlgEuler);
   _dlgFwd.applyQuaternion(_dlgQuat).normalize();
 
@@ -93,14 +105,15 @@ function openDialog(opts){
     text: opts.text || '',
     options: (opts.options || []).map(o => ({ label: o.label, cb: o.cb })),
     dir: _dlgFwd.clone(),          // 世界系固定方向
+    rad,                          // 本面板的球面半径（叠放时逐层增大）
     center: camera,                // 球心 = 相机（追随玩家）
     pos: new THREE.Vector3(),      // 当前实际位置（弹簧驱动）
     vel: new THREE.Vector3(),
     buttons: [], textMaxH: 0,
-    hover: -1, lean: 0, lastYaw: state.yaw
+    hover: -1, lean: 0, lastYaw: state.yaw, id: ++dlgSeq
   };
   /* 初始落位略近并给一点外抛速度，让弹窗"弹"到球面上 */
-  _dlgTarget.copy(camera.position).addScaledVector(dlg.dir, DLG_RADIUS);
+  _dlgTarget.copy(camera.position).addScaledVector(dlg.dir, rad);
   dlg.pos.copy(_dlgTarget).addScaledVector(dlg.dir, -0.28);
   dlg.vel.copy(dlg.dir).multiplyScalar(0.7);
 
@@ -116,8 +129,12 @@ function closeDialog(dlg){
   scene.remove(dlg.mesh);
   dlg.tex.dispose();
   dlg.mesh.material.dispose();
-  if (dlgHoverBtn && dlgHoverBtn.dlg === dlg) dlgHoverBtn = null;
-  crosshair.classList.remove('hot');
+  /* 正在注视的面板被关掉时，顺带清掉停留进度 */
+  if (dlgHoverBtn && dlgHoverBtn.dlg === dlg){
+    dlgHoverBtn = null;
+    dwellProgress = 0;
+    dwellKey = '';
+  }
 }
 
 /* 收场用：无条件收起全部弹窗（不触发按钮回调） */
@@ -168,52 +185,85 @@ function selectDialogOption(n){
 }
 
 /* =========================================================
-   每帧更新：惯性追随 + 相切朝向 + 准心拾取
+   每帧更新：惯性追随 + 相切朝向 + 全局拾取 + 视线停留
+   多面板并存时逐块更新物理，拾取对所有面板取最近命中。
    ========================================================= */
 function updateDialogs(dt){
   if (!dialogs.length){
-    if (dlgHoverBtn){ dlgHoverBtn = null; crosshair.classList.remove('hot'); }
+    dlgHoverBtn = null;
+    dwellProgress = 0;
+    dwellKey = '';
     return;
   }
-  const dlg = dialogs[dialogs.length - 1];
+  if (dwellCooldown > 0) dwellCooldown -= dt;
 
-  /* 1. 位置：欠阻尼弹簧追踪球面目标点（球心 = 相机，追随玩家平移） */
-  _dlgTarget.copy(dlg.center.position).addScaledVector(dlg.dir, DLG_RADIUS);
-  _dlgAcc.copy(_dlgTarget).sub(dlg.pos).multiplyScalar(DLG_STIFFNESS)
-         .addScaledVector(dlg.vel, -DLG_DAMPING);
-  dlg.vel.addScaledVector(_dlgAcc, dt);
-  dlg.pos.addScaledVector(dlg.vel, dt);
-  dlg.mesh.position.copy(dlg.pos);
+  /* 1. 每块面板：欠阻尼弹簧追踪各自球面目标点 + 相切朝向 + 转身拖尾 */
+  const prevHover = dialogs.map(d => d.hover);
+  for (const dlg of dialogs){
+    dlg.hover = -1;
 
-  /* 2. 朝向：法线对准球心（用滞后的实际位置 → 朝向自带惯性） */
-  dlg.mesh.lookAt(dlg.center.position);
+    _dlgTarget.copy(dlg.center.position).addScaledVector(dlg.dir, dlg.rad);
+    _dlgAcc.copy(_dlgTarget).sub(dlg.pos).multiplyScalar(DLG_STIFFNESS)
+           .addScaledVector(dlg.vel, -DLG_DAMPING);
+    dlg.vel.addScaledVector(_dlgAcc, dt);
+    dlg.pos.addScaledVector(dlg.vel, dt);
+    dlg.mesh.position.copy(dlg.pos);
 
-  /* 3. 转身惯性：视线快速转动时附加滚转角，像悬浮板被空气拖住 */
-  let dyaw = state.yaw - dlg.lastYaw;
-  dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
-  dlg.lastYaw = state.yaw;
-  const rate = clamp(dyaw / Math.max(dt, 1e-3), -8, 8);
-  dlg.lean = lerp(dlg.lean, clamp(rate * 0.045, -DLG_MAX_LEAN, DLG_MAX_LEAN),
-                  1 - Math.exp(-dt * 7));
-  dlg.mesh.rotateZ(-dlg.lean);
+    /* 法线对准球心（用滞后的实际位置 → 朝向自带惯性） */
+    dlg.mesh.lookAt(dlg.center.position);
 
-  /* 4. 拾取：锁定时用准心，未锁定时用鼠标位置 */
-  raycaster.far = DLG_RADIUS + 0.5;   // 只拾取弹窗自身，不穿模打到场景
+    /* 转身惯性：视线快速转动时附加滚转角，像悬浮板被空气拖住 */
+    let dyaw = state.yaw - dlg.lastYaw;
+    dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
+    dlg.lastYaw = state.yaw;
+    const rate = clamp(dyaw / Math.max(dt, 1e-3), -8, 8);
+    dlg.lean = lerp(dlg.lean, clamp(rate * 0.045, -DLG_MAX_LEAN, DLG_MAX_LEAN),
+                    1 - Math.exp(-dt * 7));
+    dlg.mesh.rotateZ(-dlg.lean);
+  }
+
+  /* 2. 拾取：对所有面板射线，取最近命中那块上的按钮 */
+  raycaster.far = DLG_RADIUS + DLG_STACK_STEP * dialogs.length + 0.5;
   if (pointerLocked) raycaster.setFromCamera(CENTER, camera);
   else raycaster.setFromCamera(dlgMouseNdc, camera);
-  const hits = raycaster.intersectObject(dlg.mesh, false);
-  let hover = -1;
-  if (hits.length && hits[0].uv){
+  let best = null;
+  for (const dlg of dialogs){
+    const hits = raycaster.intersectObject(dlg.mesh, false);
+    if (!hits.length || !hits[0].uv) continue;
     const px = hits[0].uv.x * DLG_CANVAS_W;
     const py = (1 - hits[0].uv.y) * DLG_CANVAS_H;
-    hover = hitDialogButton(dlg, px, py);
+    const idx = hitDialogButton(dlg, px, py);
+    if (idx < 0) continue;
+    if (!best || hits[0].distance < best.dist) best = { dlg, idx, dist: hits[0].distance };
   }
-  if (hover !== dlg.hover){
-    dlg.hover = hover;
-    drawDialog(dlg, hover);
+  if (best) best.dlg.hover = best.idx;
+  dlgHoverBtn = best ? { dlg: best.dlg, idx: best.idx } : null;
+  /* 只重画悬停状态发生变化的面板 */
+  dialogs.forEach((d, i) => {
+    if (d.hover !== prevHover[i]) drawDialog(d, d.hover);
+  });
+
+  /* 3. 视线停留：对准则按钮即填充进度；未对准（或换目标）则快速倒退 */
+  const key = best ? best.dlg.id + ':' + best.idx : '';
+  if (key && key === dwellKey && dwellCooldown <= 0){
+    dwellProgress += dt / DLG_DWELL_TIME;
+    if (dwellProgress >= 1){
+      /* 满环即触发；回调自行决定关闭面板或改写其内容 */
+      dwellProgress = 0;
+      dwellKey = '';
+      dwellCooldown = DLG_DWELL_LOCK;
+      const opt = best.dlg.options[best.idx];
+      if (opt && opt.cb) opt.cb(best.dlg);
+    }
+  } else {
+    dwellKey = key;
+    dwellProgress = Math.max(0, dwellProgress - dt / DLG_DWELL_DECAY);
   }
-  dlgHoverBtn = hover >= 0 ? { dlg, idx: hover } : null;
-  crosshair.classList.toggle('hot', dlgHoverBtn !== null);
+}
+
+/* 供准星读取的停留状态（进度环 / 交互态） */
+function dialogDwell(){
+  return { progress: dwellProgress, active: dlgHoverBtn !== null };
 }
 
 function hitDialogButton(dlg, px, py){

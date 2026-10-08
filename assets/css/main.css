@@ -113,12 +113,10 @@
   #btnSettings:hover{background:#243048;border-color:#3d5278;color:#c3d3f5;}
 
   #crosshair{
-    position:fixed;top:50%;left:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
-    border-radius:50%;background:#ffffffcc;z-index:9;pointer-events:none;
-    box-shadow:0 0 4px #000,0 0 2px #000;
+    /* 准星已改为 3D 物体（见 js/reticle.js）：本元素仅保留显隐状态，
+       供各面板用 classList 控制 3D 准星的可见性，自身不再绘制像素 */
+    display:none;
   }
-  /* 准星指向弹窗按钮时的热点态 */
-  #crosshair.hot{background:#9dc0ff;box-shadow:0 0 10px #5b8cff,0 0 3px #000;}
   #prompt{
     position:fixed;bottom:12%;left:50%;transform:translateX(-50%);z-index:11;
     background:rgba(12,16,24,.85);border:1px solid #3a4560;

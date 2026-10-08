@@ -12,8 +12,10 @@ function bindEvents(){
     if (!state.started || state.ended) return;
     /* 弹窗优先：左键点按钮，不作用于场景也不重新捕获 */
     if (hasDialog()){ activateDialogButton(); return; }
-    if (pointerLocked) doInteract('e');
-    else requestLock();
+    if (!pointerLocked){ requestLock(); return; }
+    /* 左键即原空格键语义：准星指向可攻击目标（老师/保安，且在范围内）
+       时执行攻击，否则执行普通交互 */
+    doInteract(actionSpace ? 'space' : 'e');
   });
 
   document.addEventListener('keydown', e => {
@@ -74,7 +76,6 @@ function bindEvents(){
       else doInteract('e');
     }
     if (e.code === 'KeyF'){ doInteract('f'); }
-    if (e.code === 'Space'){ doInteract('space'); e.preventDefault(); }
     if (e.code === 'KeyH') callTeacher();
   });
 
@@ -250,7 +251,7 @@ function bindEvents(){
     state.startTime = performance.now();
     yawTarget = state.yaw; pitchTarget = state.pitch;
     clock.getDelta();
-    toast('比赛开始！WASD 移动，鼠标转动视角，E 交互。', 2600);
+    toast('比赛开始！WASD 移动，鼠标转动视角，左键交互 / 攻击。', 2600);
     /* 点击按钮是用户手势，此时申请指针锁定成功率最高 */
     requestLock();
     /* 尝试恢复存档 */
@@ -289,6 +290,8 @@ function animate(){
 
   /* 3D 悬浮弹窗：惯性追随 + 相切朝向 + 按钮拾取 */
   if (dialogs.length) updateDialogs(realDt);
+  /* 3D 准星：旋转 / 缩放 / 变色 / 停留进度环 */
+  updateReticle(realDt);
 
   if (state.view === 'corridor') updateCorridor(realDt);
   if (state.view === 'bathroom') updateBathroom(realDt);
@@ -450,6 +453,7 @@ function init(){
 
   buildWorld();
   updateAllDeskScreens();
+  initReticle();
   bindEvents();
   initPaperEvents();
   renderHudProbs();

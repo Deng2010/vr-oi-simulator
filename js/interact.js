@@ -38,7 +38,7 @@ function updateInteract(){
     const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
     if (d < GUARD_PUNCH_RANGE){
       actionSpace = { fn: () => punchGuard(g) };
-      const txt = `[ 空格 ] 殴打保安（距离 ${d.toFixed(1)}m）`;
+      const txt = `[ 左键 ] 殴打保安（距离 ${d.toFixed(1)}m）`;
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
       promptEl.classList.remove('hidden');
       return;
@@ -51,7 +51,7 @@ function updateInteract(){
                          state.pos.z - teacher.group.position.z);
     if (d < 2.4 && teacher.userData.mode !== 'warn'){
       actionSpace = { fn: punchTeacher };
-      const txt = '[ 空格 ] 殴打监考老师（后果自负）';
+      const txt = '[ 左键 ] 殴打监考老师（后果自负）';
       if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
       promptEl.classList.remove('hidden');
       return;

@@ -33,6 +33,7 @@ js/
   ide.js              IDE 面板 / 语法高亮 / 提交评测
   paper.js            草稿纸手写板
   look.js             FPS 视角 / 指针锁定 / 玩家移动 / 小地图
+  reticle.js          3D 准星：45° 交互旋转 / 攻击红化放大 / 停留进度环
   save.js             进度存档读写（localStorage）
   ending.js           比赛结算与结局分支
   main.js             事件绑定 / 主循环 / 初始化入口
