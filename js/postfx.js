@@ -12,8 +12,8 @@
    所有常量 ramp 见 POST_DAMP_MIN/MAX，由紧张值驱动（setPostDamp）。
    ========================================================= */
 
-const POST_DAMP_MIN = 0.1;    // 初始：安静考场也有一层薄拖影
-const POST_DAMP_MAX = 0.5;    // 紧张值拉满：几乎复刻上一帧的长拖影
+const POST_DAMP_MIN = 0.2;    // 初始：安静考场也有一层薄拖影
+const POST_DAMP_MAX = 0.9;    // 紧张值拉满：几乎复刻上一帧的长拖影
 
 let postOK = false;
 let rtFrame = null, rtAccA = null, rtAccB = null;
