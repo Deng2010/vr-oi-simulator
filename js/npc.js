@@ -143,6 +143,11 @@ function downNPC(n){
   scene.remove(n.group);
   n.userData.state = 'down';
   n.userData.anger = 0;
+  /* 与打保安同等级的打击感：脆响 + 视角回弹 + 命中顿帧 */
+  audio.punch();
+  kickView(0.055, (Math.random() - 0.5) * 0.055);
+  hitStop = 0.08;
+  toast('你一拳放倒了同学！考场里彻底乱了。', 1600);
   return true;
 }
 

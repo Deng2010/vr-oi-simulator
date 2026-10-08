@@ -82,6 +82,11 @@ function bindEvents(){
       else doInteract(actionSpace ? 'space' : 'e');
     }
     if (e.code === 'KeyF'){ doInteract('f'); }
+    if (e.code === 'Space'){
+      /* 空格跳跃；弹窗悬浮期间不跳，避免误触 */
+      if (!hasDialog()) tryJump();
+      e.preventDefault();
+    }
     if (e.code === 'KeyH') callTeacher();
   });
 
@@ -334,12 +339,14 @@ function animate(){
     endSlowMo();
   }
   const worldDt = worldDtFor(realDt);
+  /* 世界时钟：受击间隔等"世界内"计时都以它为准，慢放时一并变慢 */
+  state.worldTime += worldDt;
 
   const inWorld = state.view === 'world';
 
   if (inWorld && state.started && !state.ended && !state.frozen){
     applyLook(realDt);
-    updatePlayer(realDt);
+    updatePlayer(worldDt);       /* 移动也吃慢放：通报期间世界真的变慢 */
   }
 
   /* 3D 悬浮弹窗：惯性追随 + 相切朝向 + 按钮拾取 */

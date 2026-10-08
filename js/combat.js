@@ -66,7 +66,7 @@ function punchTeacher(){
 /* ---------- 攻击判定窗口 ----------
    距离之外再加视角扇形：只有落在准星前 GUARD_PUNCH_ARC 弧度内的
    目标才算"在拳范围内"。半角 0.9rad ≈ 51°，比 360° 球判定收紧很多。 */
-const GUARD_PUNCH_ARC = 0.9;
+const GUARD_PUNCH_ARC = 0.4;
 
 function inAttackArc(x, z){
   const fx = -Math.sin(state.yaw), fz = -Math.cos(state.yaw);
@@ -255,9 +255,9 @@ function endByGuards(){
    受击无敌改为玩家侧 1 秒：任何保安都能抓，但玩家 1 秒内只掉一格。
    返回 false 表示本局已经结束。 */
 function handleGuardCatch(g){
-  const now = performance.now();
+  const now = state.worldTime;    /* 用世界时钟：慢放期间受击间隔同样被拉长 */
   if (state.hpVisible && state.hp > 0){
-    if (now - state.lastDamageAt < PLAYER_HURT_INVULN) return true;   /* 无敌中 */
+    if (now - state.lastDamageAt < PLAYER_HURT_INVULN / 1000) return true;
     state.lastDamageAt = now;
     if (!damagePlayer(g, now)){
       endByGuards();

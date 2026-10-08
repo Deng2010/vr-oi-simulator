@@ -67,6 +67,7 @@ const _right = new THREE.Vector3();
 const _move = new THREE.Vector3();
 
 function updatePlayer(dt){
+  updateJump(dt);
   const sprinting = !!state.keys['shift'];
   const speed = sprinting ? 5.0 : 3.1;   // Shift 加速
   _fwd.set(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
@@ -84,8 +85,10 @@ function updatePlayer(dt){
     const nx = clamp(state.pos.x + _move.x, -7.5, 7.5);
     const nz = clamp(state.pos.z + _move.z, -6.5, 6.5);
     /* 分轴滑动碰撞 */
-    if (!collides(nx, state.pos.z, 0.28)) state.pos.x = nx;
-    if (!collides(state.pos.x, nz, 0.28)) state.pos.z = nz;
+    /* 空中不碰障碍：可以翻身过桌面；落地时若卡进去会回溯到起跳点 */
+    const air = !onGround;
+    if (air || !collides(nx, state.pos.z, 0.28)) state.pos.x = nx;
+    if (air || !collides(state.pos.x, nz, 0.28)) state.pos.z = nz;
 
     state.bob += dt * (sprinting ? 15 : 11);   // 疾走时脚步更急促
     if (Math.sin(state.bob) > 0.96 && Math.random() < 0.4) audio.step();
@@ -100,6 +103,39 @@ function updatePlayer(dt){
   camera.rotation.y += recoilYaw;
   /* 紧张态镜头抖动（同样只做视觉叠加） */
   applyShake(dt);
+}
+
+/* ---------- 跳跃 ----------
+   空格起跳；重力积分 + 落地回零。dt 用世界步长，所以通报慢放期间
+   跳跃也会一起变慢，与移动速度保持一致。 */
+const JUMP_GRAVITY = 20;          // 重力（m/s²）
+const JUMP_VELOCITY = 6.4;        // 起跳初速度（m/s）→ 跳高约 1.0m
+let jumpY = 0, velY = 0, onGround = true;
+const _jumpSafe = new THREE.Vector3(0, 0, -2.08);
+
+function tryJump(){
+  if (!onGround || state.view !== 'world' || state.ended) return;
+  velY = JUMP_VELOCITY;
+  onGround = false;
+  _jumpSafe.set(state.pos.x, 0, state.pos.z);   /* 记下起跳点，落地回溯用 */
+  audio.beep(420, 0.05, 0.03, 'triangle');
+}
+
+function updateJump(dt){
+  if (onGround) return;
+  velY -= JUMP_GRAVITY * dt;
+  jumpY += velY * dt;
+  if (jumpY <= 0){
+    jumpY = 0;
+    velY = 0;
+    onGround = true;
+    audio.step();
+    /* 落点卡进障碍（比如桌面）→ 退回起跳点，不会卡死 */
+    if (collides(state.pos.x, state.pos.z, 0.28)){
+      state.pos.x = _jumpSafe.x;
+      state.pos.z = _jumpSafe.z;
+    }
+  }
 }
 
 /* ---------- 紧张态镜头抖动 ----------

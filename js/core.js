@@ -55,9 +55,10 @@ const state = {
   warnCount: 0, wanderTimer: 0,
   teacherWarnActive: false, bathroomApproved: false,
   teacherDown: false,             // 是否已打倒监考（决定同学可否被攻击）
-  hp: 5, hpVisible: false,        // 血条（监考倒台后才显示）
+  hp: 3, hpVisible: false,        // 血条（监考倒台后才显示）
   doorOpen: false,                // 终局：门已开
-  lastDamageAt: 0,                // 玩家上次受击时间（1s 受击无敌）
+  lastDamageAt: -999,             // 玩家上次受击时间（世界时钟；-999 = 还没挨过打）
+  worldTime: 0,                   // 世界时钟（秒）：只累计 worldDt，慢放时同比例变慢
   guardKills: 0, submitCount: {}, achievements: new Set(),
   guardsSpawned: 0,
   defiance: 0,                // 违抗保安通报的次数（推高紧张值）

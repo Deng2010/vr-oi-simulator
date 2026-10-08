@@ -9,7 +9,7 @@
      但玩家 1 秒内只会真的掉一格。
    ========================================================= */
 
-const HP_MAX = 5;
+const HP_MAX = 3;
 const PLAYER_HURT_INVULN = 1000;   /* 玩家受击无敌：1 秒内无论几个保安都只掉一格 */
 
 /* 纯函数：本次被抓是扣血还是致命 */
@@ -19,9 +19,9 @@ function guardHitResult(hpVisible, hp){
   return 'damage';
 }
 
-/* 纯函数：此刻是否还在受击无敌期 */
+/* 纯函数：此刻是否还在受击无敌期（时间基准为世界时钟，单位秒） */
 function playerInvulnerable(now){
-  return now - (state.lastDamageAt || 0) < PLAYER_HURT_INVULN;
+  return now - (state.lastDamageAt || 0) < PLAYER_HURT_INVULN / 1000;
 }
 
 function initHp(){
