@@ -17,12 +17,12 @@
    配套手感：kickView（look.js）视角回弹、hitStop（main.js）顿帧。
    ========================================================= */
 
-const DEBRIS_GRAVITY = 15;       // 重力（m/s^2）
-const DEBRIS_LIFE    = 1.6;      // 基础存活（秒）
-const DEBRIS_FADE    = 0.4;      // 淡出时长（秒）
+const DEBRIS_GRAVITY = 10;       // 重力（m/s^2）
+const DEBRIS_LIFE    = 2.5;      // 基础存活（秒）
+const DEBRIS_FADE    = 0.5;      // 淡出时长（秒）
 const DEBRIS_DRAG    = 1.2;      // 空气阻尼（1/s）
-const DEBRIS_RESTITUTION = 0.32; // 弹性系数（低速时归零防抖）
-const DEBRIS_FRICTION = 0.45;    // 摩擦系数
+const DEBRIS_RESTITUTION = 0.1; // 弹性系数（低速时归零防抖）
+const DEBRIS_FRICTION = 0.3;    // 摩擦系数
 const DEBRIS_SLEEP_V   = 0.28;   // 线速度休眠阈值
 const DEBRIS_SLEEP_W   = 1.1;    // 角速度休眠阈值
 const DEBRIS_SLEEP_T   = 0.35;   // 低速持续多久后休眠

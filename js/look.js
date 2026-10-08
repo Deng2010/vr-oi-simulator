@@ -78,6 +78,7 @@ function updatePlayer(dt){
   if (state.keys['a']) _move.sub(_right);
 
   const moving = _move.lengthSq() > 0;
+  lastMoveSpeed = moving ? speed : 0;
   if (moving){
     _move.normalize().multiplyScalar(speed * dt);
     const nx = clamp(state.pos.x + _move.x, -7.5, 7.5);
@@ -97,6 +98,27 @@ function updatePlayer(dt){
   /* 回弹是纯视觉叠加，不写回 state.yaw/pitch，不影响真实朝向 */
   camera.rotation.x += recoilPitch;
   camera.rotation.y += recoilYaw;
+  /* 紧张态镜头抖动（同样只做视觉叠加） */
+  applyShake(dt);
+}
+
+/* ---------- 紧张态镜头抖动 ----------
+   多频率正弦叠加：高频细颤 + 低频摇摆，幅度 ∝ 紧张值 × 移动强度。
+   抖动是"吓到手抖"，不是晕动症模拟器，上限刻意压得很小。 */
+const SHAKE_MAX = 0.011;          // 最大角偏移（弧度，约 0.63°）
+let lastMoveSpeed = 0;
+let shakeT = 0;
+
+function applyShake(dt){
+  const t = getTension();
+  if (t < 0.02 || !shakeEnabled){ lastMoveSpeed = 0; return; }
+  shakeT += dt;
+  const move = clamp(lastMoveSpeed / 5, 0, 1);
+  const amp = SHAKE_MAX * t * (0.30 + 0.70 * move);
+  const n1 = Math.sin(shakeT * 37.3) * Math.sin(shakeT * 11.7);
+  const n2 = Math.sin(shakeT * 23.1 + 1.3) * Math.sin(shakeT * 7.9 + 0.6);
+  camera.rotation.x += (n2 * 0.6 - n1 * 0.4) * amp;
+  camera.rotation.y += (n1 * 0.7 + n2 * 0.5) * amp;
 }
 
 /* ---------- 出拳视角回弹 ---------- */

@@ -9,6 +9,7 @@
 <body>
 
 <canvas id="scene"></canvas>
+<div id="tenseVignette"></div>
 <div id="crosshair" class="hidden"></div>
 
 <div id="hud" class="hidden">
@@ -61,6 +62,10 @@
       <input type="range" id="volSliderStart" min="0" max="100" value="60">
       <span class="val" id="volValueStart">60%</span>
     </div>
+    <div class="setting-row">
+      <label>镜头晃动</label>
+      <span class="toggle on" id="shakeToggleStart"></span>
+    </div>
   </div>
   <button id="btnStart">进 入 考 场</button>
   <button id="btnClearSaveStart" style="margin:14px auto 0;display:block;padding:9px 26px;
@@ -100,6 +105,10 @@
     <div class="setting-row">
       <label>音效</label>
       <span class="toggle on" id="muteToggle"></span>
+    </div>
+    <div class="setting-row">
+      <label>镜头晃动</label>
+      <span class="toggle on" id="shakeToggle"></span>
     </div>
     <div class="set-title">存档</div>
     <div class="row2">
@@ -219,6 +228,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
+<!-- 后处理（全局拖影）：CDN 失败时自动回退为直接渲染，见 js/postfx.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/AfterimagePass.js"></script>
+
 <!-- Three.js 加载失败兜底（需紧跟 CDN 脚本尽早执行） -->
 <script>
 if (typeof THREE === 'undefined'){
@@ -269,6 +285,8 @@ if (typeof THREE === 'undefined'){
 <script src="js/paper.js"></script>
 <script src="js/look.js"></script>
 <script src="js/reticle.js"></script>
+<script src="js/tension.js"></script>
+<script src="js/postfx.js"></script>
 <script src="js/save.js"></script>
 <script src="js/ending.js"></script>
 <script src="js/main.js"></script>

@@ -55,6 +55,7 @@ const state = {
   warnCount: 0, wanderTimer: 0,
   teacherWarnActive: false, bathroomApproved: false,
   guardKills: 0, submitCount: {}, achievements: new Set(),
+  guardsSpawned: 0,
   startTime: 0,
   wanderCount: 0,              // 离开座位触发警告的次数
   wanderPenaltyApplied: false  // 是否已触发"时间锁定"惩罚
@@ -181,6 +182,7 @@ const audio = {
 /* ---------- 全局引用 ---------- */
 let scene, camera, renderer, clock;
 const raycaster = new THREE.Raycaster();
+raycaster.layers.enable(1);   // 准星射线也要能命中 UI 层（3D 弹窗按钮）
 const CENTER = new THREE.Vector2(0, 0);
 let interactables = [];
 const deskScreens = [];   // 每台显示器的 { ctx, tex }，用于后续刷新
@@ -209,6 +211,7 @@ const achNotify = $('achNotify');
 const SENS_MIN = 0.35, SENS_MAX = 3.5;   // 灵敏度档位（对应滑条 1~20）
 const SENS_SCALE = 0.0011;               // 档位 → 弧度 / 像素
 let mouseSens = 1.925, smoothAmount = 0.35, timeScale = 15;
+let shakeEnabled = true;          // 紧张态镜头抖动（晕动症友好开关）
 let yawTarget = 0, pitchTarget = 0;
 
 function sliderToSens(v){ return SENS_MIN + ((v - 1) / 19) * (SENS_MAX - SENS_MIN); }
@@ -225,6 +228,7 @@ function loadViewSettings(){
     else if (typeof o.turn === 'number') mouseSens = sliderToSens(clamp(o.turn, 1, 20));
     if (typeof o.smooth === 'number') smoothAmount = clamp(o.smooth, 0, 0.9);
     if (typeof o.time === 'number')   timeScale    = clamp(o.time, 1, 60);
+    if (typeof o.shake === 'boolean') shakeEnabled = o.shake;
     if (typeof o.vol === 'number')    audio.volume = clamp(o.vol, 0, 1);
     if (typeof o.muted === 'boolean') audio.muted  = o.muted;
   } catch(e){}
@@ -233,7 +237,7 @@ function saveViewSettings(){
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({
       sens: mouseSens, smooth: smoothAmount, time: timeScale,
-      vol: audio.volume, muted: audio.muted
+      vol: audio.volume, muted: audio.muted, shake: shakeEnabled
     }));
   } catch(e){}
 }
@@ -261,4 +265,8 @@ function syncViewUI(){
   ['volValueStart', 'volValue'].forEach(id => { const e = $(id); if (e) e.textContent = volv + '%'; });
   const mt = $('muteToggle');
   if (mt) mt.classList.toggle('on', !audio.muted);
+  const st = $('shakeToggle');
+  if (st) st.classList.toggle('on', shakeEnabled);
+  const st2 = $('shakeToggleStart');
+  if (st2) st2.classList.toggle('on', shakeEnabled);
 }

@@ -35,6 +35,8 @@ js/
   paper.js            草稿纸手写板
   look.js             FPS 视角 / 指针锁定 / 玩家移动 / 小地图
   reticle.js          3D 准星：45° 交互旋转 / 攻击红化放大 / 停留进度环
+  tension.js          紧张值系统：灯光压暗 / 色偏 / 暗角 / 心跳 / 抖动 / 拖影
+  postfx.js           全局动态模糊（AfterimagePass，CDN 失败自动回退）
   save.js             进度存档读写（localStorage）
   ending.js           比赛结算与结局分支
   main.js             事件绑定 / 主循环 / 初始化入口
@@ -48,3 +50,11 @@ JS 全部是传统脚本（非 ES Module），按 index.html 中的顺序加载�
 1. 在 `assets/problems/` 新建一个以题目 id 命名的文件（如 `P10001.js`）；
 2. 内容为 `PROBLEM_DATA.push({ id, name, max, tl, ml, desc, starter: STARTER_TEMPLATE });`；
 3. 在 `index.html` 中按同样格式补一行 `<script>` 引入。
+
+## 隐藏结局
+
+殴打监考老师会叫来保安。保安总出场名额上限为 200 人（`GUARD_MAX_TOTAL`），
+耗尽后不再补充。击倒全部 200 人触发隐藏结局「无人能挡」。
+随着击倒数上升，紧张值（`js/tension.js`）会逐渐拉满：灯光压暗、雾色转暗红、
+屏幕暗角随心跳收缩、对比度增强、镜头抖动加剧、全局拖影变长。
+回座位静坐可以让紧张值部分回落，但贴身追来的保安不受影响。

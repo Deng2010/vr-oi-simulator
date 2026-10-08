@@ -364,6 +364,8 @@ function buildPerson(x, z, shirtColor, rotY, startPose){
   hair.position.set(0, 1.535, 0.02);
   g.add(hair);
 
+  addContactShadow(g, 0.52);
+
   return { group: g, armL, armR, head, legsSit, legsStand,
            phase: Math.random() * Math.PI * 2 };
 }
@@ -448,8 +450,22 @@ function buildSecurityGuard(x, z){
   warnLight.position.set(0, 1.84, 0.02);
   g.add(warnLight);
 
+  /* 加法混合的红色光晕：配合点光源与拖影，就是"红灯拖影"的主角 */
+  const glow = new THREE.Mesh(
+    getSphereGeo(0.13, 8, 8),
+    new THREE.MeshBasicMaterial({
+      color: 0xff3333, transparent: true, opacity: 0.30,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  glow.position.set(0, 1.84, 0.02);
+  g.add(glow);
+
+  addContactShadow(g, 0.58);
+
   return {
     group: g, armL, armR, head, warnLight,
+    glow,
     phase: Math.random() * Math.PI * 2
   };
 }
@@ -460,6 +476,78 @@ const GUARD_SPEED_BASE = 0.55;
 const GUARD_SPAWN_DIST = 5.0;
 const GUARD_HIT_RADIUS = 0.95;
 const GUARD_PUNCH_RANGE = 2.2;
+const GUARD_MAX_TOTAL = 200;   // 全场最多排出多少保安；耗尽后不再补充
+
+/* ---------- 假接触阴影：径向渐变贴片，比真阴影便宜且可随紧张态加深 ---------- */
+const _shadowGeo = new THREE.PlaneGeometry(1, 1);
+const _shadowTex = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(32, 32, 1, 32, 32, 31);
+  grad.addColorStop(0, 'rgba(0,0,0,0.9)');
+  grad.addColorStop(0.55, 'rgba(0,0,0,0.5)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+})();
+const contactShadows = [];
+
+function addContactShadow(parent, radius){
+  const m = new THREE.Mesh(_shadowGeo, new THREE.MeshBasicMaterial({
+    map: _shadowTex, transparent: true, opacity: 0.45, depthWrite: false
+  }));
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = 0.012;
+  m.scale.set(radius * 2, radius * 2, 1);
+  m.renderOrder = 1;
+  parent.add(m);
+  contactShadows.push(m);
+  return m;
+}
+
+/* 紧张态：阴影变深（"阴影更深"的廉价实现，无需 shadowMap） */
+function deepenContactShadows(t){
+  /* 清扫：组已被移出场景的角色（父级的父级为空）其阴影不再需要 */
+  for (let i = contactShadows.length - 1; i >= 0; i--){
+    const m = contactShadows[i];
+    if (m.parent && m.parent.parent === null) contactShadows.splice(i, 1);
+  }
+  for (const m of contactShadows) m.material.opacity = 0.42 + 0.46 * t;
+}
+
+/* ---------- 保安警灯：最多 2 盏真实点光源，挂到最近的保安头顶 ----------
+   点光源数量直接进光照 shader，不能按保安数无限添加，故做上限并常驻。 */
+const guardLights = [];
+function initGuardLights(){
+  for (let i = 0; i < 2; i++){
+    const l = new THREE.PointLight(0xff2211, 0, 7, 2);
+    l.userData.isGuardLight = true;   /* 紧张值调光时跳过，强度由闪烁驱动 */
+    scene.add(l);
+    guardLights.push(l);
+  }
+}
+
+/* guards：按距离排序后的前两名（可为 null） */
+function updateGuardLights(guards, t){
+  for (let i = 0; i < guardLights.length; i++){
+    const l = guardLights[i];
+    const g = guards[i];
+    if (g && g.userData.alive){
+      g.group.add(l);                                  // 自动从上一个父节点摘离
+      l.position.set(0, 1.84, 0.02);
+      l.intensity = (0.9 + 2.4 * (g.userData.blink || 0)) * (1 + 0.5 * t);
+    } else {
+      l.intensity = 0;                                // 保留在场景里，避免 shader 重编译
+    }
+  }
+}
+
+/* 剩余可派出名额（纯函数，便于测试） */
+function guardPoolRemaining(){
+  return Math.max(0, GUARD_MAX_TOTAL - (state.guardsSpawned || 0));
+}
 
 function aliveGuardCount(){
   let n = 0;
@@ -478,13 +566,17 @@ function spawnTwoGuards(){
   if (state.ended) return;
   pruneDeadGuards();
 
+  /* 名额耗尽：不再派出新保安 */
+  const n = Math.min(2, guardPoolRemaining());
+  if (n <= 0) return;
+
   const baseAngles = [
     Math.random() * Math.PI * 2,
     Math.random() * Math.PI * 2 + Math.PI
   ];
   const speedBonus = Math.min(0.35, state.guardKills * 0.04);
 
-  for (let i = 0; i < 2; i++){
+  for (let i = 0; i < n; i++){
     let angle = baseAngles[i];
     const dist = GUARD_SPAWN_DIST + Math.random() * 1.2;
     let gx = state.pos.x + Math.cos(angle) * dist;
@@ -505,6 +597,7 @@ function spawnTwoGuards(){
       alive: true
     };
     securityGuards.push(g);
+    state.guardsSpawned = (state.guardsSpawned || 0) + 1;
   }
 }
 

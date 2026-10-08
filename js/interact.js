@@ -27,14 +27,6 @@ function updateInteract(){
     return;
   }
 
-  /* 鼠标未被指针锁定（Esc 释放或未捕获）：提示点击画面，暂不显示交互提示 */
-  if (!pointerLocked){
-    const txt = '鼠标已释放 —— 点击画面继续考试';
-    if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-    promptEl.classList.remove('hidden');
-    return;
-  }
-
   /* 优先：保安 → 空格 */
   for (let i = 0; i < securityGuards.length; i++){
     const g = securityGuards[i];
@@ -112,6 +104,14 @@ function updateInteract(){
     const it = hits[0].object.userData.interact;
     actionE = { fn: it.action };
     const txt = '[ E ] ' + it.label;
+    if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
+    promptEl.classList.remove('hidden');
+  }
+
+  /* 兜底提示：没有任何可交互/可攻击目标时，才提醒重新捕获鼠标。
+     注意动作判定不依赖指针锁定——锁定失效时 E / 左键依然能交互和出拳。 */
+  if (!pointerLocked && !actionE && !actionF && !actionSpace){
+    const txt = '鼠标已释放 —— 点击画面继续考试';
     if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
     promptEl.classList.remove('hidden');
   }

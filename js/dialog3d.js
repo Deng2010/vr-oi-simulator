@@ -83,6 +83,7 @@ function openDialog(opts){
   mesh.scale.set(DLG_WORLD_H * (DLG_CANVAS_W / DLG_CANVAS_H), DLG_WORLD_H, 1);
   mesh.renderOrder = 999;
   mesh.frustumCulled = false;
+  mesh.layers.set(1);          /* UI 层：不参与全局拖影，文字保持锐利 */
   scene.add(mesh);
 
   /* 生成方向：当前准心方向叠加小幅随机偏移，之后固定在世界系。

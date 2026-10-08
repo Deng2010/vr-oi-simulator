@@ -86,6 +86,9 @@ function initReticle(){
   retRing.visible = false;
   g.add(retRing);
 
+  /* 准星整体划到 UI 层（layer 1）：不参与拖影，永远锐利 */
+  g.traverse(o => { o.layers.set(1); });
+
   camera.add(g);
   scene.add(camera);      // 相机的子节点要被渲染，需先把相机挂进场景
   reticle = g;
@@ -117,8 +120,14 @@ function updateReticle(dt){
   /* 攻击态：渐变成红色 */
   const targetMix = attacking ? 1 : 0;
   retMix += (targetMix - retMix) * (1 - Math.exp(-dt * 10));
-  _retCol.copy(RETICLE_WHITE).lerp(RETICLE_RED, retMix);
+  /* 紧张态也会让准星泛一点血色（攻击态优先） */
+  const tn = getTension() * 0.45;
+  _retCol.copy(RETICLE_WHITE).lerp(RETICLE_RED, Math.max(retMix, tn));
   for (const b of retBars) b.material.color.copy(_retCol);
+
+  /* 紧张态呼吸：极轻微的缩放脉动 */
+  const breathe = 1 + 0.05 * getTension() * Math.sin(performance.now() * 0.006);
+  reticle.scale.setScalar(retScale * breathe);
 
   /* 停留进度环 */
   retRing.visible = dwell.progress > 0.002;

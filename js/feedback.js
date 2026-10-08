@@ -67,6 +67,7 @@ const ACHIEVEMENTS = {
   teacher_hit:{ name: '袭师者',     desc: '殴打了监考老师' },
   explorer:   { name: '厕所旅行家', desc: '完整去过一次洗手间' },
   wanderer: { name: '红圈五连', desc: '同一场考试，五次随意走动' }
+  ,army: { name: '一人军队', desc: '击倒全部 200 名保安（隐藏结局）' }
 };
 
 function unlockAch(id){

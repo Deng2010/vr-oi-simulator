@@ -14,7 +14,9 @@ function bindEvents(){
        避免点击造成状态中断而进度环仍残留的问题；此时点击仅用于
        在指针意外释放时重新捕获鼠标 */
     if (hasDialog()){ if (!pointerLocked) requestLock(); return; }
-    if (!pointerLocked){ requestLock(); return; }
+    /* 未锁定时：有可攻击目标就直接出拳（锁定失效也能打），
+       否则重新捕获鼠标——避免误触其他交互 */
+    if (!pointerLocked && !actionSpace){ requestLock(); return; }
     /* 左键即原空格键语义：准星指向可攻击目标（老师/保安，且在范围内）
        时执行攻击，否则执行普通交互 */
     doInteract(actionSpace ? 'space' : 'e');
@@ -75,7 +77,9 @@ function bindEvents(){
     if (e.code === 'KeyE'){
       /* 弹窗优先：E 用来点按钮，不作用于场景 */
       if (hasDialog()) activateDialogButton();
-      else doInteract('e');
+      /* 与左键同优先级：可攻击则出拳，否则交互。
+         这条路径不依赖指针锁定，锁定失效时也能打 */
+      else doInteract(actionSpace ? 'space' : 'e');
     }
     if (e.code === 'KeyF'){ doInteract('f'); }
     if (e.code === 'KeyH') callTeacher();
@@ -133,6 +137,7 @@ function bindEvents(){
       camera.aspect = innerWidth / innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(innerWidth, innerHeight);
+      resizePostFX();
       forceRedraw = true;
     }, 150);
   });
@@ -163,6 +168,26 @@ function bindEvents(){
     mt.onclick = () => {
       audio.setMuted(!audio.muted);
       mt.classList.toggle('on', !audio.muted);
+      saveViewSettings();
+    };
+  }
+
+  /* 镜头晃动开关（紧张态抖动，晕动症友好） */
+  const st = $('shakeToggle');
+  if (st){
+    st.classList.toggle('on', shakeEnabled);
+    st.onclick = () => {
+      shakeEnabled = !shakeEnabled;
+      st.classList.toggle('on', shakeEnabled);
+      saveViewSettings();
+    };
+  }
+  const st2 = $('shakeToggleStart');
+  if (st2){
+    st2.classList.toggle('on', shakeEnabled);
+    st2.onclick = () => {
+      shakeEnabled = !shakeEnabled;
+      st2.classList.toggle('on', shakeEnabled);
       saveViewSettings();
     };
   }
@@ -368,6 +393,9 @@ function animate(){
     /* 保安 */
     updateGuards(worldDt, t);
 
+    /* 紧张值：随击倒数与贴身程度上升，坐定可回落 */
+    updateTension(worldDt, state.guardKills, nearestGuardDist, lastMoveSpeed);
+
     /* 走动警告检测 */
     if (state.started && !state.ended && !state.frozen
         && !state.bathroomApproved && !state.teacherWarnActive && teacher
@@ -418,12 +446,16 @@ function animate(){
         `总分 <b>${state.totalScore}</b> / 400　` +
         `<span style="color:#5d6880;font-size:11px">警告 ${state.warnCount} 次</span>${guardInfo}`;
     }
+    /* HUD 陪葬：计时器与小地图随紧张值进入红色警戒 */
+    const tn = getTension();
+    hudTimer.classList.toggle('tense', tn > 0.05);
+    minimapWrap.classList.toggle('tense', tn > 0.05);
     drawMinimap();
   }
 
   /* 关键优化：IDE / 草稿纸 / 走廊等视图下跳过渲染 */
   if (!VIEW_NO_RENDER.has(state.view) || forceRedraw){
-    renderer.render(scene, camera);
+    renderFrame(realDt);
     forceRedraw = false;
   }
 }
@@ -463,6 +495,10 @@ function init(){
   buildWorld();
   updateAllDeskScreens();
   initReticle();
+  /* 氛围系统：拖影后处理（可失败回退）/ 保安警灯 / 紧张值 */
+  initPostFX();
+  initGuardLights();
+  initTension();
   bindEvents();
   initPaperEvents();
   renderHudProbs();
