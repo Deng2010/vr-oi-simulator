@@ -42,6 +42,8 @@ function punchTeacher(){
   unlockAch('teacher_hit');
   /* 监考已倒：从这一刻起同学也可以打了 */
   state.teacherDown = true;
+  /* 亮出血条 */
+  revealHp();
 
   setTimeout(() => {
     if (teacher){
@@ -164,7 +166,14 @@ function updateGuards(realDt, t){
     if (d < nearD[0]){ nearD[1] = nearD[0]; near[1] = near[0]; nearD[0] = d; near[0] = g; }
     else if (d < nearD[1]){ nearD[1] = d; near[1] = g; }
 
-    if (d < GUARD_HIT_RADIUS){ endByGuards(); return; }
+    if (d < GUARD_HIT_RADIUS){
+      /* 单个保安独立出手冷却，防止贴身连续扣血 */
+      const now = performance.now();
+      if (guardCanAttack(g, now)){
+        g.userData.nextAttackAt = now + GUARD_HIT_COOLDOWN;
+        if (!handleGuardCatch(g)) return;
+      }
+    }
 
     if (d > 0.01){
       const sp = g.userData.speed * realDt;
@@ -219,6 +228,20 @@ function endByGuards(){
     '遵守考场纪律，人人有责。\n下次别再打老师了。');
 }
 
+/* 保安抓住玩家：有血条就扣 1 格，没有血条直接结局。
+   返回 false 表示本局已经结束。 */
+function handleGuardCatch(g){
+  if (state.hpVisible && state.hp > 0){
+    if (!damagePlayer(g, performance.now())){
+      endByGuards();
+      return false;
+    }
+    return true;
+  }
+  endByGuards();
+  return false;
+}
+
 /* =========================================================
    击杀里程碑 + 保安警告窗
    ---------------------------------------------------------
@@ -231,7 +254,7 @@ function endByGuards(){
      叫来更多保安。
    ========================================================= */
 const GUARD_WARN_MIN_KILLS = 10;   // 从第几杀开始可能弹窗
-const GUARD_WARN_CHANCE    = 0.04; // 每次击杀的触发概率
+const GUARD_WARN_CHANCE    = 0.1; // 每次击杀的触发概率
 
 const GUARD_WARN_LINES = [
   /* 档 0（10-19）：口头提醒 */
@@ -292,6 +315,10 @@ function checkGuardKillMilestones(k){
 function maybeGuardWarning(){
   if (!guardWarnRoll(state.guardKills, Math.random)) return;
 
+  /* 通报弹出：整个世界放慢到 0.1x（考试计时不受影响），
+     选项落地后恢复原速 */
+  beginSlowMo();
+
   const lines = GUARD_WARN_LINES[guardWarnTier(state.guardKills)];
   const line = lines[Math.floor(Math.random() * lines.length)];
   /* 两条不重复的叛逆台词 + 一个配合选项 */
@@ -299,13 +326,14 @@ function maybeGuardWarning(){
   const defyA = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
   const defyB = pool[Math.floor(Math.random() * pool.length)];
 
-  openDialog({
+  slowMoDlg = openDialog({
     title: '\u26A0 保安队 · 第 ' + state.guardKills + ' 次通报',
     text: line,
     options: [
       {
         label: '双手抱头蹲下（配合）',
         cb: dlg => {
+          endSlowMo();
           closeDialog(dlg);
           state.defiance = 0;
           toast('你慢慢蹲下。保安退了半步，但没有离开。', 2200);
@@ -326,6 +354,7 @@ function maybeGuardWarning(){
 
 /* 嘴硬的代价：违抗计数 +1（推高紧张值）+ 立刻叫来更多保安 */
 function defyGuardWarning(dlg){
+  endSlowMo();
   closeDialog(dlg);
   state.defiance = (state.defiance || 0) + 1;
   toast('对面沉默了两秒——然后更多脚步声涌了进来。', 2200);

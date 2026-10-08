@@ -55,6 +55,7 @@ const state = {
   warnCount: 0, wanderTimer: 0,
   teacherWarnActive: false, bathroomApproved: false,
   teacherDown: false,             // 是否已打倒监考（决定同学可否被攻击）
+  hp: 5, hpVisible: false,        // 血条（监考倒台后才显示）
   guardKills: 0, submitCount: {}, achievements: new Set(),
   guardsSpawned: 0,
   defiance: 0,                // 违抗保安通报的次数（推高紧张值）
@@ -205,6 +206,7 @@ const bathroomUI = $('bathroomUI'), bathBar = $('bathBar'),
 const endingUI = $('ending');
 const toastStack = $('toastStack');
 const pauseMenu = $('pauseMenu'), npcComputerUI = $('npcComputerUI');
+const redFlash = $('redFlash');   // 受击闪红（出拳不再闪，只保留这一处）
 const minimapWrap = $('minimapWrap');
 const minimap = $('minimap'), mmCtx = minimap.getContext('2d');
 const achNotify = $('achNotify');

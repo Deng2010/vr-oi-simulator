@@ -292,6 +292,23 @@ function bindEvents(){
 let lastInteractUpdate = 0;
 let forceRedraw = false;
 let hitStop = 0;                // 命中顿帧剩余时间（出拳命中时置位）
+let worldTimeScale = 1;         // 全局世界时间倍率（通报弹窗期间的子弹时间）
+let slowMoDlg = null;           // 引发慢放的弹窗；它一消失就恢复原速
+
+/* 世界时间步长：顿帧 × 全局慢放。考试计时（state.elapsed）用 realDt，
+   不受这里影响——慢的是世界，不是钟。 */
+function worldDtFor(realDt){
+  const hs = hitStop > 0 ? 0.12 : 1;
+  return realDt * hs * worldTimeScale;
+}
+
+function beginSlowMo(){
+  worldTimeScale = 0.1;
+}
+
+function endSlowMo(){
+  worldTimeScale = 1;
+}
 
 /* 这些视图下，3D 世界不可见（被全屏覆盖层盖住），可以跳过 render；
    其中 code/paper/corridor/bathroom/npcComputer 也跳过世界逻辑更新。 */
@@ -311,7 +328,12 @@ function animate(){
 
   /* 命中顿帧：命中瞬间世界逻辑减速到 12%，相机/UI/计时不受影响 */
   if (hitStop > 0) hitStop -= realDt;
-  const worldDt = hitStop > 0 ? realDt * 0.12 : realDt;
+  /* 通报弹窗把世界放到 0.1x；弹窗消失（选项或 Esc）即恢复 */
+  if (slowMoDlg && dialogs.indexOf(slowMoDlg) < 0){
+    slowMoDlg = null;
+    endSlowMo();
+  }
+  const worldDt = worldDtFor(realDt);
 
   const inWorld = state.view === 'world';
 
@@ -499,6 +521,7 @@ function init(){
   initPostFX();
   initGuardLights();
   initTension();
+  initHp();
   bindEvents();
   initPaperEvents();
   renderHudProbs();

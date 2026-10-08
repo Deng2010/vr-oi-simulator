@@ -171,6 +171,29 @@
   }
   #minimap{display:block;border-radius:6px;}
 
+  /* ---------- 血条（监考倒台后才显示） ---------- */
+  #hpBar{
+    position:fixed;left:188px;bottom:20px;z-index:10;display:none;
+    align-items:center;gap:6px;
+    background:rgba(10,13,20,.78);border:1px solid #2a3448;border-radius:10px;
+    padding:10px 14px;backdrop-filter:blur(6px);
+  }
+  #hpBar.show{display:inline-flex;}
+  #hpBar i{
+    display:block;width:15px;height:15px;border-radius:4px;
+    background:#2a1218;border:1px solid #4a1f28;
+    transition:background .18s, box-shadow .18s, border-color .18s;
+  }
+  #hpBar i.on{
+    background:linear-gradient(135deg,#ff6b78,#b8232f);
+    border-color:#ff8f96;box-shadow:0 0 10px -2px #ff5f6d99;
+  }
+  /* 受击闪红：只在被保安抓住时触发 */
+  #redFlash{
+    position:fixed;inset:0;background:#ff2b2b;opacity:0;
+    pointer-events:none;z-index:150;transition:opacity .13s ease-out;
+  }
+
   /* ---------- 紧张态 ---------- */
   #tenseVignette{
     position:fixed;inset:0;pointer-events:none;z-index:5;opacity:0;
