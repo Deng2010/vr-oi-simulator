@@ -164,18 +164,6 @@
   }
   #minimap{display:block;border-radius:6px;}
 
-  #redFlash{
-    position:fixed;inset:0;background:#ff2b2b;opacity:0;
-    pointer-events:none;z-index:150;transition:opacity .13s ease-out;
-  }
-  #dangerVignette{
-    position:fixed;inset:0;pointer-events:none;z-index:8;
-    box-shadow:inset 0 0 160px 40px rgba(255,40,40,0);transition:box-shadow .3s;
-  }
-  #dangerVignette.on{
-    box-shadow:inset 0 0 160px 40px rgba(255,40,40,.45);
-  }
-
   /* 成就通知 */
   #achNotify{
     position:fixed;top:80px;right:20px;z-index:70;

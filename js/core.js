@@ -200,8 +200,7 @@ const bathroomUI = $('bathroomUI'), bathBar = $('bathBar'),
       bathSub = $('bathSub'), bathDots = $('bathDots');
 const endingUI = $('ending');
 const toastStack = $('toastStack');
-const pauseMenu = $('pauseMenu'), redFlash = $('redFlash'),
-      dangerVig = $('dangerVignette'), npcComputerUI = $('npcComputerUI');
+const pauseMenu = $('pauseMenu'), npcComputerUI = $('npcComputerUI');
 const minimapWrap = $('minimapWrap');
 const minimap = $('minimap'), mmCtx = minimap.getContext('2d');
 const achNotify = $('achNotify');

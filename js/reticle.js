@@ -13,9 +13,9 @@
    ========================================================= */
 
 const RETICLE_DIST   = 0.5;     // 准星到相机的距离（米）
-const RETICLE_LEN    = 0.030;   // 十字单臂长度
-const RETICLE_TH     = 0.0026;  // 十字臂粗细
-const RETICLE_RING_R = 0.055;   // 进度圆环半径
+const RETICLE_LEN    = 0.015;   // 十字单臂长度（整体已缩放 0.5×）
+const RETICLE_TH     = 0.0013;  // 十字臂粗细
+const RETICLE_RING_R = 0.0275;  // 进度圆环半径
 
 const RETICLE_WHITE  = new THREE.Color(0xffffff);
 const RETICLE_RED    = new THREE.Color(0xff5f6d);
@@ -94,6 +94,11 @@ function initReticle(){
 function updateReticle(dt){
   if (!reticle) return;
   reticle.visible = !crosshair.classList.contains('hidden');
+  /* 兜底：准星整体不可见时，进度环绝不残留 */
+  if (!reticle.visible){
+    retRing.visible = false;
+    return;
+  }
 
   const dwell = dialogDwell();          // 弹窗按钮的视线停留状态
   const attacking = !!actionSpace;      // 攻击行为且在交互范围内

@@ -26,8 +26,11 @@ function punchTeacher(){
   teacher.armR.rotation.x = -1.4;
 
   audio.punch();
-  redFlash.style.opacity = '0.62';
-  setTimeout(() => redFlash.style.opacity = '0', 160);
+
+  /* 打击感：全身部件爆散 + 视角回弹 + 命中顿帧 */
+  spawnBodyDebris(teacher.group, { speed: 3.2 });
+  kickView(0.045, (Math.random() - 0.5) * 0.05);
+  hitStop = 0.07;
 
   toast('\u{1F44A} 你一拳打在了监考老师的胳膊上……', 1600);
   unlockAch('teacher_hit');
@@ -61,12 +64,16 @@ function punchGuard(g){
   }
 
   g.userData.alive = false;
+  /* 先炸散再移除组：部件已摘到场景里，带物理飞走 */
+  spawnBodyDebris(g.group, { speed: 3.9 });
   scene.remove(g.group);
   state.guardKills++;
 
   audio.punch();
-  redFlash.style.opacity = '0.4';
-  setTimeout(() => redFlash.style.opacity = '0', 130);
+
+  /* 打击感：视角回弹 + 顿帧（比打老师更重） */
+  kickView(0.06, (Math.random() - 0.5) * 0.06);
+  hitStop = 0.09;
 
   toast('\u{1F44A} 一拳撂倒了一个保安！', 1500);
   if (state.guardKills >= 5) unlockAch('guard_5');
@@ -119,8 +126,6 @@ function updateGuards(realDt, t){
     }
   }
 
-  if (aliveGuardCount() > 0 && minDist < 3.5) dangerVig.classList.add('on');
-  else dangerVig.classList.remove('on');
 }
 
 function endByGuards(){
@@ -148,5 +153,4 @@ function hideAllPanels(){
     .forEach(id => { const e = $(id); if (e) e.classList.add('hidden'); });
   crosshair.classList.add('hidden');
   promptEl.classList.add('hidden');
-  dangerVig.classList.remove('on');
 }

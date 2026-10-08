@@ -10,8 +10,10 @@ function bindEvents(){
   /* 左键交互；未锁定时点击画面重新捕获鼠标，不触发交互 */
   renderer.domElement.addEventListener('click', () => {
     if (!state.started || state.ended) return;
-    /* 弹窗优先：左键点按钮，不作用于场景也不重新捕获 */
-    if (hasDialog()){ activateDialogButton(); return; }
+    /* 弹窗存在期间左键不消除面板（只允许视线停留确认），
+       避免点击造成状态中断而进度环仍残留的问题；此时点击仅用于
+       在指针意外释放时重新捕获鼠标 */
+    if (hasDialog()){ if (!pointerLocked) requestLock(); return; }
     if (!pointerLocked){ requestLock(); return; }
     /* 左键即原空格键语义：准星指向可攻击目标（老师/保安，且在范围内）
        时执行攻击，否则执行普通交互 */
@@ -264,6 +266,7 @@ function bindEvents(){
    ========================================================= */
 let lastInteractUpdate = 0;
 let forceRedraw = false;
+let hitStop = 0;                // 命中顿帧剩余时间（出拳命中时置位）
 
 /* 这些视图下，3D 世界不可见（被全屏覆盖层盖住），可以跳过 render；
    其中 code/paper/corridor/bathroom/npcComputer 也跳过世界逻辑更新。 */
@@ -281,6 +284,10 @@ function animate(){
     if (state.elapsed >= CONTEST_LEN) endContest(false);
   }
 
+  /* 命中顿帧：命中瞬间世界逻辑减速到 12%，相机/UI/计时不受影响 */
+  if (hitStop > 0) hitStop -= realDt;
+  const worldDt = hitStop > 0 ? realDt * 0.12 : realDt;
+
   const inWorld = state.view === 'world';
 
   if (inWorld && state.started && !state.ended && !state.frozen){
@@ -290,6 +297,8 @@ function animate(){
 
   /* 3D 悬浮弹窗：惯性追随 + 相切朝向 + 按钮拾取 */
   if (dialogs.length) updateDialogs(realDt);
+  /* 爆散碎块的物理积分（顿帧同样生效，打出凝滞感） */
+  if (debrisList.length) updateDebris(worldDt);
   /* 3D 准星：旋转 / 缩放 / 变色 / 停留进度环 */
   updateReticle(realDt);
 
@@ -298,7 +307,7 @@ function animate(){
 
   /* 世界逻辑：只在世界视图下运行，避免在 IDE / 草稿纸里空跑 NPC 与 AI */
   if (inWorld){
-    updateNPCs(realDt, t);
+    updateNPCs(worldDt, t);
 
     /* 老师 AI */
     if (teacher && !state.frozen){
@@ -327,7 +336,7 @@ function animate(){
           teacher.group.rotation.y = Math.atan2(dx, dz);
           showTeacherWarning();
         } else {
-          const sp = 3.2 * realDt;
+          const sp = 3.2 * worldDt;
           const nx = pos.x + (dx / d) * sp;
           const nz = pos.z + (dz / d) * sp;
           if (!collides(nx, pos.z, 0.3)) pos.x = nx;
@@ -349,7 +358,7 @@ function animate(){
         const d = Math.hypot(dx, dz);
         if (d < 0.3) tm.mode = 'patrol';
         else {
-          const sp = 3.0 * realDt;
+          const sp = 3.0 * worldDt;
           pos.x += (dx / d) * sp; pos.z += (dz / d) * sp;
           teacher.group.rotation.y = Math.atan2(dx, dz);
         }
@@ -357,7 +366,7 @@ function animate(){
     }
 
     /* 保安 */
-    updateGuards(realDt, t);
+    updateGuards(worldDt, t);
 
     /* 走动警告检测 */
     if (state.started && !state.ended && !state.frozen

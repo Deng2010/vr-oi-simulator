@@ -8,6 +8,9 @@
    ========================================================= */
 let lastInteractKey = '';
 
+/* 干扰同学的判定半径：必须贴到"他的人"身边，而非整个座位区 */
+const NPC_DISTURB_RANGE = 0.72;
+
 function updateInteract(){
   actionE = null;
   actionF = null;
@@ -16,18 +19,19 @@ function updateInteract(){
 
   if (state.view !== 'world' || !state.started || state.ended || state.frozen) return;
 
+  /* 弹窗存在期间：屏蔽场景交互提示，准星操作优先给弹窗按钮。
+     放在指针锁定检查之前：弹窗期内不提示"点击画面"，避免误导 */
+  if (hasDialog()){
+    actionE = null; actionF = null; actionSpace = null;
+    promptEl.classList.add('hidden');
+    return;
+  }
+
   /* 鼠标未被指针锁定（Esc 释放或未捕获）：提示点击画面，暂不显示交互提示 */
   if (!pointerLocked){
     const txt = '鼠标已释放 —— 点击画面继续考试';
     if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
     promptEl.classList.remove('hidden');
-    return;
-  }
-
-  /* 弹窗存在期间：屏蔽场景交互提示，准星操作优先给弹窗按钮 */
-  if (hasDialog()){
-    actionE = null; actionF = null; actionSpace = null;
-    promptEl.classList.add('hidden');
     return;
   }
 
@@ -66,6 +70,10 @@ function updateInteract(){
     const d = Math.hypot(state.pos.x - ud.seatX, state.pos.z - ud.seatZ);
     if (d < 2.3){
       if (ud.state === 'seated'){
+        /* 干扰的判定从"座位 2.3m"收紧到"他的人"：以身体实际位置为圆心 */
+        const dBody = Math.hypot(state.pos.x - n.group.position.x,
+                                 state.pos.z - n.group.position.z);
+        if (dBody > NPC_DISTURB_RANGE) continue;
         actionF = { fn: () => disturbNPC(i) };
         const txt = `[ F ] 干扰${ud.name}（他可能会报告老师）`;
         if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }

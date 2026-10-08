@@ -27,6 +27,7 @@ js/
   world.js            考场场景：房间 / 桌椅 / 显示器 / 人物 / 保安
   interact.js         准星交互判定（E / F / 空格）
   combat.js           殴打老师 / 保安 AI / 全员收尾
+  debris.js           击中爆散：形状感知的刚体物理（与地板/墙壁碰撞）
   npc.js              屏蔽词机制与选手 NPC 行为
   teacher.js          监考老师：警告 / 惩罚 / 举手对话
   corridor.js         走廊往返与洗手间流程

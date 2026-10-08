@@ -7,6 +7,11 @@
    视角 / 玩家
    ========================================================= */
 function applyLook(dt){
+  /* 出拳回弹衰减：命中时 kickView 注入的视觉偏移平滑归零 */
+  const kr = 1 - Math.exp(-dt * 11);
+  recoilPitch += (0 - recoilPitch) * kr;
+  recoilYaw   += (0 - recoilYaw)   * kr;
+
   /* 旋转输入由 mousemove（指针锁定）写入 yawTarget / pitchTarget，
      这里只负责平滑插值与俯仰限位 */
   pitchTarget = clamp(pitchTarget, -1.35, 1.35);
@@ -89,6 +94,16 @@ function updatePlayer(dt){
   const bobY = moving ? Math.sin(state.bob) * 0.022 : Math.sin(state.bob) * 0.004;
   camera.position.set(state.pos.x, 1.65 + bobY, state.pos.z);
   camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
+  /* 回弹是纯视觉叠加，不写回 state.yaw/pitch，不影响真实朝向 */
+  camera.rotation.x += recoilPitch;
+  camera.rotation.y += recoilYaw;
+}
+
+/* ---------- 出拳视角回弹 ---------- */
+let recoilPitch = 0, recoilYaw = 0;
+function kickView(pitchAmt, yawAmt){
+  recoilPitch = clamp(recoilPitch + pitchAmt, -0.10, 0.10);
+  recoilYaw   = clamp(recoilYaw   + yawAmt,   -0.10, 0.10);
 }
 
 /* =========================================================
