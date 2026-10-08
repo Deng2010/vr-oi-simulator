@@ -19,6 +19,7 @@ const RETICLE_RING_R = 0.0275;  // 进度圆环半径
 
 const RETICLE_WHITE  = new THREE.Color(0xffffff);
 const RETICLE_RED    = new THREE.Color(0xff5f6d);
+const RETICLE_DARK   = new THREE.Color(0x141822);   /* 白光区域的反色 */
 
 let reticle = null;             // 准星 Group
 const retBars = [];             // 两根臂
@@ -53,6 +54,7 @@ function initReticle(){
 
   /* 进度圆环：极坐标 shader，uProgress 0..1，从顶部顺时针填充 */
   retRingU = { uProgress: { value: 0 } };
+  retRingU.uDark = { value: 0 };
   retRing = new THREE.Mesh(
     new THREE.PlaneGeometry(RETICLE_RING_R * 2, RETICLE_RING_R * 2),
     new THREE.ShaderMaterial({
@@ -69,6 +71,7 @@ function initReticle(){
         precision mediump float;
         varying vec2 vUv;
         uniform float uProgress;
+        uniform float uDark;
         void main(){
           vec2 p = vUv - 0.5;
           float r = length(p) * 2.0;
@@ -78,7 +81,9 @@ function initReticle(){
           float fill = step(ang, uProgress);
           float alpha = ring * (0.20 + 0.80 * fill);
           if (alpha < 0.02) discard;
-          gl_FragColor = vec4(mix(vec3(0.36, 0.55, 1.0), vec3(1.0), fill), alpha);
+          vec3 base = mix(vec3(0.36, 0.55, 1.0), vec3(0.10, 0.14, 0.22), uDark);
+          vec3 hot  = mix(vec3(1.0), vec3(0.86, 0.22, 0.30), uDark);
+          gl_FragColor = vec4(mix(base, hot, fill), alpha);
         }`
     })
   );
@@ -120,14 +125,19 @@ function updateReticle(dt){
   /* 攻击态：渐变成红色 */
   const targetMix = attacking ? 1 : 0;
   retMix += (targetMix - retMix) * (1 - Math.exp(-dt * 10));
-  /* 紧张态也会让准星泛一点血色（攻击态优先） */
+  /* 紧张态也会让准星泛一点血色（攻击态优先）；
+     指着门口白光时底色反色，否则白底上准星会消失 */
   const tn = getTension() * 0.45;
-  _retCol.copy(RETICLE_WHITE).lerp(RETICLE_RED, Math.max(retMix, tn));
+  const base = aimingAtWhiteLight() ? RETICLE_DARK : RETICLE_WHITE;
+  _retCol.copy(base).lerp(RETICLE_RED, Math.max(retMix, tn));
   for (const b of retBars) b.material.color.copy(_retCol);
 
   /* 紧张态呼吸：极轻微的缩放脉动 */
   const breathe = 1 + 0.05 * getTension() * Math.sin(performance.now() * 0.006);
   reticle.scale.setScalar(retScale * breathe);
+
+  /* 进度环也跟着反色 */
+  retRingU.uDark.value = aimingAtWhiteLight() ? 1 : 0;
 
   /* 停留进度环 */
   retRing.visible = dwell.progress > 0.002;

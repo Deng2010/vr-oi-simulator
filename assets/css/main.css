@@ -124,6 +124,11 @@
     color:#e6ecf9;backdrop-filter:blur(6px);pointer-events:none;
     box-shadow:0 6px 24px -6px #000;white-space:nowrap;
   }
+  /* 指着门口白光时切换浅底深字，保证可读 */
+  #prompt.bright{
+    background:rgba(238,242,250,.92);border-color:#2a3448;
+    color:#141822;box-shadow:0 6px 24px -6px #0008;
+  }
   /* ---------- 字幕提示：小地图上方，向上堆叠 ---------- */
   #toastStack{
     position:fixed;left:20px;bottom:178px;z-index:60;pointer-events:none;

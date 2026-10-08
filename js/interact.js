@@ -16,6 +16,8 @@ function updateInteract(){
   actionF = null;
   actionSpace = null;
   promptEl.classList.add('hidden');
+  /* 准星指着门口白光时，交互提示切换浅底深字，保证可读 */
+  promptEl.classList.toggle('bright', aimingAtWhiteLight());
 
   if (state.view !== 'world' || !state.started || state.ended || state.frozen) return;
 
@@ -101,6 +103,14 @@ function updateInteract(){
   /* 出口 → E */
   const dDoor = Math.hypot(state.pos.x - 7.85, state.pos.z - 0);
   if (dDoor < 3.0){
+    /* 终局：门已开，走向白光即可走出去 */
+    if (state.doorOpen){
+      actionE = { fn: walkOutOfTheRoom };
+      const txt = '[ E ] 走出去';
+      if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
+      promptEl.classList.remove('hidden');
+      return;
+    }
     if (state.bathroomApproved){
       actionE = { fn: () => enterCorridor('toilet') };
       const txt = '[ E ] 离开考场去洗手间';

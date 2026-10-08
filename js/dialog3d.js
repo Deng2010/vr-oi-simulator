@@ -32,16 +32,17 @@
 const DLG_RADIUS      = 2.0;    // 球面半径（米）：弹窗中心到眼睛的距离
 const DLG_SPAWN_YAW   = 0.15;   // 生成时相对准心的随机偏航（弧度，约 ±8.6°）
 const DLG_SPAWN_PITCH = 0.11;   // 生成时相对准心的随机俯仰（弧度，约 ±6.3°）
-const DLG_CANVAS_W    = 1000;   // 画布像素尺寸（决定文字清晰度）
-const DLG_CANVAS_H    = 600;
-const DLG_WORLD_H     = 0.744;  // 画板世界高度（米），宽度按画布比例推算
+const DLG_CANVAS_W    = 2000;   // 画布像素尺寸（与整体倍率同步翻倍，保持清晰度）
+const DLG_CANVAS_H    = 1200;
+const DLG_WORLD_H     = 1.488;  // 画板世界高度（米），宽度按画布比例推算
+const DLG_SCALE       = 2;      // 布局与字号的整体倍率（警告窗整体放大 2x）
 const DLG_STIFFNESS   = 90;     // 弹簧刚度（欠阻尼 → 轻微过冲回摆）
 const DLG_DAMPING     = 9;
 const DLG_MAX_LEAN    = 0.32;   // 转身带来的最大附加滚转角（弧度）
 const DLG_DWELL_TIME  = 1.0;    // 视线停留确认时长（秒）
 const DLG_DWELL_DECAY = 0.32;   // 未对准时进度倒退速度（秒清空）
 const DLG_DWELL_LOCK  = 0.45;   // 触发后的冷却，防止同按钮立刻重复触发
-const DLG_STACK_STEP  = 0.22;   // 叠放时每层半径增量
+const DLG_STACK_STEP  = 0.44;   // 叠放时每层半径增量（随倍率同步放大）
 
 /* 面板配色，与 CSS 变量保持一致 */
 const DLG_COL = {
@@ -94,9 +95,9 @@ function openDialog(opts){
   const rad = DLG_RADIUS + DLG_STACK_STEP * si;
   _dlgFwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
   _dlgEuler.set((Math.random() * 2 - 1) * DLG_SPAWN_PITCH +
-                  (layer % 2 ? 1 : -1) * 0.09 * (layer + 1),
+                  (layer % 2 ? 1 : -1) * 0.18 * (layer + 1),
                 (Math.random() * 2 - 1) * DLG_SPAWN_YAW +
-                  side * (0.34 + 0.22 * layer), 0, 'YXZ');
+                  side * (0.68 + 0.44 * layer), 0, 'YXZ');
   _dlgQuat.setFromEuler(_dlgEuler);
   _dlgFwd.applyQuaternion(_dlgQuat).normalize();
 
@@ -287,11 +288,11 @@ function layoutDialog(dlg){
   }
   const cols = Math.min(2, n);
   const rows = Math.ceil(n / cols);
-  const pad = 28, gap = 14, bh = 66;
+  const pad = 28 * DLG_SCALE, gap = 14 * DLG_SCALE, bh = 66 * DLG_SCALE;
   const bw = (DLG_CANVAS_W - pad * 2 - gap * (cols - 1)) / cols;
   const totalH = rows * bh + (rows - 1) * gap;
   const top = DLG_CANVAS_H - pad - totalH;
-  dlg.textMaxH = top - 104 - 12;          // 标题区 104px + 间隙
+  dlg.textMaxH = top - (104 + 12) * DLG_SCALE;   // 标题区 + 间隙
   for (let i = 0; i < n; i++){
     const c = i % cols, r = (i / cols) | 0;
     dlg.buttons.push({
@@ -309,51 +310,52 @@ function drawDialog(dlg, hoverIdx){
   ctx.clearRect(0, 0, W, H);
 
   /* 面板底 + 圆角边框 + 左侧强调条 */
-  roundRectPath(ctx, 6, 6, W - 12, H - 12, 18);
+  roundRectPath(ctx, 6 * DLG_SCALE, 6 * DLG_SCALE,
+                 W - 12 * DLG_SCALE, H - 12 * DLG_SCALE, 18 * DLG_SCALE);
   ctx.fillStyle = DLG_COL.bg;
   ctx.fill();
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 3 * DLG_SCALE;
   ctx.strokeStyle = DLG_COL.border;
   ctx.stroke();
   ctx.fillStyle = DLG_COL.accent;
-  ctx.fillRect(16, 34, 5, H - 68);
+  ctx.fillRect(16 * DLG_SCALE, 34 * DLG_SCALE, 5 * DLG_SCALE, H - 68 * DLG_SCALE);
 
   /* 标题 */
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   if (dlg.title){
-    ctx.font = '600 32px "Microsoft YaHei", "PingFang SC", sans-serif';
+    ctx.font = `600 ${37 * DLG_SCALE}px "Microsoft YaHei", "PingFang SC", sans-serif`;
     ctx.fillStyle = DLG_COL.title;
-    ctx.fillText(dlg.title, 40, 32);
+    ctx.fillText(dlg.title, 40 * DLG_SCALE, 32 * DLG_SCALE);
   }
 
   /* 正文（CJK 感知换行，超高截断） */
-  ctx.font = '26px "Microsoft YaHei", "PingFang SC", sans-serif';
+  ctx.font = `${26 * DLG_SCALE}px "Microsoft YaHei", "PingFang SC", sans-serif`;
   ctx.fillStyle = DLG_COL.text;
-  const lines = wrapDialogText(ctx, dlg.text, W - 96);
-  const maxLines = Math.max(1, Math.floor(dlg.textMaxH / 38));
+  const lines = wrapDialogText(ctx, dlg.text, W - 96 * DLG_SCALE);
+  const maxLines = Math.max(1, Math.floor(dlg.textMaxH / (38 * DLG_SCALE)));
   for (let i = 0; i < Math.min(lines.length, maxLines); i++){
-    ctx.fillText(lines[i], 40, 104 + i * 38);
+    ctx.fillText(lines[i], 40 * DLG_SCALE, (104 + i * 38) * DLG_SCALE);
   }
   if (lines.length > maxLines){
     ctx.fillStyle = DLG_COL.dim;
-    ctx.fillText('……', 40, 104 + maxLines * 38);
+    ctx.fillText('……', 40 * DLG_SCALE, (104 + maxLines * 38) * DLG_SCALE);
   }
 
   /* 按钮：hover 高亮；点中即由 activateDialogButton 触发回调并消除弹窗 */
   dlg.buttons.forEach((b, i) => {
     const hot = i === hoverIdx;
-    roundRectPath(ctx, b.x, b.y, b.w, b.h, 12);
+    roundRectPath(ctx, b.x, b.y, b.w, b.h, 12 * DLG_SCALE);
     ctx.fillStyle = hot ? DLG_COL.btnHot : DLG_COL.btn;
     ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * DLG_SCALE;
     ctx.strokeStyle = hot ? '#8fb0ff' : DLG_COL.border;
     ctx.stroke();
-    ctx.font = (hot ? '600 ' : '') + '25px "Microsoft YaHei", "PingFang SC", sans-serif';
+    ctx.font = (hot ? '600 ' : '') + `${25 * DLG_SCALE}px "Microsoft YaHei", "PingFang SC", sans-serif`;
     ctx.fillStyle = hot ? '#ffffff' : DLG_COL.btnText;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(b.label, b.x + b.w / 2, b.y + b.h / 2 + 1);
+    ctx.fillText(b.label, b.x + b.w / 2, b.y + b.h / 2 + DLG_SCALE);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
   });

@@ -7,6 +7,12 @@
    场景搭建
    ========================================================= */
 const ROOM_W = 16, ROOM_D = 14, ROOM_H = 3.4;
+const DOOR_W = 0.95, DOOR_H = 2.15;   // 门洞尺寸（+X 墙上的开口）
+
+/* 终局白光：门板 / 门口光面 / 外扩辉光 / 地面投射 / 点光源 */
+let doorGroup = null, doorLightMesh = null, doorGlowMesh = null,
+    doorFloorMesh = null, doorPointLight = null, doorFloorTex = null;
+let doorOpenT = 0;
 
 function buildRoom(){
   const W = ROOM_W, D = ROOM_D, H = ROOM_H;
@@ -38,7 +44,11 @@ function buildRoom(){
   mkWall(W, H,  0, H/2, -D/2, 0);
   mkWall(W, H,  0, H/2,  D/2, Math.PI);
   mkWall(D, H, -W/2, H/2, 0, Math.PI/2);
-  mkWall(D, H,  W/2, H/2, 0, -Math.PI/2);
+  /* +X 墙留出门洞：左右两段 + 顶部一段 */
+  const sideW = (D - DOOR_W) / 2;
+  mkWall(sideW, H, W/2, H/2, -(D/2 - sideW / 2), -Math.PI/2);
+  mkWall(sideW, H, W/2, H/2,  (D/2 - sideW / 2), -Math.PI/2);
+  mkWall(DOOR_W, H - DOOR_H, W/2, DOOR_H + (H - DOOR_H) / 2, 0, -Math.PI/2);
 
   /* 墙面障碍 */
   addObstacle(-W/2 - 0.5, 0, 0.5, D/2 + 1);
@@ -102,14 +112,19 @@ function buildRoom(){
   hh.rotation.z = 0.6; mm.rotation.z = -1.1;
 
   /* 门 */
-  box(0.07, 2.15, 0.95, 0x4a3a2e, W/2 - 0.04, 1.075, 0, scene, { roughness: 0.7 });
+  /* 注意：必须赋值给模块级 doorGroup（不能加 const，否则会遮蔽它，
+     updateDoorLight / openTheDoor 拿到的就永远是 null） */
+  doorGroup = new THREE.Group();
+  doorGroup.position.set(W/2 - 0.04, 0, -0.475);   /* 铰链在门左侧 */
+  scene.add(doorGroup);
+  box(0.07, 2.15, 0.95, 0x4a3a2e, 0, 1.075, 0.475, doorGroup, { roughness: 0.7 });
   const handle = new THREE.Mesh(
     new THREE.CylinderGeometry(0.022, 0.022, 0.16, 10),
     mat(0xc9b037, { metalness: 0.85, roughness: 0.28 })
   );
   handle.rotation.x = Math.PI / 2;
-  handle.position.set(W/2 - 0.12, 1.05, -0.32);
-  scene.add(handle);
+  handle.position.set(-0.08, 1.05, 0.155);
+  doorGroup.add(handle);
 
   const signC = document.createElement('canvas');
   signC.width = 256; signC.height = 96;
@@ -124,6 +139,64 @@ function buildRoom(){
   sign.position.set(W/2 - 0.09, 2.42, 0);
   sign.rotation.y = -Math.PI / 2;
   scene.add(sign);
+
+  /* ---------- 终局白光（打完全部保安后才点亮） ---------- */
+  /* 门口光面：填满门洞的极亮白面，从房内可见 */
+  doorLightMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(DOOR_W, DOOR_H),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0,
+      depthWrite: false, side: THREE.DoubleSide
+    })
+  );
+  doorLightMesh.position.set(W/2 + 0.14, DOOR_H / 2, 0);
+  doorLightMesh.rotation.y = -Math.PI / 2;
+  doorLightMesh.visible = false;
+  scene.add(doorLightMesh);
+
+  /* 外扩辉光：门口外侧更大的一层加法白光 */
+  doorGlowMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.4, 3.4),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+  doorGlowMesh.position.set(W/2 + 0.42, 1.5, 0);
+  doorGlowMesh.rotation.y = -Math.PI / 2;
+  doorGlowMesh.visible = false;
+  scene.add(doorGlowMesh);
+
+  /* 地面投射：门口洒进房内的光斑，亮度随距离衰减 */
+  const fc = document.createElement('canvas');
+  fc.width = 256; fc.height = 256;
+  const fx = fc.getContext('2d');
+  /* 亮端在画布右侧：plane 的 u 轴朝 +X，即门口一侧最亮、向房内衰减 */
+  const grad = fx.createLinearGradient(256, 0, 0, 0);
+  grad.addColorStop(0.0, 'rgba(255,255,255,0.95)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.55)');
+  grad.addColorStop(1.0, 'rgba(255,255,255,0)');
+  fx.fillStyle = grad;
+  fx.fillRect(0, 0, 256, 256);
+  doorFloorTex = new THREE.CanvasTexture(fc);
+  doorFloorMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.2, 2.8),
+    new THREE.MeshBasicMaterial({
+      map: doorFloorTex, transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    })
+  );
+  doorFloorMesh.rotation.x = -Math.PI / 2;
+  doorFloorMesh.position.set(W/2 - 2.1, 0.03, 0);
+  doorFloorMesh.visible = false;
+  scene.add(doorFloorMesh);
+
+  /* 门口点光源：让白光真正照到考场里（压迫感中的唯一亮源） */
+  doorPointLight = new THREE.PointLight(0xffffff, 0, 16, 2);
+  doorPointLight.userData.noTensionDim = true;   /* 豁免紧张值调光 */
+  doorPointLight.position.set(W/2 + 0.5, 1.6, 0);
+  scene.add(doorPointLight);
 
   /* 窗 */
   box(0.06, 1.6, 3.0, 0x3a4150, -W/2 + 0.04, 1.9, 0, scene);
@@ -520,10 +593,39 @@ function deepenContactShadows(t){
 /* ---------- 保安警灯：最多 2 盏真实点光源，挂到最近的保安头顶 ----------
    点光源数量直接进光照 shader，不能按保安数无限添加，故做上限并常驻。 */
 const guardLights = [];
+/* ---------- 终局：门开 + 强光投射 ---------- */
+function openTheDoor(){
+  state.doorOpen = true;
+  doorLightMesh.visible = true;
+  doorGlowMesh.visible = true;
+  doorFloorMesh.visible = true;
+}
+
+/* 每帧推进开门与点灯（1.6s 平滑完成） */
+function updateDoorLight(dt){
+  if (!state.doorOpen || !doorGroup) return;
+  if (doorOpenT >= 1) return;
+  doorOpenT = Math.min(1, doorOpenT + dt / 1.6);
+  const e = doorOpenT * doorOpenT * (3 - 2 * doorOpenT);       /* smoothstep */
+  doorGroup.rotation.y = -1.9 * e;                              /* 开门约 109° */
+  doorLightMesh.material.opacity = 0.45 + 0.55 * e;             /* 门口白面 */
+  doorGlowMesh.material.opacity   = 0.75 * e;                   /* 外侧辉光 */
+  doorFloorMesh.material.opacity  = 0.9 * e;                    /* 地面投射 */
+  doorPointLight.intensity        = 7 * e;                      /* 照进考场 */
+}
+
+/* 准星是否指着白光区域（用于反色，保证可读） */
+function aimingAtWhiteLight(){
+  if (!state.doorOpen || doorOpenT < 0.12 || !doorLightMesh) return false;
+  raycaster.setFromCamera(CENTER, camera);
+  raycaster.far = 16;
+  return raycaster.intersectObject(doorLightMesh, false).length > 0;
+}
+
 function initGuardLights(){
   for (let i = 0; i < 2; i++){
     const l = new THREE.PointLight(0xff2211, 0, 7, 2);
-    l.userData.isGuardLight = true;   /* 紧张值调光时跳过，强度由闪烁驱动 */
+    l.userData.noTensionDim = true;   /* 紧张值调光时跳过，强度由闪烁驱动 */
     scene.add(l);
     guardLights.push(l);
   }

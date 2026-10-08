@@ -351,6 +351,8 @@ function animate(){
 
   if (state.view === 'corridor') updateCorridor(realDt);
   if (state.view === 'bathroom') updateBathroom(realDt);
+  /* 终局：开门动画与白光投射的推进 */
+  if (state.doorOpen) updateDoorLight(realDt);
 
   /* 世界逻辑：只在世界视图下运行，避免在 IDE / 草稿纸里空跑 NPC 与 AI */
   if (inWorld){
@@ -462,11 +464,11 @@ function animate(){
     if (hudScore.dataset.key !== key){
       hudScore.dataset.key = key;
       const guardInfo = alive > 0
-        ? `　<span style="color:#ff6b78;font-size:11px">\u26A0 保安 ${alive}</span>`
+        ? `　<span style="color:#ff6b78;font-size:16px">\u26A0 保安 ${alive}</span>`
         : '';
       hudScore.innerHTML =
         `总分 <b>${state.totalScore}</b> / 400　` +
-        `<span style="color:#5d6880;font-size:11px">警告 ${state.warnCount} 次</span>${guardInfo}`;
+        `<span style="color:#5d6880;font-size:16px">警告 ${state.warnCount} 次</span>${guardInfo}`;
     }
     /* HUD 陪葬：计时器与小地图随紧张值进入红色警戒 */
     const tn = getTension();

@@ -5,12 +5,12 @@
    - 默认隐藏；监考倒台一刻显示，并提醒"你现在有血条了"；
    - 被保安抓住扣 1 格，窗口闪红 + 左下角提示"你被命中了！"；
    - 扣到 0 走"被保安抓走"结局；
-   - 每个保安有独立攻击冷却（GUARD_HIT_COOLDOWN），防止同一帧
-     或贴身时连续扣血。
+   - 玩家侧 1 秒受击无敌（PLAYER_HURT_INVULN）：任何保安都能动手，
+     但玩家 1 秒内只会真的掉一格。
    ========================================================= */
 
 const HP_MAX = 5;
-const GUARD_HIT_COOLDOWN = 2000;   /* 单个保安两次有效攻击的最小间隔（ms） */
+const PLAYER_HURT_INVULN = 1000;   /* 玩家受击无敌：1 秒内无论几个保安都只掉一格 */
 
 /* 纯函数：本次被抓是扣血还是致命 */
 function guardHitResult(hpVisible, hp){
@@ -19,9 +19,9 @@ function guardHitResult(hpVisible, hp){
   return 'damage';
 }
 
-/* 纯函数：该保安现在是否可以发动一次有效攻击 */
-function guardCanAttack(g, now){
-  return now >= ((g && g.userData && g.userData.nextAttackAt) || 0);
+/* 纯函数：此刻是否还在受击无敌期 */
+function playerInvulnerable(now){
+  return now - (state.lastDamageAt || 0) < PLAYER_HURT_INVULN;
 }
 
 function initHp(){

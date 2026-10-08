@@ -75,9 +75,9 @@ function updateTension(dt, kills, nearestDist, playerSpeed){
                  playerSpeed < TENSION_CALM_SPEED;
   const nightmare = (state.guardsSpawned || 0) > 0;
   let target = tensionTarget(kills, nearestDist, atSeat, nightmare);
-  /* 嘴硬是有代价的：每次违抗通报直接推高紧张值（最多 +0.35） */
+  /* 嘴硬是有代价的：每次违抗通报直接推高紧张值（最多 +0.25） */
   if (state.defiance > 0){
-    target = clamp(target + Math.min(0.35, state.defiance * 0.12), 0, 1);
+    target = clamp(target + Math.min(0.25, state.defiance * 0.12), 0, 1);
   }
 
   const tau = target > tension ? TENSION_RISE_TAU : TENSION_FALL_TAU;
@@ -106,7 +106,8 @@ function applyTension(t, dt){
     tHemi.groundColor.copy(_tGndA).lerp(_tGndB, t);
   }
   for (const p of tPoints){
-    if (p.userData && p.userData.isGuardLight) continue;   /* 警灯强度由闪烁逻辑驱动 */
+    /* 警灯与终局白光的强度各自驱动，不随紧张值调光 */
+    if (p.userData && p.userData.noTensionDim) continue;
     p.intensity = lerp(0.42, 0.12, t);
   }
   if (scene.fog) scene.fog.color.copy(_tFogA).lerp(_tFogB, t);

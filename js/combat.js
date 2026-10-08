@@ -99,10 +99,38 @@ function killGuard(g){
   scene.remove(g.group);
   state.guardKills++;
   if (state.guardKills >= GUARD_MAX_TOTAL){
-    endByTotalVictory();
+    openFinalDoor();
     return false;
   }
   return true;
+}
+
+/* 打完全部保安：不直接结算，开门 + 弹"警告"，等玩家自己走出去 */
+function openFinalDoor(){
+  if (state.doorOpen || state.ended) return;
+  openTheDoor();
+  audio.beep(880, 0.3, 0.06, 'sine');
+  setTimeout(() => audio.beep(1320, 0.4, 0.05, 'sine'), 260);
+  toast('走廊尽头那扇门，开了。', 3000);
+  /* 慢放 0.4s 再弹窗，让开门的动作先被看见 */
+  setTimeout(() => {
+    if (state.ended) return;
+    openDialog({
+      title: '\u26A0 警告',
+      text: '门开了。\n\n' +
+            '不是考场这一扇——是走廊尽头那扇从来打不开的门。\n' +
+            '它开的时候没有声音，只有光。白得不像这个考场里该有的东西。\n\n' +
+            '保安们停下了动作，齐刷刷望向那个方向，然后让开了路。\n' +
+            '广播里只剩电流噪音。你听见过这样的召唤吗？',
+      options: [{ label: '去看看', cb: dlg => closeDialog(dlg) }]
+    });
+  }, 1400);
+}
+
+/* 真的走出白光：此时才结算 */
+function walkOutOfTheRoom(){
+  if (state.ended) return;
+  endByTotalVictory();
 }
 
 /* 一拳扫倒拳范围内所有保安（不是只有一个） */
@@ -167,12 +195,7 @@ function updateGuards(realDt, t){
     else if (d < nearD[1]){ nearD[1] = d; near[1] = g; }
 
     if (d < GUARD_HIT_RADIUS){
-      /* 单个保安独立出手冷却，防止贴身连续扣血 */
-      const now = performance.now();
-      if (guardCanAttack(g, now)){
-        g.userData.nextAttackAt = now + GUARD_HIT_COOLDOWN;
-        if (!handleGuardCatch(g)) return;
-      }
+      if (!handleGuardCatch(g)) return;
     }
 
     if (d > 0.01){
@@ -229,10 +252,14 @@ function endByGuards(){
 }
 
 /* 保安抓住玩家：有血条就扣 1 格，没有血条直接结局。
+   受击无敌改为玩家侧 1 秒：任何保安都能抓，但玩家 1 秒内只掉一格。
    返回 false 表示本局已经结束。 */
 function handleGuardCatch(g){
+  const now = performance.now();
   if (state.hpVisible && state.hp > 0){
-    if (!damagePlayer(g, performance.now())){
+    if (now - state.lastDamageAt < PLAYER_HURT_INVULN) return true;   /* 无敌中 */
+    state.lastDamageAt = now;
+    if (!damagePlayer(g, now)){
       endByGuards();
       return false;
     }
@@ -331,16 +358,6 @@ function maybeGuardWarning(){
     text: line,
     options: [
       {
-        label: '双手抱头蹲下（配合）',
-        cb: dlg => {
-          endSlowMo();
-          closeDialog(dlg);
-          state.defiance = 0;
-          toast('你慢慢蹲下。保安退了半步，但没有离开。', 2200);
-          audio.beep(300, 0.12, 0.04, 'sine');
-        }
-      },
-      {
         label: defyA,
         cb: dlg => defyGuardWarning(dlg)
       },
@@ -374,12 +391,13 @@ function endByTotalVictory(){
   unlockAch('army');
 
   $('endTitle').textContent = '无 人 能 挡';
-  $('endSub').textContent = '第 200 名保安倒下了。走廊里再也走不出人来。';
+  $('endSub').textContent = '第 200 名保安倒下了。然后，你走进了那片白光。';
   showEnding(state.totalScore,
-    '你站在考场中央，呼吸和心跳一起慢下来。\n\n' +
-    '脚下是两百具叠在一起的制服。帽檐、徽章、对讲机，散了一地。\n' +
+    '门在身后合上。没有风，没有声音，也没有人追出来。\n\n' +
+    '你站在光里回头看：两百具叠在一起的制服，帽檐、徽章、对讲机散了一地。\n' +
     '监考老师不知什么时候已经跑了，教务处的电话打到了天亮。\n' +
-    '来的人不认识你，只认识这个考场——他们后来把整层楼封了。\n\n' +
+    '来的人不认识你，只认识这个考场。他们后来把整层楼封了，\n' +
+    '只在记录里写：那个考生赢了，然后走了。\n\n' +
     '《NOI 竞赛纪律》最后一页写着：\n' +
     '“纪律需要人来执行。如果执行纪律的人都不够了，\n' +
     '那考场里就只剩下一条纪律：别惹写代码的人。”\n\n' +

@@ -56,6 +56,8 @@ const state = {
   teacherWarnActive: false, bathroomApproved: false,
   teacherDown: false,             // 是否已打倒监考（决定同学可否被攻击）
   hp: 5, hpVisible: false,        // 血条（监考倒台后才显示）
+  doorOpen: false,                // 终局：门已开
+  lastDamageAt: 0,                // 玩家上次受击时间（1s 受击无敌）
   guardKills: 0, submitCount: {}, achievements: new Set(),
   guardsSpawned: 0,
   defiance: 0,                // 违抗保安通报的次数（推高紧张值）
