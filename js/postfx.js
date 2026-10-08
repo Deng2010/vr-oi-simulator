@@ -10,8 +10,8 @@
      renderFrame 自动回退为直接渲染，其余氛围效果不受影响。
    ========================================================= */
 
-const POST_DAMP_MIN = 0.26;    // 初始：有一点拖影但很弱
-const POST_DAMP_MAX = 0.80;    // 紧张值拉满时的拖影长度
+const POST_DAMP_MIN = 0.52;    // 初始：安静考场也有一层薄拖影
+const POST_DAMP_MAX = 0.93;    // 紧张值拉满：几乎复刻上一帧的长拖影
 
 let composer = null, afterimage = null, postOK = false;
 

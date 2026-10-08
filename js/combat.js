@@ -85,8 +85,11 @@ function punchGuard(g){
   kickView(0.06, (Math.random() - 0.5) * 0.06);
   hitStop = 0.09;
 
+  /* 击杀里程碑成就 + 随机保安警告窗 */
+  checkGuardKillMilestones(state.guardKills);
+  maybeGuardWarning();
+
   toast('\u{1F44A} 一拳撂倒了一个保安！', 1500);
-  if (state.guardKills >= 5) unlockAch('guard_5');
 
   setTimeout(() => {
     if (state.ended) return;
@@ -174,6 +177,120 @@ function endByGuards(){
   showEnding(0, '你在考场上公然殴打监考老师，性质恶劣。\n' +
     '本次比赛成绩作废，并记入诚信档案。\n\n' +
     '遵守考场纪律，人人有责。\n下次别再打老师了。');
+}
+
+/* =========================================================
+   击杀里程碑 + 保安警告窗
+   ---------------------------------------------------------
+   - 击杀 10 / 20 / 50 / 100 解锁对应成就；
+   - 从第 10 杀起，每次击杀有 GUARD_WARN_CHANCE 概率弹出保安队
+     警告窗（3D 悬浮弹窗，必须交互消除）。文案按击杀数分四档，
+     语气逐渐升级：口头提醒 → 正式警告 → 纪律处理 → 最后通牒；
+   - 选项含"配合"与两条随机叛逆台词。配合：违抗计数清零；
+     嘴硬：违抗计数 +1（直接推高紧张值，见 tension.js）并立刻
+     叫来更多保安。
+   ========================================================= */
+const GUARD_WARN_MIN_KILLS = 10;   // 从第几杀开始可能弹窗
+const GUARD_WARN_CHANCE    = 0.04; // 每次击杀的触发概率
+
+const GUARD_WARN_LINES = [
+  /* 档 0（10-19）：口头提醒 */
+  [
+    '同学，请停止攻击工作人员，配合我们维护考场秩序。',
+    '保安同志正在赶来。请你放下拳头，我们可以当作什么都没发生。',
+    '考场监控已全程记录。现在停手，还来得及。',
+    '同学，打人不能加分。有话好好说，先放下手。'
+  ],
+  /* 档 1（20-49）：正式警告 */
+  [
+    '最后一次警告。继续袭击工作人员，我们将按考场纪律处理你。',
+    '你的行为已构成扰乱考试秩序，我们有权取消你的成绩。',
+    '考场秩序由我们负责，你的拳头不负责。立刻停手。',
+    '再说一次：放下拳头。这是通知，不是请求。'
+  ],
+  /* 档 2（50-99）：纪律处理 */
+  [
+    '拒不配合者，我们有权取消成绩并禁赛三年。这是正式通知。',
+    '你已经打倒了足够多的工作人员。收手，或者承担后果。',
+    '考场外已经叫好了人。你要继续，我们就只能继续。',
+    '《NOI 竞赛纪律》第三十一条：你现在每挥一拳，都在给自己记一笔。'
+  ],
+  /* 档 3（100+）：最后通牒 */
+  [
+    '现在立刻双手抱头蹲下，放弃抵抗，否则我们将动用物理。',
+    '最后一次。抱头，蹲下，别逼我们把这考场拆了。',
+    '你是考生，不是选手队。停下，或者我们让你停下。',
+    '给你十秒。之后发生的事情，写在通报里会很难看。'
+  ]
+];
+
+const GUARD_WARN_DEFY = ['那就试试', '我才不呢', '有本事来抓我啊',
+                         '等我先把这题写完', '你们人多了不起？'];
+
+/* 纯函数：按击杀数选警告档位（0=口头提醒 … 3=最后通牒） */
+function guardWarnTier(kills){
+  if (kills < 20)  return 0;
+  if (kills < 50)  return 1;
+  if (kills < 100) return 2;
+  return 3;
+}
+
+/* 纯函数：本次是否触发警告窗 */
+function guardWarnRoll(kills, rng){
+  if (kills < GUARD_WARN_MIN_KILLS) return false;
+  return rng() < GUARD_WARN_CHANCE;
+}
+
+function checkGuardKillMilestones(k){
+  if (k >= 5)   unlockAch('guard_5');
+  if (k >= 10)  unlockAch('guard10');
+  if (k >= 20)  unlockAch('guard20');
+  if (k >= 50)  unlockAch('guard50');
+  if (k >= 100) unlockAch('guard100');
+}
+
+function maybeGuardWarning(){
+  if (!guardWarnRoll(state.guardKills, Math.random)) return;
+
+  const lines = GUARD_WARN_LINES[guardWarnTier(state.guardKills)];
+  const line = lines[Math.floor(Math.random() * lines.length)];
+  /* 两条不重复的叛逆台词 + 一个配合选项 */
+  const pool = GUARD_WARN_DEFY.slice();
+  const defyA = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+  const defyB = pool[Math.floor(Math.random() * pool.length)];
+
+  openDialog({
+    title: '\u26A0 保安队 · 第 ' + state.guardKills + ' 次通报',
+    text: line,
+    options: [
+      {
+        label: '双手抱头蹲下（配合）',
+        cb: dlg => {
+          closeDialog(dlg);
+          state.defiance = 0;
+          toast('你慢慢蹲下。保安退了半步，但没有离开。', 2200);
+          audio.beep(300, 0.12, 0.04, 'sine');
+        }
+      },
+      {
+        label: defyA,
+        cb: dlg => defyGuardWarning(dlg)
+      },
+      {
+        label: defyB,
+        cb: dlg => defyGuardWarning(dlg)
+      }
+    ]
+  });
+}
+
+/* 嘴硬的代价：违抗计数 +1（推高紧张值）+ 立刻叫来更多保安 */
+function defyGuardWarning(dlg){
+  closeDialog(dlg);
+  state.defiance = (state.defiance || 0) + 1;
+  toast('对面沉默了两秒——然后更多脚步声涌了进来。', 2200);
+  audio.beep(180, 0.25, 0.06, 'sawtooth');
+  spawnTwoGuards();
 }
 
 /* =========================================================

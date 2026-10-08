@@ -56,6 +56,7 @@ const state = {
   teacherWarnActive: false, bathroomApproved: false,
   guardKills: 0, submitCount: {}, achievements: new Set(),
   guardsSpawned: 0,
+  defiance: 0,                // 违抗保安通报的次数（推高紧张值）
   startTime: 0,
   wanderCount: 0,              // 离开座位触发警告的次数
   wanderPenaltyApplied: false  // 是否已触发"时间锁定"惩罚

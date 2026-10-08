@@ -74,7 +74,11 @@ function updateTension(dt, kills, nearestDist, playerSpeed){
   const atSeat = Math.hypot(dx, dz) < TENSION_CALM_RADIUS &&
                  playerSpeed < TENSION_CALM_SPEED;
   const nightmare = (state.guardsSpawned || 0) > 0;
-  const target = tensionTarget(kills, nearestDist, atSeat, nightmare);
+  let target = tensionTarget(kills, nearestDist, atSeat, nightmare);
+  /* 嘴硬是有代价的：每次违抗通报直接推高紧张值（最多 +0.35） */
+  if (state.defiance > 0){
+    target = clamp(target + Math.min(0.35, state.defiance * 0.12), 0, 1);
+  }
 
   const tau = target > tension ? TENSION_RISE_TAU : TENSION_FALL_TAU;
   tension += (target - tension) * (1 - Math.exp(-dt / tau));
