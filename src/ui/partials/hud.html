@@ -1,0 +1,21 @@
+<!-- 常驻层：渲染画布、红闪/暗角、准星、HUD、小地图、提示条、Toast、成就通知
+     由原 index.html 第 431-448 行拆出，通过 build/vite-plugin-html-partials.mjs
+     在开发与构建时原样内联回 index.html。 -->
+<canvas id="scene"></canvas>
+<div id="redFlash"></div>
+<div id="dangerVignette"></div>
+<div id="crosshair" class="hidden"></div>
+
+<div id="hud" class="hidden">
+  <div id="hudTimer">04:00:00</div>
+  <div id="hudScore">总分 <b>0</b> / 400</div>
+  <div id="hudProbs"></div>
+  <button id="btnSettings">&#x2699; 设置</button>
+  <button id="btnEnd">交卷离场</button>
+</div>
+<div id="minimapWrap" class="hidden">
+  <canvas id="minimap" width="140" height="124"></canvas>
+</div>
+<div id="prompt" class="hidden"></div>
+<div id="toast"></div>
+<div id="achNotify"></div>

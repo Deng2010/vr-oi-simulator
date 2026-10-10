@@ -1,0 +1,59 @@
+/* HUD：计时器、总分、题目进度、准星、提示条
+   由原 index.html 内联 <style> 第 86-141 行原样拆出，
+   在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10;}
+  #hudTimer{
+    position:absolute;top:18px;left:50%;transform:translateX(-50%);
+    font-family:"SF Mono",Consolas,monospace;font-size:26px;font-weight:600;
+    letter-spacing:2px;padding:8px 26px;border-radius:10px;
+    background:rgba(10,13,20,.72);border:1px solid #2a3448;
+    text-shadow:0 0 18px #5b8cff66;backdrop-filter:blur(6px);
+  }
+  #hudTimer.warn{color:#ff8f8f;border-color:#5a2b2b;text-shadow:0 0 18px #ff5f6d88;}
+  #hudScore{
+    position:absolute;top:18px;left:20px;font-size:13px;color:#9aa5bb;
+    background:rgba(10,13,20,.72);border:1px solid #2a3448;border-radius:10px;
+    padding:10px 16px;backdrop-filter:blur(6px);
+  }
+  #hudScore b{color:#eaeffb;font-size:18px;font-family:monospace;}
+  #hudProbs{
+    position:absolute;top:18px;right:20px;font-size:12px;
+    background:rgba(10,13,20,.72);border:1px solid #2a3448;border-radius:10px;
+    padding:10px 14px;min-width:160px;backdrop-filter:blur(6px);
+  }
+  #hudProbs .row{display:flex;justify-content:space-between;gap:14px;padding:2px 0;color:#8e99ae;}
+  #hudProbs .row b{color:#e2e8f5;font-family:monospace;}
+  #hudProbs .row.ac b{color:var(--green);}
+  #btnEnd,#btnSettings{
+    position:absolute;bottom:20px;pointer-events:auto;
+    background:rgba(30,36,50,.8);border:1px solid #333d52;color:#9aa5bb;
+    padding:7px 16px;border-radius:8px;font-size:12px;cursor:pointer;
+    transition:.15s;font-family:inherit;
+  }
+  #btnEnd{right:20px;}
+  #btnEnd:hover{background:#3a2a2a;border-color:#6b3a3a;color:#ffb3b3;}
+  #btnSettings{right:118px;}
+  #btnSettings:hover{background:#243048;border-color:#3d5278;color:#c3d3f5;}
+
+  #crosshair{
+    position:fixed;top:50%;left:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+    border-radius:50%;background:#ffffffcc;z-index:9;pointer-events:none;
+    box-shadow:0 0 4px #000,0 0 2px #000;
+  }
+  #prompt{
+    position:fixed;bottom:12%;left:50%;transform:translateX(-50%);z-index:11;
+    background:rgba(12,16,24,.85);border:1px solid #3a4560;
+    padding:9px 22px;border-radius:9px;font-size:14px;letter-spacing:1px;
+    color:#e6ecf9;backdrop-filter:blur(6px);pointer-events:none;
+    box-shadow:0 6px 24px -6px #000;white-space:nowrap;
+  }
+  #toast{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:60;
+    background:rgba(15,19,28,.92);border:1px solid #35405a;border-radius:12px;
+    padding:16px 30px;font-size:15px;color:#dfe6f5;pointer-events:none;
+    opacity:0;transition:opacity .35s;box-shadow:0 12px 40px -10px #000;
+    max-width:min(80vw,560px);text-align:center;line-height:1.6;
+  }
+  #toast.show{opacity:1;}
+

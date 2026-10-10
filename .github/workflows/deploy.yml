@@ -1,0 +1,117 @@
+name: Deploy to GitHub Pages
+
+# 关键约束：只有「推送 tag」才会发布。
+#   · push tag       → 发布（唯一入口）
+#   · workflow_dispatch → 应急手动重发（需要指定一个已存在的 tag）
+# main 分支的推送不会触发本工作流，因此线上永远是某个 tag 的产物。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的 tag（例如 v1.0.0）'
+        required: true
+
+# GitHub Pages 部署所需权限：OIDC 令牌 + Pages 写入
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时刻只跑一次部署；发布不做 cancel-in-progress，
+# 避免出现「发布到一半被取消」的半成品站点。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 构建
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 手动触发时要按输入的 tag 取代码
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # ---------- 版本一致性校验 ----------
+      # tag 与 package.json 版本必须一致，避免「v1.2.0 的站点里写着 1.1.9」。
+      - name: 校验 tag 与 package.json 版本一致
+        id: version
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          PKG="$(node -p "require('./package.json').version")"
+          echo "tag=$TAG  package.json=$PKG"
+          if [ "v$PKG" != "$TAG" ]; then
+            echo "::error::tag ($TAG) 与 package.json 版本 (v$PKG) 不一致，请先同步版本号再打 tag"
+            exit 1
+          fi
+          echo "version=$PKG" >> "$GITHUB_OUTPUT"
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 校验烘焙贴图资产
+        run: |
+          for f in board door-sign keyboard; do
+            test -s "assets/textures/$f.webp" \
+              || { echo "::error::缺少 assets/textures/$f.webp，请运行 npm run bake:assets"; exit 1; }
+          done
+
+      # 发布前把校验全跑一遍：宁可不发布，也不发布一个坏的站点。
+      - name: ESLint
+        run: npm run lint
+
+      - name: 回归测试
+        run: npm test
+
+      - name: 构建（把版本号注入产物）
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: npm run build
+
+      # Pages 需要 .nojekyll，否则以 _ 开头的文件/目录会被 Jekyll 忽略
+      - name: 写入 .nojekyll
+        run: touch dist/.nojekyll
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 打包站点
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: 发布到 Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 部署
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 发布摘要
+        run: |
+          {
+            echo "### 已发布 v${{ needs.build.outputs.version }}"
+            echo ""
+            echo "- 站点：${{ steps.deployment.outputs.page_url }}"
+            echo "- 触发：\`${{ github.event.inputs.tag || github.ref_name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

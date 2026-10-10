@@ -1,0 +1,27 @@
+# 依赖与构建产物
+node_modules/
+dist/
+.npm-cache/
+.vite/
+
+# 本地环境
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+
+# 编辑器
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# 日志
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# 测试 / 工具的临时产物
+tests/tmp/
+tools/out/
+.chrome-*/

@@ -1,0 +1,31 @@
+{
+  "name": "vr-oi-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "VR OI 考场模拟器 —— 第一人称 3D 信息学奥赛考场（Three.js + Vite）",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node tests/run.mjs",
+    "bake:assets": "node tools/bake-assets.mjs",
+    "verify": "npm run lint && npm test && npm run build"
+  },
+  "dependencies": {
+    "three": "0.128.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "esbuild": "^0.21.5",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "vite": "^5.0.0"
+  }
+}

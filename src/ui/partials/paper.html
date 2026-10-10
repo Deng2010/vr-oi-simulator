@@ -1,0 +1,16 @@
+<!-- 草稿纸
+     由原 index.html 第 574-586 行拆出，通过 build/vite-plugin-html-partials.mjs
+     在开发与构建时原样内联回 index.html。 -->
+<!-- ===================== 草稿纸 ===================== -->
+<div id="paperUI" class="screen hidden">
+  <div class="paperbox">
+    <div class="ph">
+      <span>&#x1F4DD; 草稿纸 — 鼠标拖动书写</span>
+      <span>
+        <button class="btn" id="btnClearPaper" style="padding:4px 14px;font-size:12px">清空</button>
+        <button class="btn" id="btnClosePaper" style="padding:4px 14px;font-size:12px;margin-left:8px">放下纸 (Esc)</button>
+      </span>
+    </div>
+    <canvas id="paperCanvas"></canvas>
+  </div>
+</div>

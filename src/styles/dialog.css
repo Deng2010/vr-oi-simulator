@@ -1,0 +1,15 @@
+/* 监考老师对话框
+   由原 index.html 内联 <style> 第 389-400 行原样拆出，
+   在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
+  /* ---------- 对话框 ---------- */
+  #teacherDlg .dlg{
+    width:min(520px,90vw);background:#0f131b;border:1px solid #232b3a;
+    border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -16px #000;
+  }
+  .dlg-head{padding:13px 20px;background:#141a25;border-bottom:1px solid #1e2532;
+    font-size:13px;color:#a9b8d4;}
+  .dlg-body{padding:22px 20px;font-size:14px;line-height:1.8;color:#cbd5e8;
+    white-space:pre-wrap;max-height:40vh;overflow-y:auto;}
+  .dlg-actions{display:flex;flex-direction:column;gap:8px;padding:0 20px 20px;}
+  .dlg-actions .btn{text-align:left;}
+

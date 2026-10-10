@@ -1,0 +1,45 @@
+<!-- 暂停 / 设置菜单
+     由原 index.html 第 496-537 行拆出，通过 build/vite-plugin-html-partials.mjs
+     在开发与构建时原样内联回 index.html。 -->
+<!-- ===================== 暂停菜单 ===================== -->
+<div id="pauseMenu" class="screen hidden">
+  <div class="pbox">
+    <h2>设置</h2>
+    <div class="sub">比赛时间不会因为打开这个面板而暂停。</div>
+    <div class="set-title" style="border-top:none;margin-top:10px;padding-top:0">键盘手感</div>
+    <div class="setting-row">
+      <label>转向速度</label>
+      <input type="range" id="turnSlider" min="1" max="20" value="10">
+      <span class="val" id="turnValue">2.2</span>
+    </div>
+    <div class="setting-row">
+      <label>转向平滑</label>
+      <input type="range" id="smoothSlider" min="0" max="90" value="35">
+      <span class="val" id="smoothValue">35%</span>
+    </div>
+    <div class="set-title">比赛</div>
+    <div class="setting-row">
+      <label>时间流速</label>
+      <input type="range" id="timeSlider" min="1" max="60" value="15">
+      <span class="val" id="timeValue">15×</span>
+    </div>
+    <div class="setting-row">
+      <label>音量</label>
+      <input type="range" id="volSlider" min="0" max="100" value="60">
+      <span class="val" id="volValue">60%</span>
+    </div>
+    <div class="setting-row">
+      <label>音效</label>
+      <span class="toggle on" id="muteToggle"></span>
+    </div>
+    <div class="set-title">存档</div>
+    <div class="row2">
+      <button class="btn" id="btnSave">手动保存进度</button>
+      <button class="btn" id="btnClearSave">清除存档</button>
+    </div>
+    <div class="row2">
+      <button class="btn primary" id="btnResume">返回考场</button>
+      <button class="btn" id="btnPauseEnd">交卷离场</button>
+    </div>
+  </div>
+</div>

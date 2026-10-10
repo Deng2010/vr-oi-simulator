@@ -1,0 +1,76 @@
+name: CI
+
+# 只在 PR 与主干推送时做校验，绝不发布。
+# 发布走 deploy.yml，且必须由 tag 触发 —— 这样往 main 上推任何提交
+# 都不会意外覆盖线上 Pages，线上内容始终对应一个有版本号的 tag。
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: lint / test / build / smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 校验烘焙贴图资产（缺失会让构建直接失败，这里给出更清晰的报错）
+        run: |
+          for f in board door-sign keyboard; do
+            test -s "assets/textures/$f.webp" \
+              || { echo "::error::缺少 assets/textures/$f.webp，请运行 npm run bake:assets"; exit 1; }
+          done
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: 回归测试（评分/NPC 确定性、题面哈希、依赖方向）
+        run: npm test
+
+      - name: 构建
+        run: npm run build
+
+      - name: 产物体积报告
+        run: |
+          {
+            echo "### 构建产物体积"
+            echo '```'
+            find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.webp' \) \
+              -exec ls -l {} \; | awk '{printf "%9d  %s\n", $5, $9}' | sort -rn
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # WebGL 端到端冒烟测试：真浏览器跑一遍
+      # 「初始化 → 开始比赛 → 准星交互 → 打开 IDE → 题面懒加载 → 提交评测 → 设置面板」。
+      # ESLint 只能证明名字解析得对，证明不了模块接线与懒加载路径没断。
+      - name: 安装无头 Chromium（仅用于冒烟测试）
+        run: npx --yes playwright@1.47.2 install --with-deps chromium
+
+      - name: 浏览器端到端冒烟测试
+        run: node tools/smoke-test.mjs
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7

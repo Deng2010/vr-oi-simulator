@@ -1,0 +1,47 @@
+/* 走廊与洗手间
+   由原 index.html 内联 <style> 第 321-364 行原样拆出，
+   在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
+  /* ---------- 走廊 / 洗手间 ---------- */
+  #corridorUI .corrbox{
+    position:relative;width:100vw;height:100vh;overflow:hidden;
+    background:radial-gradient(ellipse 65% 70% at 50% 52%, #1d2532 0%, #0a0e15 55%, #030509 100%);
+  }
+  #corrVanish{
+    position:absolute;left:50%;top:52%;
+    transform:translate(-50%,-50%) scale(.55);
+    text-align:center;z-index:2;will-change:transform;
+  }
+  #corrDoor{font-size:68px;line-height:1;user-select:none;
+    filter:drop-shadow(0 0 22px #5b8cff90);}
+  #corrDoorLabel{margin-top:10px;font-size:13px;color:#9aa9c5;letter-spacing:4px;
+    text-shadow:0 0 12px #5b8cff80;}
+  #corridorUI .corrinfo{
+    position:absolute;left:50%;bottom:11%;transform:translateX(-50%);
+    width:min(520px,78vw);text-align:center;z-index:5;
+  }
+  #corrStep{font-size:16px;color:#e6ecf9;margin-bottom:12px;letter-spacing:1px;}
+  #corridorUI .corrprogress{height:8px;background:#1c2330;border-radius:4px;
+    overflow:hidden;margin-bottom:10px;}
+  #corrBar{display:block;height:100%;width:0;
+    background:linear-gradient(90deg,#5b8cff,#a78bfa);transition:width .08s linear;}
+  #corrHint{font-size:13px;color:#7c869c;letter-spacing:1px;}
+
+  #bathroomUI .bathbox{
+    width:min(520px,92vw);background:#0f131b;border:1px solid #232b3a;
+    border-radius:14px;padding:32px 36px 28px;text-align:center;
+    box-shadow:0 30px 80px -20px #000;
+  }
+  #bathroomUI h2{font-size:20px;margin-bottom:6px;font-weight:600;color:#e8eefc;}
+  #bathroomUI .bsub{font-size:12px;color:#5d6880;margin-bottom:24px;letter-spacing:1px;}
+  #bathroomUI .bstep{font-size:15.5px;color:#cbd5e8;margin-bottom:14px;
+    line-height:1.6;min-height:24px;}
+  #bathroomUI .bprogress{height:8px;background:#1c2330;border-radius:4px;
+    overflow:hidden;margin-bottom:14px;}
+  #bathroomUI .bprogress i{display:block;height:100%;width:0;
+    background:linear-gradient(90deg,#38d39f,#5b8cff);transition:width .05s linear;}
+  #bathroomUI .bhint{font-size:12.5px;color:#7c869c;letter-spacing:.5px;}
+  #bathroomUI .bdots{display:flex;justify-content:center;gap:8px;margin-top:20px;}
+  #bathroomUI .bdots i{width:7px;height:7px;border-radius:50%;background:#242c3c;transition:.2s;}
+  #bathroomUI .bdots i.on{background:#5b8cff;box-shadow:0 0 8px #5b8cffaa;}
+  #bathroomUI .bdots i.done{background:#38d39f;}
+

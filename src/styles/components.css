@@ -1,0 +1,26 @@
+/* 共享组件：.screen 覆盖层、.btn、暂停菜单
+   由原 index.html 内联 <style> 第 175-197 行原样拆出，
+   在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
+  .screen{
+    position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:rgba(4,6,10,.82);backdrop-filter:blur(5px);padding:16px;
+  }
+  .btn{
+    background:#1e2533;border:1px solid #333e54;color:#cbd4e5;padding:9px 20px;
+    border-radius:8px;font-size:13px;cursor:pointer;transition:.15s;font-family:inherit;
+  }
+  .btn:hover{background:#28313f;border-color:#4a5878;}
+  .btn.primary{background:linear-gradient(135deg,#3b6df0,#6b4ef0);border:none;color:#fff;font-weight:600;}
+  .btn.primary:hover{filter:brightness(1.12);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  #pauseMenu .pbox{
+    width:min(480px,92vw);background:#0f131b;border:1px solid #232b3a;
+    border-radius:14px;padding:26px 30px;box-shadow:0 30px 80px -20px #000;
+    max-height:90vh;overflow-y:auto;
+  }
+  #pauseMenu h2{font-size:18px;margin-bottom:6px;color:#e8eefc;font-weight:600;letter-spacing:1px;}
+  #pauseMenu .sub{font-size:12px;color:#5d6880;margin-bottom:6px;line-height:1.75;}
+  #pauseMenu .row2{display:flex;gap:10px;margin-top:16px;}
+  #pauseMenu .row2 .btn{flex:1;text-align:center;}
+

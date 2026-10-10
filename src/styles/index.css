@@ -1,0 +1,13 @@
+/* 样式入口：严格按原 index.html 内联 <style> 的顺序导入，
+   以保证同优先级选择器的层叠结果与重构前完全一致。 */
+@import './base.css';
+@import './start.css';
+@import './hud.css';
+@import './effects.css';
+@import './components.css';
+@import './ide.css';
+@import './paper.css';
+@import './corridor.css';
+@import './npc-computer.css';
+@import './dialog.css';
+@import './ending.css';

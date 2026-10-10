@@ -1,0 +1,37 @@
+<!-- 代码界面（题面列表 + 编辑器 + 评测面板）
+     由原 index.html 第 539-572 行拆出，通过 build/vite-plugin-html-partials.mjs
+     在开发与构建时原样内联回 index.html。 -->
+<!-- ===================== 代码界面 ===================== -->
+<div id="codeUI" class="screen hidden">
+  <div class="ide">
+    <div class="ide-top">
+      <div><span class="dot" style="background:#ff5f57"></span>
+           <span class="dot" style="background:#ffbd2e"></span>
+           <span class="dot" style="background:#28c840"></span>
+           &nbsp;&nbsp;NOI 2026 · 评测环境 v3.2</div>
+      <div class="ide-time" id="ideTime">04:00:00</div>
+    </div>
+    <div class="ide-main">
+      <aside class="ide-problems" id="problemList"></aside>
+      <section class="ide-problem" id="problemPane"></section>
+      <section class="ide-editor">
+        <div class="bar">
+          <span id="fileName">T1.cpp</span>
+          <span id="cursorInfo">Ln 1, Col 1 &nbsp;·&nbsp; C++14 &nbsp;·&nbsp; g++ -O2</span>
+        </div>
+        <div class="editor-wrap">
+          <pre id="codeHighlight" aria-hidden="true"></pre>
+          <textarea id="codeArea" spellcheck="false" wrap="off"
+                    autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+        </div>
+      </section>
+    </div>
+    <div class="ide-bottom">
+      <button id="btnSubmit" class="btn primary">提交评测</button>
+      <button id="btnReset" class="btn">重置代码</button>
+      <span class="ide-hint">按 Esc 或点击右侧按钮离开电脑</span>
+      <button id="btnLeave" class="btn">离开电脑</button>
+    </div>
+  </div>
+  <div id="verdict" class="verdict hidden"></div>
+</div>

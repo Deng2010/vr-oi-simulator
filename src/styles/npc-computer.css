@@ -1,0 +1,27 @@
+/* NPC 电脑
+   由原 index.html 内联 <style> 第 365-388 行原样拆出，
+   在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
+  /* ---------- NPC 电脑 ---------- */
+  #npcComputerUI .npcbox{
+    width:min(760px,94vw);height:min(560px,88vh);display:flex;flex-direction:column;
+    background:#0d1017;border:1px solid #232b3a;border-radius:12px;overflow:hidden;
+    box-shadow:0 30px 90px -20px #000;
+  }
+  #npcComputerUI .npchead{
+    padding:12px 18px;background:#12161f;border-bottom:1px solid #1e2532;
+    font-size:13px;color:#c9d7f5;display:flex;justify-content:space-between;align-items:center;
+  }
+  #npcComputerUI .npchead .tag{
+    font-size:11px;color:#ffcc57;background:#33290f;padding:3px 9px;border-radius:5px;
+    letter-spacing:1px;
+  }
+  #npcComputerUI .npcbody{
+    flex:1;overflow:auto;background:#0b0e14;
+    padding:18px 22px;font-family:"JetBrains Mono",Consolas,monospace;
+    font-size:13px;line-height:1.7;color:#c8d3e8;white-space:pre-wrap;
+  }
+  #npcComputerUI .npcactions{
+    height:56px;display:flex;align-items:center;justify-content:flex-end;gap:10px;
+    padding:0 18px;background:#12161f;border-top:1px solid #1e2532;flex-shrink:0;
+  }
+

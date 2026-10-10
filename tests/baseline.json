@@ -1,0 +1,1682 @@
+{
+  "judgment": [
+    {
+      "id": "P14962",
+      "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 40,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.156s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.628s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.666s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.780s"
+          },
+          {
+            "id": 5,
+            "status": "WA",
+            "time": "0.425s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.188s"
+          },
+          {
+            "id": 7,
+            "status": "RE",
+            "time": "0.640s"
+          },
+          {
+            "id": 8,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 9,
+            "status": "RE",
+            "time": "0.262s"
+          },
+          {
+            "id": 10,
+            "status": "TLE",
+            "time": ">3.0s"
+          }
+        ],
+        "passed": 4
+      }
+    },
+    {
+      "id": "P14962",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(){ios::sync_with_stdio(false);cin.tie(0);int n;cin>>n;vector<int> a(n);for(int i=0;i<n;i++)cin>>a[i];sort(a.begin(),a.end());long long ans=0;for(int i=0;i<n;i++)ans+=a[i];cout<<ans<<endl;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 50,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.200s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.226s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.470s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.478s"
+          },
+          {
+            "id": 5,
+            "status": "AC",
+            "time": "0.632s"
+          },
+          {
+            "id": 6,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.788s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.014s"
+          },
+          {
+            "id": 9,
+            "status": "RE",
+            "time": "0.714s"
+          },
+          {
+            "id": 10,
+            "status": "WA",
+            "time": "0.622s"
+          }
+        ],
+        "passed": 5
+      }
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){ return 0; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P14962",
+      "code": "// 只有注释\n/* 块注释 */\nint main(){ printf(\"hi\"); return 0; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){ string s=\"int main() { return 0; }\"; cout<<s; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 40,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.469s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.060s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.589s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.053s"
+          },
+          {
+            "id": 5,
+            "status": "RE",
+            "time": "0.345s"
+          },
+          {
+            "id": 6,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 7,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.361s"
+          },
+          {
+            "id": 9,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 10,
+            "status": "TLE",
+            "time": ">3.0s"
+          }
+        ],
+        "passed": 4
+      }
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 40,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.398s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.665s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.126s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.472s"
+          },
+          {
+            "id": 5,
+            "status": "WA",
+            "time": "0.124s"
+          },
+          {
+            "id": 6,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 7,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 8,
+            "status": "RE",
+            "time": "0.202s"
+          },
+          {
+            "id": 9,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 10,
+            "status": "WA",
+            "time": "0.371s"
+          }
+        ],
+        "passed": 4
+      }
+    },
+    {
+      "id": "P14962",
+      "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 30,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.756s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.341s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.108s"
+          },
+          {
+            "id": 4,
+            "status": "WA",
+            "time": "0.610s"
+          },
+          {
+            "id": 5,
+            "status": "WA",
+            "time": "0.630s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.508s"
+          },
+          {
+            "id": 7,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.396s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.481s"
+          },
+          {
+            "id": 10,
+            "status": "WA",
+            "time": "0.391s"
+          }
+        ],
+        "passed": 3
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 40,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.728s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.383s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.407s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.195s"
+          },
+          {
+            "id": 5,
+            "status": "RE",
+            "time": "0.768s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.379s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.388s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.553s"
+          },
+          {
+            "id": 9,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 10,
+            "status": "RE",
+            "time": "0.136s"
+          }
+        ],
+        "passed": 4
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(){ios::sync_with_stdio(false);cin.tie(0);int n;cin>>n;vector<int> a(n);for(int i=0;i<n;i++)cin>>a[i];sort(a.begin(),a.end());long long ans=0;for(int i=0;i<n;i++)ans+=a[i];cout<<ans<<endl;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 50,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.250s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.270s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.309s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.787s"
+          },
+          {
+            "id": 5,
+            "status": "AC",
+            "time": "0.263s"
+          },
+          {
+            "id": 6,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.400s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.029s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.421s"
+          },
+          {
+            "id": 10,
+            "status": "TLE",
+            "time": ">3.0s"
+          }
+        ],
+        "passed": 5
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){ return 0; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "// 只有注释\n/* 块注释 */\nint main(){ printf(\"hi\"); return 0; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){ string s=\"int main() { return 0; }\"; cout<<s; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 30,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.728s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.026s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.581s"
+          },
+          {
+            "id": 4,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 5,
+            "status": "RE",
+            "time": "0.678s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.115s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.623s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.430s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.749s"
+          },
+          {
+            "id": 10,
+            "status": "RE",
+            "time": "0.764s"
+          }
+        ],
+        "passed": 3
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 40,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.121s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.146s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.726s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.620s"
+          },
+          {
+            "id": 5,
+            "status": "WA",
+            "time": "0.032s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.457s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.559s"
+          },
+          {
+            "id": 8,
+            "status": "RE",
+            "time": "0.396s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.758s"
+          },
+          {
+            "id": 10,
+            "status": "RE",
+            "time": "0.631s"
+          }
+        ],
+        "passed": 4
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 20,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.708s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.377s"
+          },
+          {
+            "id": 3,
+            "status": "WA",
+            "time": "0.297s"
+          },
+          {
+            "id": 4,
+            "status": "RE",
+            "time": "0.081s"
+          },
+          {
+            "id": 5,
+            "status": "RE",
+            "time": "0.488s"
+          },
+          {
+            "id": 6,
+            "status": "RE",
+            "time": "0.476s"
+          },
+          {
+            "id": 7,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.182s"
+          },
+          {
+            "id": 9,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 10,
+            "status": "TLE",
+            "time": ">3.0s"
+          }
+        ],
+        "passed": 2
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 50,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.737s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.776s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.531s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.248s"
+          },
+          {
+            "id": 5,
+            "status": "AC",
+            "time": "0.728s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.787s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.258s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.798s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.750s"
+          },
+          {
+            "id": 10,
+            "status": "TLE",
+            "time": ">3.0s"
+          }
+        ],
+        "passed": 5
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(){ios::sync_with_stdio(false);cin.tie(0);int n;cin>>n;vector<int> a(n);for(int i=0;i<n;i++)cin>>a[i];sort(a.begin(),a.end());long long ans=0;for(int i=0;i<n;i++)ans+=a[i];cout<<ans<<endl;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 60,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.237s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.266s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.155s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.055s"
+          },
+          {
+            "id": 5,
+            "status": "AC",
+            "time": "0.319s"
+          },
+          {
+            "id": 6,
+            "status": "AC",
+            "time": "0.634s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.507s"
+          },
+          {
+            "id": 8,
+            "status": "RE",
+            "time": "0.133s"
+          },
+          {
+            "id": 9,
+            "status": "RE",
+            "time": "0.190s"
+          },
+          {
+            "id": 10,
+            "status": "WA",
+            "time": "0.290s"
+          }
+        ],
+        "passed": 6
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){ return 0; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "// 只有注释\n/* 块注释 */\nint main(){ printf(\"hi\"); return 0; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){ string s=\"int main() { return 0; }\"; cout<<s; }",
+      "out": {
+        "status": "CE",
+        "score": 0,
+        "cases": [
+          {
+            "id": 1,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 2,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 3,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 4,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 5,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 6,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 7,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 8,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 9,
+            "status": "CE",
+            "time": "-"
+          },
+          {
+            "id": 10,
+            "status": "CE",
+            "time": "-"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 30,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.661s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.220s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.751s"
+          },
+          {
+            "id": 4,
+            "status": "WA",
+            "time": "0.306s"
+          },
+          {
+            "id": 5,
+            "status": "WA",
+            "time": "0.275s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.418s"
+          },
+          {
+            "id": 7,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.265s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.387s"
+          },
+          {
+            "id": 10,
+            "status": "RE",
+            "time": "0.109s"
+          }
+        ],
+        "passed": 3
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 50,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.376s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.458s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.718s"
+          },
+          {
+            "id": 4,
+            "status": "AC",
+            "time": "0.142s"
+          },
+          {
+            "id": 5,
+            "status": "AC",
+            "time": "0.336s"
+          },
+          {
+            "id": 6,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.517s"
+          },
+          {
+            "id": 8,
+            "status": "WA",
+            "time": "0.483s"
+          },
+          {
+            "id": 9,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 10,
+            "status": "TLE",
+            "time": ">3.0s"
+          }
+        ],
+        "passed": 5
+      }
+    },
+    {
+      "id": "P17434",
+      "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 30,
+        "cases": [
+          {
+            "id": 1,
+            "status": "AC",
+            "time": "0.058s"
+          },
+          {
+            "id": 2,
+            "status": "AC",
+            "time": "0.267s"
+          },
+          {
+            "id": 3,
+            "status": "AC",
+            "time": "0.142s"
+          },
+          {
+            "id": 4,
+            "status": "WA",
+            "time": "0.625s"
+          },
+          {
+            "id": 5,
+            "status": "WA",
+            "time": "0.791s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.761s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.545s"
+          },
+          {
+            "id": 8,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.520s"
+          },
+          {
+            "id": 10,
+            "status": "WA",
+            "time": "0.401s"
+          }
+        ],
+        "passed": 3
+      }
+    }
+  ],
+  "npc": [
+    {
+      "name": "小明",
+      "id": "P14962",
+      "code": "// P14962 —— 小明\n// 认真读题，稳扎稳打\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    long long sum = 0;\n    cin >> n;\n    for (int i = 0; i < n; i++) cin >> a[i];\n    // 先读入\n    for (int i = 0; i < n; i++) {\n        if (a[i] > 0) ans++;\n        sum += i;\n        ans += a[i];\n        ans = min(ans, a[i]);\n        ans = (ans + a[i]) % 1000000007;\n        ans = (ans + a[i]) % 1000000007;\n        ans = min(ans, a[i]);\n    }\n    sort(a.begin(), a.end(), greater<long long>());\n\n    cout << ans << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小明",
+      "id": "P16184",
+      "code": "// P16184 —— 小明\n// 认真读题，稳扎稳打\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    long long sum = 0;\n    cin >> n;\n    a.resize(n);\n    // 核心处理\n    for (int i = 0; i < n; i++) {\n        ans = max(ans, a[i]);\n        ans = min(ans, a[i]);\n        if (a[i] > 0) ans++;\n        ans += a[i];\n        ans = max(ans, a[i]);\n        ans = min(ans, a[i]);\n        if (a[i] > 0) ans++;\n    }\n\n    cout << ans + sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小明",
+      "id": "P17434",
+      "code": "// P17434 —— 小明\n// 认真读题，稳扎稳打\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    cin >> n;\n    for (int i = 0; i < n; i++) cin >> a[i];\n    // 输出结果\n    for (int i = 0; i < n; i++) {\n        ans = (ans + a[i]) % 1000000007;\n        if (a[i] > 0) ans++;\n        ans = (ans + a[i]) % 1000000007;\n        ans += a[i];\n        sum += i;\n        sum += i;\n    }\n    sort(a.begin(), a.end(), greater<long long>());\n\n    cout << ans + sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小红",
+      "id": "P14962",
+      "code": "// P14962 —— 小红\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    cin >> n;\n    a.resize(n);\n    for (int i = 0; i < n; i++) cin >> a[i];\n    for (int i = 0; i < n; i++) {\n        ans += a[i];\n        ans += a[i];\n        ans = (ans + a[i]) % 1000000007;\n        sum += i;\n        ans = max(ans, a[i]);\n        ans = (ans + a[i]) % 1000000007;\n    }\n    sort(a.begin(), a.end());\n\n    cout << sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小红",
+      "id": "P16184",
+      "code": "// P16184 —— 小红\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    long long sum = 0;\n    cin >> n;\n    a.resize(n);\n    for (int i = 0; i < n; i++) cin >> a[i];\n    for (int i = 0; i < n; i++) {\n        sum += i;\n        sum += i;\n        ans += a[i];\n        sum += i;\n        ans += a[i];\n        ans += a[i];\n    }\n\n    cout << sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小红",
+      "id": "P17434",
+      "code": "// P17434 —— 小红\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    vector<long long> a;\n    cin >> n;\n    a.resize(n);\n    for (int i = 0; i < n; i++) cin >> a[i];\n    // 注意边界\n    for (int i = 0; i < n; i++) {\n        sum += i;\n        ans = max(ans, a[i]);\n        ans = min(ans, a[i]);\n        sum += i;\n        if (a[i] > 0) ans++;\n        ans = (ans + a[i]) % 1000000007;\n        ans = (ans + a[i]) % 1000000007;\n        ans = min(ans, a[i]);\n    }\n    sort(a.begin(), a.end(), greater<long long>());\n\n    cout << ans << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小刚",
+      "id": "P14962",
+      "code": "// P14962 by 小刚\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    long long sum = 0;\n    vector<long long> a;\n    cin >> n;\n    for (int i = 0; i < n; i++) cin >> a[i];\n    for (int i = 0; i < n; i++) {\n        sum += i;\n        ans = max(ans, a[i]);\n        ans += a[i];\n        sum += i;\n        ans = min(ans, a[i]);\n        ans = min(ans, a[i]);\n    }\n    reverse(a.begin(), a.end());\n\n    cout << sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小刚",
+      "id": "P16184",
+      "code": "// P16184 by 小刚\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    cin >> n;\n    for (int i = 0; i < n; i++) {\n        if (a[i] > 0) ans++;\n        sum += i;\n        ans = max(ans, a[i]);\n        ans = min(ans, a[i]);\n        ans = (ans + a[i]) % 1000000007;\n        ans += a[i];\n    }\n\n    cout << ans << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小刚",
+      "id": "P17434",
+      "code": "// P17434 by 小刚\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    long long sum = 0;\n    vector<long long> a;\n    cin >> n;\n    for (int i = 0; i < n; i++) cin >> a[i];\n    for (int i = 0; i < n; i++) {\n        if (a[i] > 0) ans++;\n        if (a[i] > 0) ans++;\n        ans = max(ans, a[i]);\n        ans = (ans + a[i]) % 1000000007;\n        sum += i;\n    }\n\n    cout << sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小强",
+      "id": "P14962",
+      "code": "// P14962\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n  ios::sync_with_stdio(false);\n  cin.tie(0);\n\n  int n;\n  long long ans = 0;\n  long long sum = 0;\n  cin >> n;\n  a.resize(n);\n  for (int i = 0; i < n; i++) cin >> a[i];\n  for (int i = 0; i < n; i++) {\n    sum += i;\n    ans += a[i];\n    if (a[i] > 0) ans++;\n    ans = min(ans, a[i]);\n    ans = min(ans, a[i]);\n  }\n  for (int i = 0; i < n - 1; i++)\n    for (int j = 0; j < n - 1 - i; j++)\n      if (a[j] > a[j + 1]) swap(a[j], a[j + 1]);\n\n  cout << ans + sum << endl;\n\n  return 0;\n}"
+    },
+    {
+      "name": "小强",
+      "id": "P16184",
+      "code": "// P16184\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n  ios::sync_with_stdio(false);\n  cin.tie(0);\n\n  int n;\n  long long ans = 0;\n  long long sum = 0;\n  vector<long long> a;\n  cin >> n;\n  for (int i = 0; i < n; i++) cin >> a[i];\n  for (int i = 0; i < n; i++) {\n    sum += i;\n    sum += i;\n    ans += a[i];\n    if (a[i] > 0) ans++;\n    ans = (ans + a[i]) % 1000000007;\n  }\n  for (int i = 0; i < n - 1; i++)\n    for (int j = 0; j < n - 1 - i; j++)\n      if (a[j] > a[j + 1]) swap(a[j], a[j + 1]);\n\n  cout << sum << endl;\n\n  return 0;\n}"
+    },
+    {
+      "name": "小强",
+      "id": "P17434",
+      "code": "// P17434\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n  ios::sync_with_stdio(false);\n  cin.tie(0);\n\n  int n;\n  long long ans = 0;\n  vector<long long> a;\n  cin >> n;\n  for (int i = 0; i < n; i++) {\n    sum += i;\n    ans += a[i];\n    if (a[i] > 0) ans++;\n    ans += a[i];\n    sum += i;\n  }\n\n  cout << ans + sum << endl;\n\n  return 0;\n}"
+    },
+    {
+      "name": "小丽",
+      "id": "P14962",
+      "code": "// P14962 …… 好难\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    cin >> n;\n    // 先随便写写\n    for (int i = 0; i < n; i++) {\n        ans = min(ans, a[i]);\n        ans = (ans + a[i]) % 1000000007;\n    }\n\n    cout << sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小丽",
+      "id": "P16184",
+      "code": "// P16184 …… 好难\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    vector<long long> a;\n    cin >> n;\n    a.resize(n);\n    for (int i = 0; i < n; i++) cin >> a[i];\n    // 先随便写写\n    for (int i = 0; i < n; i++) {\n        ans = (ans + a[i]) % 1000000007;\n        ans = max(ans, a[i]);\n    }\n\n    cout << ans + sum << endl;\n\n    return 0;\n}"
+    },
+    {
+      "name": "小丽",
+      "id": "P17434",
+      "code": "// P17434 …… 好难\n#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(0);\n\n    int n;\n    long long ans = 0;\n    long long sum = 0;\n    vector<long long> a;\n    cin >> n;\n    // 先随便写写\n    for (int i = 0; i < n; i++) {\n        if (a[i] > 0) ans++;\n        sum += i;\n        ans = min(ans, a[i]);\n        ans = max(ans, a[i]);\n    }\n\n    cout << ans + sum << endl;\n\n    return 0;\n}"
+    }
+  ],
+  "pool": [
+    {
+      "id": "P14962",
+      "name": "一次买够",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1145,
+      "starterLen": 141
+    },
+    {
+      "id": "P14963",
+      "name": "何意味",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1071,
+      "starterLen": 141
+    },
+    {
+      "id": "P14964",
+      "name": "可比豆出道计划",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1562,
+      "starterLen": 141
+    },
+    {
+      "id": "P14965",
+      "name": "昔涟",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1189,
+      "starterLen": 141
+    },
+    {
+      "id": "P15861",
+      "name": "A_Step_Back",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 649,
+      "starterLen": 141
+    },
+    {
+      "id": "P15862",
+      "name": "回去！",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1737,
+      "starterLen": 141
+    },
+    {
+      "id": "P15863",
+      "name": "wywmrfz",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1382,
+      "starterLen": 141
+    },
+    {
+      "id": "P15864",
+      "name": "阵列之弈",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1096,
+      "starterLen": 141
+    },
+    {
+      "id": "P16184",
+      "name": "数据交锋",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1101,
+      "starterLen": 141
+    },
+    {
+      "id": "P16185",
+      "name": "战术突破",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1164,
+      "starterLen": 141
+    },
+    {
+      "id": "P16186",
+      "name": "策定乾坤",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1017,
+      "starterLen": 141
+    },
+    {
+      "id": "P16187",
+      "name": "单挑风云",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1610,
+      "starterLen": 141
+    },
+    {
+      "id": "P17431",
+      "name": "紫金断局",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1031,
+      "starterLen": 141
+    },
+    {
+      "id": "P17432",
+      "name": "彼方的她",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 1140,
+      "starterLen": 141
+    },
+    {
+      "id": "P17433",
+      "name": "卿即终解",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 415,
+      "starterLen": 141
+    },
+    {
+      "id": "P17434",
+      "name": "星链光华",
+      "max": 100,
+      "tl": "1.0s",
+      "ml": "256MB",
+      "descLen": 661,
+      "starterLen": 141
+    }
+  ]
+}

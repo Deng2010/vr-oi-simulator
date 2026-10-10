@@ -1,0 +1,116 @@
+/* 代码界面：题面列表、编辑器、语法高亮、评测结果
+   由原 index.html 内联 <style> 第 198-310 行原样拆出，
+   在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
+  /* ---------- 代码界面 ---------- */
+  #codeUI .ide{
+    width:min(1400px,96vw);height:min(880px,92vh);display:flex;flex-direction:column;
+    background:#0d1017;border:1px solid #232b3a;border-radius:12px;overflow:hidden;
+    box-shadow:0 30px 90px -20px #000;
+  }
+  .ide-top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px;height:42px;background:#12161f;border-bottom:1px solid #1e2532;
+    font-size:12px;color:#7d879c;flex-shrink:0;
+  }
+  .ide-top .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;}
+  .ide-time{font-family:monospace;font-size:14px;color:#9fb2d8;}
+  .ide-main{flex:1;display:flex;min-height:0;}
+  .ide-problems{
+    width:160px;background:#0f131b;border-right:1px solid #1e2532;
+    padding:12px 8px;flex-shrink:0;overflow:auto;
+  }
+  .pitem{
+    padding:10px 12px;border-radius:8px;font-size:12.5px;cursor:pointer;
+    margin-bottom:6px;color:#8b95a9;border:1px solid transparent;transition:.15s;
+  }
+  .pitem:hover{background:#161c27;}
+  .pitem.active{background:#1a2233;border-color:#2f4370;color:#c9d7f5;}
+  .pitem .pn{display:flex;justify-content:space-between;align-items:center;gap:6px;}
+  .pitem .sc{font-family:monospace;font-size:11px;}
+  .pitem.ac .sc{color:var(--green);}
+  .ide-problem{
+    width:390px;padding:20px 22px;overflow:auto;border-right:1px solid #1e2532;
+    font-size:13px;line-height:1.85;color:#a9b4c8;flex-shrink:0;
+  }
+  .ide-problem h3{font-size:16px;color:#e8eefc;margin-bottom:4px;font-weight:600;}
+  .ide-problem .meta{font-size:11px;color:#5d6880;margin-bottom:16px;font-family:monospace;letter-spacing:.5px;}
+  .ide-problem pre{background:#0a0d13;border:1px solid #1c2330;border-radius:7px;
+    padding:10px 12px;font-family:Consolas,monospace;font-size:12px;
+    color:#9fd3b0;margin:10px 0;white-space:pre-wrap;line-height:1.6;}
+
+  .ide-editor{
+    flex:1;display:flex;flex-direction:column;
+    min-width:0;min-height:0;
+    background:#0b0e14;position:relative;
+  }
+  .ide-editor .bar{
+    height:32px;display:flex;align-items:center;padding:0 14px;font-size:11.5px;
+    color:#5d6880;border-bottom:1px solid #171d28;background:#0d1117;
+    font-family:monospace;justify-content:space-between;flex-shrink:0;
+  }
+  .editor-wrap{
+    flex:1 1 0;
+    position:relative;overflow:hidden;
+    min-height:0;min-width:0;
+  }
+  #codeHighlight,#codeArea{
+    position:absolute;top:0;left:0;
+    width:100%;height:100%;
+    margin:0;padding:14px 16px;border:none;outline:none;
+    font-family:"JetBrains Mono","SF Mono",Consolas,"Courier New",monospace;
+    font-size:13.5px;line-height:1.65;tab-size:4;
+    letter-spacing:0;font-weight:400;font-style:normal;
+    white-space:pre;word-wrap:normal;overflow-wrap:normal;
+    box-sizing:border-box;resize:none;
+  }
+  #codeHighlight{
+    color:#c8d3e8;background:#0b0e14;
+    overflow:hidden;pointer-events:none;z-index:1;
+    padding-right:24px;
+  }
+  #codeArea{
+    color:transparent;-webkit-text-fill-color:transparent;
+    background:transparent;caret-color:#7aa2ff;
+    overflow:auto;z-index:2;
+    scrollbar-width:thin;scrollbar-color:#242c3c transparent;
+  }
+  #codeArea::-webkit-scrollbar{width:8px;height:8px;}
+  #codeArea::-webkit-scrollbar-thumb{background:#242c3c;border-radius:4px;}
+  #codeArea::-webkit-scrollbar-track{background:transparent;}
+  #codeArea::selection{background:#2a3a5a;}
+
+  .tok-c{color:#5a6b80;font-style:italic;}
+  .tok-s{color:#9fd3b0;}
+  .tok-k{color:#c586c0;}
+  .tok-n{color:#ffcc57;}
+  .tok-p{color:#7aa2ff;}
+
+  .ide-bottom{
+    height:56px;display:flex;align-items:center;gap:12px;padding:0 16px;
+    background:#12161f;border-top:1px solid #1e2532;flex-shrink:0;
+  }
+  .ide-hint{font-size:11.5px;color:#556074;margin-left:auto;}
+  .verdict{
+    position:absolute;right:40px;top:70px;width:340px;background:#0f141d;
+    border:1px solid #263041;border-radius:12px;padding:16px 18px;
+    box-shadow:0 20px 50px -12px #000;font-size:12.5px;z-index:5;
+  }
+  .verdict h4{font-size:13px;margin-bottom:12px;color:#dfe7f7;font-weight:600;
+    display:flex;justify-content:space-between;}
+  .verdict h4 span{font-family:monospace;font-size:15px;}
+  .cases{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .case{
+    text-align:center;padding:6px 0;border-radius:6px;font-family:monospace;
+    font-size:10.5px;font-weight:600;background:#161c26;color:#68738a;
+  }
+  .case.AC{background:#0f2e26;color:#3ddc9a;}
+  .case.WA{background:#331a1d;color:#ff6b78;}
+  .case.TLE{background:#33290f;color:#ffc857;}
+  .case.RE{background:#33221a;color:#ff9f43;}
+  .case.CE{background:#1c1f28;color:#7a8499;}
+  .judging{color:#8ea6d8;font-size:12px;padding:10px 0;text-align:center;}
+  .barwrap{height:4px;background:#1c2330;border-radius:2px;overflow:hidden;margin-top:8px;}
+  .barwrap i{display:block;height:100%;width:0;
+    background:linear-gradient(90deg,#3b6df0,#6b4ef0);
+    transition:width .1s linear;}
+

@@ -1,0 +1,16 @@
+<!-- 结算界面
+     由原 index.html 第 638-650 行拆出，通过 build/vite-plugin-html-partials.mjs
+     在开发与构建时原样内联回 index.html。 -->
+<!-- ===================== 结算 ===================== -->
+<div id="ending" class="screen hidden">
+  <div class="box">
+    <h2 id="endTitle">比 赛 结 束</h2>
+    <p id="endSub">评测机已停止运行，你的代码已被封存。</p>
+    <div class="big" id="endScore">0</div>
+    <div class="stat-grid" id="endStats"></div>
+    <div id="endDetail"></div>
+    <div id="endAch" class="ach-list"></div>
+    <button class="btn primary" id="btnRestart"
+            style="margin-top:24px;padding:11px 40px">再来一场</button>
+  </div>
+</div>

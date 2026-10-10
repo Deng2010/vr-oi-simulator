@@ -1,0 +1,86 @@
+{
+  "note": "题面与起手模板的内容哈希，取自重构前的 problems.js（git HEAD）。用于防止拆分过程损坏文本。",
+  "starterTemplate": "b116da055e9cf447ee5ee5cf80f3a9306415239bd82bf4b9797fcdc1f1688cce",
+  "problems": {
+    "P14962": {
+      "name": "一次买够",
+      "desc": "8b2d57b1dc3418506796eb47444caa563a537c67f1baa008ecb6211a94a41a17",
+      "descLen": 1145
+    },
+    "P14963": {
+      "name": "何意味",
+      "desc": "ccf3ea97082ac6abbb2f25f1198bc2e3397f44ddfba2047c4c43328a2fd9f20b",
+      "descLen": 1071
+    },
+    "P14964": {
+      "name": "可比豆出道计划",
+      "desc": "ad30a0a947a7c4228dbbe9b834e308752987a386f9d012daa9126689bd1a5fb1",
+      "descLen": 1562
+    },
+    "P14965": {
+      "name": "昔涟",
+      "desc": "dd3ba01c94b280c4a2cc0e6330d6359d501fdeff3b09daa4870998c93535e3b6",
+      "descLen": 1189
+    },
+    "P15861": {
+      "name": "A_Step_Back",
+      "desc": "c3e02c7194a03d640d2ed255ba227f51b034b54be85f37d12cb28cbbc1417f14",
+      "descLen": 649
+    },
+    "P15862": {
+      "name": "回去！",
+      "desc": "1e63908afb8d631526c9c2b9a1cc79dd830df917f5d4cd16422d2434456b5fd8",
+      "descLen": 1737
+    },
+    "P15863": {
+      "name": "wywmrfz",
+      "desc": "c00124e6c56ce5fd8d4bdcdb0ca669dd1c6f67b684bd6cd725501b9637b687ff",
+      "descLen": 1382
+    },
+    "P15864": {
+      "name": "阵列之弈",
+      "desc": "7ab2af1b9426a3dc70c51a19c8cf035c05d21f04d25a8b4ab83f7a9fadfe97a6",
+      "descLen": 1096
+    },
+    "P16184": {
+      "name": "数据交锋",
+      "desc": "b0670580e0a5db952d80dd917a98be8274de4aad49ab78f2c80eaec681a6ab56",
+      "descLen": 1101
+    },
+    "P16185": {
+      "name": "战术突破",
+      "desc": "35322ae7123a02e7b70c181b534189b40cae4f33bda112c2e575722af47f97e5",
+      "descLen": 1164
+    },
+    "P16186": {
+      "name": "策定乾坤",
+      "desc": "548f1c3d29f8016c64634a53f9ac6c1d06095c8238053acf72a2b73478880542",
+      "descLen": 1017
+    },
+    "P16187": {
+      "name": "单挑风云",
+      "desc": "090cc36c29afe0a4506e21f65acd7515f173b19e1b8f328756cca72547400784",
+      "descLen": 1610
+    },
+    "P17431": {
+      "name": "紫金断局",
+      "desc": "ca121e138e9a01c80fc760a6edd2751576d904ab476a9741c6f820484f32ee4e",
+      "descLen": 1031
+    },
+    "P17432": {
+      "name": "彼方的她",
+      "desc": "ab38c30156a72a4358423d1361c5419de8c016300e605238fa1676df6aba756f",
+      "descLen": 1140
+    },
+    "P17433": {
+      "name": "卿即终解",
+      "desc": "c8b5f14fe98dab6316f80157278073479b9c0572b17c6e5519cfd47a3c7d7720",
+      "descLen": 415
+    },
+    "P17434": {
+      "name": "星链光华",
+      "desc": "0918382a06e079eb672dc1474a6114faf5c9f5768fa0e849fd4ed4e8745ccdac",
+      "descLen": 661
+    }
+  }
+}

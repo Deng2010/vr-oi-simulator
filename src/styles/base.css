@@ -1,0 +1,16 @@
+/* 基础重置与 CSS 变量（必须最先加载）
+   由原 index.html 内联 <style> 第 8-20 行原样拆出，
+   在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
+  :root{
+    --bg:#0b0d12; --panel:#12151d; --line:#242a38; --fg:#d7dce8;
+    --dim:#7c869c; --accent:#5b8cff; --green:#38d39f; --red:#ff5f6d;
+    --yellow:#ffcc57; --orange:#ff9f43; --purple:#a78bfa;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:var(--fg);
+    -webkit-font-smoothing:antialiased;}
+  canvas{display:block;}
+  #scene{position:fixed;inset:0;}
+  .hidden{display:none !important;}
+

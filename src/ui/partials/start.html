@@ -1,0 +1,49 @@
+<!-- 开始界面（考试须知 + 手感调校）
+     由原 index.html 第 450-494 行拆出，通过 build/vite-plugin-html-partials.mjs
+     在开发与构建时原样内联回 index.html。 -->
+<!-- ===================== 开始界面 ===================== -->
+<div id="start">
+  <h1>VR OI 考场</h1>
+  <div class="sub">NATIONAL OLYMPIAD IN INFORMATICS · VIRTUAL ARENA</div>
+  <div class="card">
+    <b>考试须知</b><br>
+    比赛时长 <b>4 小时</b>，共 <b>4 道题</b>，满分 <b>400 分</b>。<br><br>
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 &nbsp;·&nbsp;
+    <kbd>←</kbd><kbd>→</kbd> 左右转身 &nbsp;·&nbsp;
+    <kbd>↑</kbd><kbd>↓</kbd> 抬头 / 低头<br>
+    <kbd>Shift</kbd> 疾走 &nbsp;·&nbsp;
+    <kbd>E</kbd> 或 <kbd>鼠标左键</kbd> 交互（电脑 · 草稿纸 · 水杯 · 出门）<br>
+    <kbd>F</kbd> 干扰同学 &nbsp;·&nbsp;
+    <kbd>空格</kbd> 出拳（老师 / 保安，后果自负）&nbsp;·&nbsp;
+    <kbd>H</kbd> 举手呼叫监考 &nbsp;·&nbsp; <kbd>Esc</kbd> 打开设置<br><br>
+
+    <div class="set-title">视角手感调校</div>
+    <div class="setting-row">
+      <label>转向速度</label>
+      <input type="range" id="turnSliderStart" min="1" max="20" value="10">
+      <span class="val" id="turnValueStart">2.2</span>
+    </div>
+    <div class="setting-row">
+      <label>转向平滑</label>
+      <input type="range" id="smoothSliderStart" min="0" max="90" value="35">
+      <span class="val" id="smoothValueStart">35%</span>
+    </div>
+    <div class="setting-row">
+      <label>时间流速</label>
+      <input type="range" id="timeSliderStart" min="1" max="60" value="15">
+      <span class="val" id="timeValueStart">15×</span>
+    </div>
+    <div class="setting-row">
+      <label>音量</label>
+      <input type="range" id="volSliderStart" min="0" max="100" value="60">
+      <span class="val" id="volValueStart">60%</span>
+    </div>
+  </div>
+  <button id="btnStart">进 入 考 场</button>
+  <button id="btnClearSaveStart" style="margin:14px auto 0;display:block;padding:9px 26px;
+    background:transparent;border:1px solid #4a3a3a;color:#c08a8a;border-radius:8px;
+    font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:2px">
+  清空存档
+  </button>
+  <div class="ver" id="appVersion"></div>
+</div>
