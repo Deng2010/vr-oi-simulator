@@ -29,7 +29,12 @@
 
 ## 1. 命令
 
-环境：Node ≥ 20（`package.json` 的 `engines`）。首次：`npm ci`。
+环境：Node ≥ 22（`package.json` 的 `engines`）。首次：`npm ci`。
+**为什么是 22 而不是 20**：`tools/smoke-test.mjs` 用 CDP 驱动浏览器，
+CDP 走 WebSocket，而**全局 `WebSocket` 只有 Node 22 才有**。
+CI 曾钉在 Node 20、本地是 22，于是本地全绿、CI 只报一句
+「WebSocket is not defined」（脚本里现在有一条前置检查给出可读的提示）。
+Node 20 在 2026-04 已 EOL，不必再兼容。
 
 | 命令 | 作用 | 期望结果 |
 |------|------|----------|
@@ -383,6 +388,13 @@ git push origin --tags   # 触发 .github/workflows/deploy.yml
 - `main` 的推送**不会**发布，只会跑 `ci.yml`（lint + test + build + 冒烟，不发布）。
 - `deploy.yml` 会强制校验 **tag ≡ `package.json` 版本**（`v1.2.0` ↔ `"1.2.0"`），
   不一致直接失败。所以**不要手改版本号后跳过着 tag 这一步**。
+- **仓库设置也是发布链路的一部分**：`github-pages` 这个 environment 的
+  Deployment branches and tags 里必须放行 tag（现在有一条 `v*`，type=tag）。
+  只放行 `main` 时构建全绿、却卡在部署那一步，报错是
+  「Tag "v1.1.0" is not allowed to deploy to github-pages due to environment protection
+  rules」—— 这句只在 Actions 的运行详情里，`git push` 是成功的，很容易误判成代码问题。
+  仓库 settings 改不了的话，用 API 加一条策略即可：
+  `gh api -X POST repos/<owner>/<repo>/environments/github-pages/deployment-branch-policies -f name='v*' -f type='tag'`。
 
 ---
 

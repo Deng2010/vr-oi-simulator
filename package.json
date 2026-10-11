@@ -6,7 +6,7 @@
   "description": "VR OI 考场模拟器 —— 第一人称 3D 信息学奥赛考场（Three.js + Vite）",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "vite",

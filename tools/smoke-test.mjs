@@ -558,6 +558,15 @@ function pageScript(opts = {}){
 
 /* ---------- 主流程 ---------- */
 async function main(){
+  /* CDP 走 WebSocket，而**全局 WebSocket 是 Node 22 才有的**
+     （Node 20 里的 undici 并不暴露全局构造器）。
+     这里提前拦一道：否则报出来的是一句「WebSocket is not defined」，
+     和「脚本自己写错了」长得一模一样 —— CI 上真的这么错过一次
+     （ci.yml 当时钉在 Node 20，而本地是 22，于是本地全绿、CI 全红）。 */
+  if (typeof WebSocket === 'undefined'){
+    throw new Error(`冒烟测试需要 Node ≥ 22（CDP 依赖全局 WebSocket），当前是 ${process.version}`);
+  }
+
   /* 顺手清掉上次被强杀留下的浏览器 profile 目录（10~20 MB/个） */
   const swept = sweepStaleProfiles(ROOT);
   if (swept) console.log(`已清理 ${swept} 个残留的浏览器 profile 目录`);
