@@ -294,12 +294,63 @@ function pageScript(opts = {}){
          所以生产构建下这一项按「不适用」处理，而不是失败。 */
       ok: perfFront ? true : !expectProbe,
       extra: perfFront
-        ? `网格 ${perfFront.meshesBeforeBatch} → ${perfFront.sceneMeshes}（合批 ${perfFront.mergedGroups} 组）` +
+        ? `网格 ${perfFront.meshesBeforeBatch} → ${perfFront.sceneMeshes}` +
+          `（合批 ${perfFront.mergedGroups} 组，动态物体跳过 ${perfFront.skippedDynamic} 个）` +
           ` drawCalls=${perfFront.drawCalls} programs=${perfFront.programs}` +
           ` pixelRatio=${perfFront.pixelRatioSetting}` +
           ` frameMs=${perfFront.frameMs.toFixed(2)} fps=${perfFront.fps.toFixed(1)}`
         : '（生产构建，探针被摇掉 —— 符合预期）'
     });
+
+    /* 2.6 场景完整性：人物 / 监考老师不能被静态合批吞掉。
+       这是「人物 4 条腿」「老师模型冻在原地」这类 bug 的端到端判据：
+       合批误吞后，动态根子树里的网格数会变成 0。 */
+    const integ = perfFront && perfFront.integrity;
+    if (expectProbe){
+      check('场景里存在 6 个动态根（5 名选手 + 监考老师）',
+        !!integ && integ.dynamicRoots === 6,
+        integ ? `dynamicRoots=${integ.dynamicRoots}` : '探针不可用');
+      check('每个动态根的模型网格都还在（未被合批吞掉）',
+        !!integ && integ.rootMeshes.length > 0 &&
+        integ.rootMeshes.every(n => n > 0),
+        integ ? `各根网格数=${JSON.stringify(integ.rootMeshes)}` : '');
+      check('人物网格数达到完整部件数量（≥ 11）',
+        !!integ && integ.minMeshes >= 11,
+        integ ? `minMeshes=${integ.minMeshes}` : '');
+
+      /* ---- 玩家反馈的两个 bug，这里各对应一条断言 ---- */
+
+      /* bug 1：每个人都同时露出坐姿 + 站姿两组腿（共 4 条）。
+         判据：有人物腿组的动态根，必须恰好可见一组。 */
+      const withLegs = (integ && integ.roots || []).filter(r => r.hasLegs);
+      check('每个选手恰好可见一组腿（不再出现 4 条腿）',
+        expectProbe && withLegs.length >= 5 &&
+        withLegs.every(r => r.visibleLegGroups === 1),
+        `含腿组的人物 ${withLegs.length} 个，可见腿组数=` +
+        JSON.stringify(withLegs.map(r => r.visibleLegGroups)));
+      check('坐姿腿 4 个盒子 / 站姿腿 2 个盒子都还在',
+        withLegs.length > 0 &&
+        withLegs.every(r => r.sitLegMeshes === 4 && r.standLegMeshes === 2),
+        JSON.stringify(withLegs.map(r => [r.sitLegMeshes, r.standLegMeshes])));
+
+      /* bug 2：监考老师的模型冻在原地，与实际坐标不符。
+         判据：老师根节点必须有网格（模型还在它下面），
+         并且它的位置会随时间变化（AI 在动，模型随之移动）。 */
+      const teacherRoot = (integ && integ.roots || [])
+        .find(r => r.name === 'teacher');
+      check('监考老师模型仍在自己的根节点下（未被烘死）',
+        !!teacherRoot && teacherRoot.meshes > 0,
+        teacherRoot ? `网格 ${teacherRoot.meshes}` : '找不到 teacher 根节点');
+      const teacherPosA = integ && integ.teacherPos;
+      await t.sleep(1200);
+      const after = window.__VR_OI_PERF__ ? window.__VR_OI_PERF__() : null;
+      const teacherPosB = after && after.integrity && after.integrity.teacherPos;
+      const moved = !!(teacherPosA && teacherPosB) &&
+        (Math.abs(teacherPosA[0] - teacherPosB[0]) > 1e-4 ||
+         Math.abs(teacherPosA[2] - teacherPosB[2]) > 1e-4);
+      check('监考老师位置随时间变化（AI 巡逻 + 模型跟随）', moved,
+        `t0=${JSON.stringify(teacherPosA)} t1=${JSON.stringify(teacherPosB)}`);
+    }
 
     /* 3. 低头看显示器，准星应命中「使用电脑」
        注意：显示器只在某个俯仰角区间内被射线命中，
@@ -383,6 +434,11 @@ function pageScript(opts = {}){
     const saved = Object.keys(localStorage).some(k => k.startsWith('oi_save'));
     check('手动保存写入 localStorage', saved, Object.keys(localStorage).join(','));
 
+    /* 收尾回到世界视图：pause 视图会跳过渲染，
+       留着遮罩会让后续截图拍到旧帧。 */
+    t.click('#btnResume');
+    await t.sleep(200);
+
     return { steps, failures };
   })();
 }
@@ -447,9 +503,15 @@ async function main(){
   });
 
   const report = evalResult.result.value;
+  const pageErrors = cdp.events.filter(e =>
+    e.kind === 'exception' ||
+    (e.kind === 'console' && e.type === 'error') ||
+    e.kind === 'log');
 
-  /* 截图（可选）：SHOT_DIR=<目录> 时保存世界视图与设置面板，
-     用于人工比对重构前后的画面是否一致。 */
+  /* 截图（可选）：SHOT_DIR=<目录> 时保存三张图，用于人工核对画面。
+     这里**重新加载一次页面**再走一遍固定操作，好处是视角回到初始状态
+     （yaw = pitch = 0），不受前面交互步骤（低头看显示器）的影响，
+     每次得到的都是同一机位，可以直接和新旧版本比对。 */
   const shotDir = process.env.SHOT_DIR;
   if (shotDir){
     mkdirSync(shotDir, { recursive: true });
@@ -459,18 +521,43 @@ async function main(){
       writeFileSync(file, Buffer.from(shot.data, 'base64'));
       console.log(`已保存截图：${file}`);
     };
-    await sleep(1200);                       /* 让世界视图稳定渲染几帧 */
-    await shoot('world');
+
+    await cdp.send('Page.navigate', { url: url + '?shot=1' });
+    for (let i = 0; i < 100; i++){
+      await sleep(200);
+      const r = await cdp.send('Runtime.evaluate', {
+        expression: `document.readyState === 'complete' && !document.getElementById('boot')`,
+        returnByValue: true
+      });
+      if (r.result.value === true) break;
+    }
+    await cdp.send('Runtime.evaluate', {
+      expression: `document.getElementById('btnStart').click()`, returnByValue: true
+    });
+    await sleep(1500);
+    await shoot('world');          /* 初始机位：正对自己的课桌 */
+
+    /* 原地转身 180°，看向后排的选手与巡逻中的监考老师 */
+    await cdp.send('Runtime.evaluate', {
+      expression: `(async () => {
+        const key = (code, type) => document.dispatchEvent(
+          new KeyboardEvent(type, { code, bubbles: true, cancelable: true }));
+        key('ArrowLeft', 'keydown');
+        await new Promise(r => setTimeout(r, 1500));
+        key('ArrowLeft', 'keyup');
+      })()`,
+      returnByValue: true,
+      awaitPromise: true
+    });
+    await sleep(1500);
+    await shoot('npcs');
+
     await cdp.send('Runtime.evaluate', {
       expression: `document.getElementById('btnSettings').click()`, returnByValue: true
     });
     await sleep(500);
     await shoot('settings');
   }
-  const pageErrors = cdp.events.filter(e =>
-    e.kind === 'exception' ||
-    (e.kind === 'console' && e.type === 'error') ||
-    e.kind === 'log');
 
   console.log(`\n目标：${url}${USE_DEV ? '  (vite dev 源码)' : '  (dist 构建产物)'}`);
   console.log('─'.repeat(64));

@@ -20,9 +20,36 @@ import * as THREE from 'three';
 
 const KEEP_ATTRIBUTES = new Set(['position', 'normal', 'uv']);
 
-function isUnderAny(obj, roots, root){
+/* 把「动态物体」的引用解析成真正的 Object3D。
+   ------------------------------------------------------------------
+   踩过的坑：buildPerson() / buildSecurityGuard() 返回的是**包装对象**
+   （{ group, armL, armR, head, legsSit, legsStand }），不是 Object3D。
+   如果把包装对象直接塞进 dynamicRoots，它永远不会出现在
+   Object3D 的 parent 链上，于是动态物体被当成静态物体合批掉 ——
+   表现就是「人物同时露出坐姿和站姿两组腿（4 条腿）」
+   以及「监考老师的模型冻在原地，和它的真实坐标对不上」。
+
+   所以这里两种形态都接受，并且**解析不出来就直接抛错**：
+   宁可让构建/测试立刻失败，也不要静默地把会动的东西烘死。 */
+function toObject3D(ref, index){
+  if (!ref) return null;
+  if (ref.isObject3D) return ref;
+  if (ref.group && ref.group.isObject3D) return ref.group;
+  throw new TypeError(
+    `mergeStaticMeshes: dynamicRoots[${index}] 既不是 Object3D，` +
+    '也没有可用的 .group —— 这类对象会被误合批，请修正调用方');
+}
+
+/* 判断某个网格是否属于「会动的东西」。
+   两条独立判据，任意一条命中就跳过：
+     1. 显式传入的 dynamicRoots（按引用匹配 Object3D）；
+     2. 祖先链上打了 userData.dynamic 标记 ——
+        标记打在 Group 上（person.js / guard.js 里），
+        而游戏逻辑覆盖的是「包装对象」的 userData，两者互不干扰。 */
+function isDynamic(obj, roots, root){
   for (let p = obj; p && p !== root; p = p.parent){
     if (roots.has(p)) return true;
+    if (p.userData && p.userData.dynamic) return true;
   }
   return false;
 }
@@ -31,27 +58,27 @@ function isUnderAny(obj, roots, root){
  * 把 root 下的静态网格按材质合并。
  * @param {THREE.Object3D} root   场景根
  * @param {object}  [opts]
- * @param {THREE.Object3D[]} [opts.dynamicRoots=[]] 会移动的物体（人物 / 老师 / 保安）
+ * @param {Array<THREE.Object3D|{group:THREE.Object3D}>} [opts.dynamicRoots=[]]
+ *        会移动的物体（人物 / 老师 / 保安）。包装对象与 Object3D 都接受。
  * @param {number}  [opts.minCount=2] 同一个桶至少几个网格才值得合并
  * @returns {{rows:Array<{material:string,meshes:number,vertices:number}>,
  *            sourceMeshes:number, mergedGroups:number, meshesAfter:number,
- *            meshesBefore:number}}
+ *            meshesBefore:number, skippedDynamic:number}}
  */
 export function mergeStaticMeshes(root, opts = {}){
   const minCount = opts.minCount ?? 2;
-  /* 动态物体用「引用」而不是 userData 标记来识别：
-     人物/老师的 userData 会被游戏逻辑整体覆盖（存档字段、AI 状态），
-     如果依赖 userData.dynamic 就会在某次赋值后失效。 */
-  const dynamic = new Set(opts.dynamicRoots || []);
+  const dynamic = new Set(
+    (opts.dynamicRoots || []).map(toObject3D).filter(Boolean));
 
   /* 先把整棵树的 world 矩阵更新到最新 */
   root.updateMatrixWorld(true);
 
   const buckets = new Map();       // material -> Mesh[]
+  let skippedDynamic = 0;
   root.traverse(obj => {
     if (!obj.isMesh) return;
     if (obj.userData.noBatch || obj.userData.interact) return;
-    if (isUnderAny(obj, dynamic, root)) return;
+    if (isDynamic(obj, dynamic, root)){ skippedDynamic++; return; }
     const material = obj.material;
     if (!material || Array.isArray(material) || material.transparent) return;
     if (!obj.geometry || !obj.geometry.attributes.position) return;
@@ -120,6 +147,10 @@ export function mergeStaticMeshes(root, opts = {}){
     sourceMeshes,
     mergedGroups,
     meshesAfter,
-    meshesBefore: meshesAfter + sourceMeshes - mergedGroups
+    meshesBefore: meshesAfter + sourceMeshes - mergedGroups,
+    /* 因为「属于动态物体」而跳过的网格数。
+       这个数字必须 > 0（场景里有人物），
+       否则说明动态根没被识别出来 —— 就是上面那个坑。 */
+    skippedDynamic
   };
 }

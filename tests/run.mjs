@@ -28,6 +28,8 @@ import {
   HIGH_FPS, LOW_FPS, MAX_PIXEL_RATIO, MIN_PIXEL_RATIO, initialPixelRatioState,
   nextPixelRatio
 } from '../src/core/perf-policy.js';
+import * as THREE from 'three';
+import { mergeStaticMeshes } from '../src/render/batch.js';
 
 /* 用 fileURLToPath 而不是 URL.pathname：后者在部分 Node 版本上
    会丢掉结尾斜杠，导致拼接出来的路径少一层分隔符。 */
@@ -163,7 +165,136 @@ console.log('\n▸ 自适应 pixelRatio 策略（src/core/perf-policy.js）');
     jitter.ratio === MAX_PIXEL_RATIO, `ratio=${jitter.ratio}`);
 }
 
-/* ---------- 8. 循环依赖 ---------- */
+/* ---------- 8. 静态合批的动态物体排除 ----------
+   这一段是**回归测试**：曾经因为 buildPerson() 返回的是包装对象
+   （{ group, armL, armR, legsSit, legsStand }）而不是 Object3D，
+   dynamicRoots 匹配不上 Object3D 的 parent 链，导致人物与监考老师
+   被误合批，表现是「人物同时露出坐姿 + 站姿共 4 条腿」
+   和「老师模型冻在原地、和真实坐标对不上」。
+
+   合批器对动态物体有**两条独立的判据**，这里分别单独验证，
+   避免「一条失效、另一条恰好兜住」让测试变成假绿：
+     判据 A：dynamicRoots 引用匹配（且必须能解析包装对象 → .group）
+     判据 B：祖先链上的 userData.dynamic 标记
+   所以下面的 fakePerson 可以决定要不要打标记，
+   从而把两条判据隔离测试。 */
+console.log('\n▸ 静态合批：动态物体排除（src/render/batch.js）');
+{
+  const box = (w, h, d, material) =>
+    new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+
+  /* 与 src/models/person.js 的返回结构保持一致：
+     对外返回包装对象；Group 上的 dynamic 标记可选，用于隔离两条判据 */
+  function fakePerson({ marked }){
+    const g = new THREE.Group();
+    if (marked) g.userData.dynamic = true;
+    const pants = new THREE.MeshStandardMaterial();
+    const legsSit = new THREE.Group();
+    for (let i = 0; i < 4; i++) legsSit.add(box(0.17, 0.17, 0.44, pants));
+    const legsStand = new THREE.Group();
+    for (let i = 0; i < 2; i++) legsStand.add(box(0.17, 0.9, 0.17, pants));
+    legsSit.visible = false;
+    g.add(legsSit, legsStand);
+    return { group: g, legsSit, legsStand };
+  }
+
+  function fakeScene({ marked = false } = {}){
+    const root = new THREE.Group();
+    const person = fakePerson({ marked });
+    root.add(person.group);
+    /* 静态家具：共享材质，应该被合批 */
+    const wood = new THREE.MeshStandardMaterial();
+    for (let i = 0; i < 6; i++) root.add(box(1.9, 0.06, 0.95, wood));
+    /* 可交互物体：必须原样保留（射线拾取依赖它） */
+    const cup = box(0.07, 0.1, 0.07, new THREE.MeshStandardMaterial());
+    cup.userData.interact = { label: '喝水', action: () => {} };
+    root.add(cup);
+    /* 透明材质：排序敏感，跳过 */
+    const glass = box(0.3, 0.3, 0.3, new THREE.MeshStandardMaterial({ transparent: true }));
+    root.add(glass);
+    return { root, person, cup, glass };
+  }
+
+  const countMeshes = node => {
+    let n = 0;
+    node.traverse(o => { if (o.isMesh) n++; });
+    return n;
+  };
+
+  /* 判据 A-1：包装对象（world.js 曾经就是这么传的）—— 不做标记，只靠引用解析 */
+  {
+    const s = fakeScene({ marked: false });
+    const r = mergeStaticMeshes(s.root, { dynamicRoots: [s.person] });
+    check('判据A：dynamicRoots 传包装对象时，人物网格被保留',
+      countMeshes(s.person.group) === 6,
+      `人物网格 ${countMeshes(s.person.group)}（期望 6）`);
+    check('判据A：坐姿腿 4 个盒子仍在 legsSit 组内',
+      s.person.legsSit.children.length === 4,
+      `${s.person.legsSit.children.length} 个`);
+    check('判据A：站姿腿 2 个盒子仍在 legsStand 组内',
+      s.person.legsStand.children.length === 2);
+    check('判据A：被跳过的动态网格数 = 6', r.skippedDynamic === 6,
+      `skippedDynamic=${r.skippedDynamic}`);
+    /* 合批后：1（合并后的家具）+ 6（人物）+ 1（水杯）+ 1（玻璃）= 9 */
+    check('静态家具确实被合批', r.meshesAfter === 9 && r.mergedGroups === 1,
+      `meshesAfter=${r.meshesAfter} groups=${r.mergedGroups}`);
+    check('合并前后网格数守恒', r.meshesBefore === 14, `meshesBefore=${r.meshesBefore}`);
+    check('可交互物体未被合批（仍在场景里）', s.cup.parent === s.root);
+    check('透明物体未被合批（仍在场景里）', s.glass.parent === s.root);
+  }
+
+  /* 判据 A-2：直接传 Object3D（world.js 现在的写法） */
+  {
+    const s = fakeScene({ marked: false });
+    const r = mergeStaticMeshes(s.root, { dynamicRoots: [s.person.group] });
+    check('判据A：dynamicRoots 传 Object3D 时人物网格被保留',
+      countMeshes(s.person.group) === 6 && r.skippedDynamic === 6);
+  }
+
+  /* 判据 B：不传 dynamicRoots，只靠模型的 userData.dynamic 标记 */
+  {
+    const s = fakeScene({ marked: true });
+    const r = mergeStaticMeshes(s.root, {});
+    check('判据B：仅靠 userData.dynamic 标记也能保住人物',
+      countMeshes(s.person.group) === 6 && r.skippedDynamic === 6,
+      `人物网格 ${countMeshes(s.person.group)}, skipped=${r.skippedDynamic}`);
+  }
+
+  /* 判据缺失时的表现：既没标记、也没传引用 → 一定会被误合批。
+     这条断言把「为什么必须有这两条判据」写进测试里：
+     一旦它变成 false，说明合批器有了别的保护，需要同步更新文档。 */
+  {
+    const s = fakeScene({ marked: false });
+    const r = mergeStaticMeshes(s.root, {});
+    check('两条判据都缺失时人物会被误合批（这就是曾经的 bug）',
+      countMeshes(s.person.group) === 0 && r.skippedDynamic === 0,
+      `人物网格 ${countMeshes(s.person.group)}`);
+  }
+
+  /* 无法解析的动态根：必须抛错，而不是静默误合批 */
+  {
+    let threw = null;
+    try { mergeStaticMeshes(fakeScene().root, { dynamicRoots: [{ nope: 1 }] }); }
+    catch (e){ threw = e; }
+    check('无法解析的动态根会直接抛错（不静默误合批）',
+      threw instanceof TypeError, threw ? threw.message.slice(0, 60) : '没有抛错');
+  }
+
+  /* 腿组可见性切换仍然有效（这就是「4 条腿」的判据） */
+  {
+    const s = fakeScene({ marked: false });
+    mergeStaticMeshes(s.root, { dynamicRoots: [s.person] });
+    s.person.legsStand.visible = false;
+    s.person.legsSit.visible = true;
+    let visible = 0;
+    s.person.group.traverse(o => { if (o.isMesh && o.parent.visible) visible++; });
+    check('切换 legsSit/legsStand 可见性后只剩一组腿（4 个盒子）',
+      visible === 4 && s.person.legsStand.visible === false,
+      `可见网格 ${visible}`);
+  }
+}
+
+/* ---------- 9. 循环依赖 ---------- */
 console.log('\n▸ 模块依赖方向');
 {
   const files = [];

@@ -283,7 +283,7 @@ Canvas2D 不需要 GPU，所以 `--no-sandbox --disable-gpu` 的无头实例就�
 → 题面懒加载完成 → 提交评测 → HUD 总分同步 → 离开 IDE → Esc 设置面板 → 存档写盘
 ```
 
-共 18 项断言，任何一项失败或控制台出现错误都会让 CI 变红。
+共 25 项断言，任何一项失败或控制台出现错误都会让 CI 变红。
 浏览器由 `npx playwright install chromium` 提供，`tools/smoke-test.mjs`
 自己会在 `~/.cache/ms-playwright` 里找到它（项目本身不依赖 playwright 包）。
 
@@ -365,14 +365,22 @@ git push && git push --tags
 2. 按**材质实例**分桶 —— 材质本来就通过 `render/materials.js` 的缓存共享，桶数很少；
 3. 把每个网格的 world 矩阵烘进几何体，再合成一个 `BufferGeometry`。
 
-**实测（`npm test` 之外，由冒烟测试的运行时探针输出）：**
+**实测（由冒烟测试的运行时探针输出，`npm run dev` + `node tools/smoke-test.mjs --dev`）：**
 
 ```
-网格 204 → 63（合批 21 组）   -69%
+网格 204 → 120（合批 12 组，动态物体跳过 66 个）   -41%
 ```
+
+其中「跳过 66 个」正好是 6 个人物 × 11 个部件 —— 这个数字必须成立：
+一旦变成 0，就说明动态物体被误合批了（见 §8.7）。
+
+人物为什么不能合批：`armL` / `armR` / `head` **每帧都在被 AI 旋转**
+（`systems/npc.js`、`systems/guards.js`、`systems/teacher.js`），
+`legsSit` / `legsStand` 还要按姿态切换可见性。
+所以「排除整棵人物子树」不是保守，而是必需。
 
 > 为什么不用 `renderer.info.render.calls` 做对比：在固定视角下，视锥剔除会让大部分
-> 静态物体根本不参与统计（实测同一份代码「面朝前方」时只有 28 次 draw call），
+> 静态物体根本不参与统计（实测同一份代码「面朝前方」时只有 25 次 draw call），
 > 拿它对比会得出错误结论。**场景网格数**是不受视角影响的确定性指标，所以选它。
 > 探针仍然会输出 draw call、program 数，仅作参考。
 
@@ -400,14 +408,58 @@ git push && git push --tags
 几何/材质缓存、几何体按视图跳过 render、resize 防抖、交互判定 80ms 节流、
 显示器贴图合并刷新、死亡保安清理、`raycaster.far` 限制、三盏 PointLight 而非每屏一盏。
 
-### 8.5 明确「测过但不值得做」的项
+### 8.5 一次真实翻车与修复记录（值得单独写下来）
+
+**症状**（由使用者发现）：
+1. 每个人物同时露出坐姿与站姿两组腿，看起来是 4 条腿；
+2. 监考老师的模型冻在原地，和它的真实坐标对不上。
+
+**根因**：`buildPerson()` 返回的是**包装对象**
+`{ group, armL, armR, head, legsSit, legsStand }`，不是 `THREE.Object3D`。
+第一版合批把这些包装对象放进 `dynamicRoots`，而判定用的是
+`for (let p = obj; p; p = p.parent) roots.has(p)` —— 包装对象永远
+不会出现在 Object3D 的 parent 链上，于是 `dynamicRoots` **实际是空的**，
+6 个人物与老师全被当成静态物体烘进了合并几何体：
+
+- 腿组里的网格被移走 → `legsSit.visible = false` 变成空操作 → 4 条腿；
+- 老师的模型被烘死在初始位置，而 `teacher.group.position` 仍在被 AI 推动
+  → 模型与真实坐标脱节（射线交互、挥拳距离用的仍是真实坐标）。
+
+讽刺的是，这次误合批还让性能数字更好看（网格 63 而不是 120）——
+**用错误的指标验收，就会把 bug 当成优化成果**。
+
+**修复（三层，任何一层单独都能挡住这个 bug）**：
+1. `batch.js` 的 `dynamicRoots` 现在会解析包装对象（`ref.group`），
+   并且**解析不出来就直接抛 `TypeError`**，不再静默误合批；
+2. `buildPerson()` / `buildSecurityGuard()` 在自己的 `Group` 上打
+   `userData.dynamic = true`（打在 Group 上而不是包装对象上 ——
+   `world.js` 会把包装对象的 `userData` 整体换成 NPC 状态字段）；
+3. `world.js` 显式传 `npcs.map(n => n.group)`，并且
+   **DEV 下若 `skippedDynamic === 0` 会打印告警**。
+
+**验证（这才是重点）**：
+- `tests/run.mjs` 新增 11 项单测，用一个与 `buildPerson` 结构一致的
+  最小场景分别隔离两条判据（包装对象引用 / `userData` 标记），
+  并且专门断言「两条判据都缺失时人物一定会被误合批」；
+  把 `batch.js` 改回旧写法可复现 **7 项失败**；
+- `tools/smoke-test.mjs` 新增 7 项端到端断言（动态根数量、每个根的网格数、
+  每个人物**恰好可见一组腿**、腿组网格数 4/2、老师根节点有网格、
+  老师位置随时间变化）。把两道防线都移除可复现 **6 项失败**；
+- `batch.js` 的返回值新增 `skippedDynamic`，作为「动态物体有没有被误吞」
+  的健康指标。
+
+### 8.6 明确「测过但不值得做」的项
 
 - `mat()` 的缓存键用 `JSON.stringify(opts)`：每次构建约 200 次调用，
   单次成本是几十纳秒，**合计不到 0.1 ms**，改成手写键构造只增加出错面，因此保留原样；
 - 静态网格 `matrixAutoUpdate = false`：three.js 每帧更新 200 个矩阵的开销量级
   同样是微秒级，已被合批顺带消掉大半（合批后的 mesh 本来就设了 `matrixAutoUpdate = false`）。
 
-### 8.6 参考帧耗时
+而「把人物腿组内部的盒子再合一次」是**值得做但这次没做**的一项，
+理由与边界都写清楚了（需要新的代码路径 + 新的风险面，而当前优先级是先修 bug）：
+见 §11。
+
+### 8.7 参考帧耗时
 
 无头 Chromium 走 SwiftShader **软件**光栅化，多次实测 `frameMs ≈ 24 ~ 65 ms`
 （约 15 ~ 42 fps，随机器负载波动很大）。这个数字只能说明「软件光栅化下 CPU 侧压力」，
@@ -419,7 +471,7 @@ git push && git push --tags
 
 三层，全部可重复执行：
 
-**第一层 · 行为基线快照**（`tests/run.mjs` + `tests/baseline.json`，151 项断言）
+**第一层 · 行为基线快照**（`tests/run.mjs` + `tests/baseline.json`，164 项断言）
 
 - 评分器：24 组固定输入（含空代码、只有注释、字符串里藏 `main` 等边界）
   逐字段比对重构前的 `judgeUnified` 输出；
@@ -434,7 +486,7 @@ git push && git push --tags
 **第二层 · 静态检查**：`src/` 只配置浏览器全局变量，`no-undef` 必须零错误 ——
 这直接证明「41 个模块之间的接线是完整的」，而不是靠残留的全局变量侥幸跑通。
 
-**第三层 · 真浏览器端到端**（`tools/smoke-test.mjs`，18 项断言）
+**第三层 · 真浏览器端到端**（`tools/smoke-test.mjs`，25 项断言）
 覆盖初始化 → 主循环 → 准星交互 → IDE → 题面懒加载 → 提交评测 → 计分 → 存档写盘，
 并要求**控制台零错误**。
 
@@ -465,7 +517,8 @@ git push && git push --tags
 |----|------|------|
 | 黑板贴图 | 烘焙成 24,640 B 的 WebP | 若首屏字节更敏感，改回运行时绘制即可省下这一笔（painter 仍在） |
 | Three.js 版本 | 锁定 r128（与重构前一致，保证画面不变） | 升级到 r15x+ 是一次**独立**的视觉迁移：光照默认值改为物理正确、`outputEncoding` → `outputColorSpace`，需要重新调光并做画面比对 |
-| 静态合批粒度 | 按材质分桶，21 组 | 若再加大量静态道具，可按「视锥区域」分桶以避免整块几何体无法剔除 |
+| 静态合批粒度 | 按材质分桶，12 组；动态物体跳过 66 个 | 若再加大量静态道具，可按「视锥区域」分桶，避免整块几何体无法视锥剔除 |
+| 人物腿组合批 | 每个人物 11 个网格，只做整棵子树排除 | 可省 24 个网格（120 → 约 96）：`legsSit` 的 4 个盒子与 `legsStand` 的 2 个盒子**只切换可见性、相对变换恒定**，可以在各自组内合并。**手臂与头不能合**——它们每帧都在被 AI 旋转（§8.1）。实现要点：合批结果要挂回该子组（烘相对变换而非 world 变换），并保证可见性切换仍然作用于合并后的网格 |
 | 题面渲染 | 仍按原样转义进 `<pre>`（Markdown 不渲染） | 若要让题面真正排版，建议**构建期**把 `.md` 编译成 HTML 字符串，运行时零依赖（而不是引入 `marked` 到产物里） |
 | 音效 | WebAudio 程序化合成，零资源文件 | 保持现状；换成音频文件只会增加体积 |
 | 存档格式 | `oi_view_v8` / `oi_save_v8`，键名与字段完全未变 | 向后兼容，老存档可直接读取 |
@@ -478,9 +531,9 @@ git push && git push --tags
 npm ci
 npm run bake:assets     # 重新生成 assets/textures/（幂等）
 npm run lint            # ESLint：0 error
-npm test                # 151 项回归断言
+npm test                # 164 项回归断言
 npm run build           # 产物在 dist/
-node tools/smoke-test.mjs   # 真浏览器 18 项端到端断言，控制台零错误
+node tools/smoke-test.mjs   # 真浏览器 25 项端到端断言，控制台零错误
 npm run dev             # 本地开发（HTML 局部模板支持热重载）
 ```
 
@@ -498,5 +551,5 @@ git push origin main --tags    # 打 tag 才会触发 Pages 发布
 | 3D 模型归位 | 模型构建代码在 `src/models/`；静态贴图在 `assets/textures/` 且由脚本可复现生成 |
 | 只在 tag 发布 | `deploy.yml` 只监听 `push.tags: v*`；tag 与 `package.json` 版本不一致时直接失败 |
 | 体积 | 首屏 gzip 202,077 → 189,652 B；自有代码 gzip -25%；题面按需加载 |
-| 性能 | 场景网格 204 → 63；键盘贴图/材质 6 → 1；pixelRatio 自适应（策略有单测） |
-| 行为不变 | 评分器 / NPC 生成 / 题面哈希 / 题库元数据全部与重构前一致；共 151 项回归断言 |
+| 性能 | 场景网格 204 → 120；键盘贴图/材质 6 → 1；pixelRatio 自适应（策略有单测） |
+| 行为不变 | 评分器 / NPC 生成 / 题面哈希 / 题库元数据全部与重构前一致；共 164 + 25 项断言 |

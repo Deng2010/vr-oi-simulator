@@ -47,8 +47,8 @@ npm run preview      # 预览构建产物
 | `npm run build` | 生产构建 |
 | `npm run preview` | 预览 `dist/` |
 | `npm run lint` | ESLint（`src/` 只给浏览器全局变量，`no-undef` 必须零错误） |
-| `npm test` | 回归测试：评分/NPC 确定性、题面哈希、资产、DPR 策略、依赖方向（151 项断言） |
-| `node tools/smoke-test.mjs` | 真浏览器端到端冒烟测试（18 项断言，需先 `npm run build`） |
+| `npm test` | 回归测试：评分/NPC 确定性、题面哈希、资产、DPR 策略、静态合批、依赖方向（164 项断言） |
+| `node tools/smoke-test.mjs` | 真浏览器端到端冒烟测试（25 项断言，需先 `npm run build`） |
 | `node tools/smoke-test.mjs --dev` | 同上，但跑源代码（需另开 `npm run dev`） |
 | `npm run bake:assets` | 重新生成 `assets/textures/*.webp`（幂等） |
 | `npm run verify` | `lint` + `test` + `build` 一把梭 |
@@ -128,8 +128,9 @@ git push origin --tags     # 触发 .github/workflows/deploy.yml
   （`src/core/rng.js`），同样的代码永远得到同样的分数，反复提交刷不了分。
   改这两个函数会让历史分数失效，`npm test` 会立刻发现。
 - **题面按需加载**：一局只抽 4 道题，就只下载 4 份题面。
-- **静态网格合批**：世界装配完成后按材质合并静态网格（204 → 63），
-  人物 / 老师 / 保安与可交互物体不参与合批。
+- **静态网格合批**：世界装配完成后按材质合并静态网格（204 → 120），
+  人物 / 老师 / 保安与可交互物体不参与合批 —— 人物的手臂、头每帧都在被 AI 旋转，
+  腿组还要切换可见性，所以必须整棵子树排除。
 - **自适应分辨率**：帧率不足时自动把 pixelRatio 从 1.5 降到 1.0（降档 2 个慢窗口、
   升档 4 个快窗口，带滞回防震荡）；决策是纯函数，有单测覆盖。
 - **音效是程序化合成的**（WebAudio），仓库里没有任何音频文件。

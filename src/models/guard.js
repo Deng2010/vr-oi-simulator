@@ -11,6 +11,10 @@ export function buildSecurityGuard(x, z){
   g.position.set(x, 0, z);
   scene.add(g);
 
+  /* 保安会移动，静态合批必须跳过整棵子树（见 src/render/batch.js）。
+     当前合批发生在保安生成之前，但这条标记让「以后再合批一次」也安全。 */
+  g.userData.dynamic = true;
+
   const skin = 0xd0a070;
   const uniform = 0x1c2a44;
   const pants = 0x141e30;
