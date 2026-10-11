@@ -207,6 +207,15 @@ function connect(wsUrl){
         events.push({ kind: 'log', text: msg.params.entry.text + ' ' +
           (msg.params.entry.url || '') });
       }
+      /* confirm() 弹窗必须有人接：无头环境里没有用户点「确定」，
+         页面会一直卡在对话框上（交卷、重置代码都走 confirm）。
+         这里统一按「确定」处理，于是「交卷 → 系统测试」可以端到端跑通。
+         这个响应没人 await，落回上面的 waiting 分支时会被忽略。 */
+      if (msg.method === 'Page.javascriptDialogOpening'){
+        ws.send(JSON.stringify({
+          id: nextId++, method: 'Page.handleJavaScriptDialog', params: { accept: true }
+        }));
+      }
     });
   });
 }
@@ -269,6 +278,29 @@ function pageScript(opts = {}){
     check('渲染画布已建立且尺寸非零',
       canvas && canvas.width > 0 && canvas.height > 0,
       canvas ? `${canvas.width}×${canvas.height}` : 'no canvas');
+
+    /* 1.5 启动屏分页：三页互斥，默认停在「简介」。
+       分页只是切 .hidden，没有别的守卫 —— 漏写或改名会让
+       「设置」「关于」静默变成空白页，所以在这里钉死。 */
+    const pageNames = ['intro', 'settings', 'about'];
+    const tabsOk = pageNames.every(n => t.el(`[data-start-tab="${n}"]`));
+    const pagesOk = pageNames.every(n => t.el(`[data-start-page="${n}"]`));
+    check('启动屏分页齐备（简介 / 设置 / 关于）', tabsOk && pagesOk);
+    check('启动屏默认只显示「简介」',
+      t.visible('[data-start-page="intro"]') &&
+      !t.visible('[data-start-page="settings"]') &&
+      !t.visible('[data-start-page="about"]'));
+
+    t.click('[data-start-tab="settings"]');
+    const settingsShown = t.visible('[data-start-page="settings"]') &&
+      t.visible('#turnSliderStart');
+    t.click('[data-start-tab="about"]');
+    const aboutShown = t.visible('[data-start-page="about"]') &&
+      !t.visible('[data-start-page="settings"]');
+    t.click('[data-start-tab="intro"]');
+    check('选项卡能切换分页并切回「简介」',
+      settingsShown && aboutShown && t.visible('#btnStart'),
+      `设置页=${settingsShown} 关于页=${aboutShown}`);
 
     /* 2. 开始比赛 */
     t.click('#btnStart');
@@ -371,11 +403,60 @@ function pageScript(opts = {}){
     check('准星射线命中显示器并提示可交互', promptOk,
       `低头 ${taps} 次，prompt="${t.text('#prompt')}"`);
 
-    /* 4. E 打开 IDE（走 doInteract → openCode → 题面懒加载） */
+    /* 3.5 准星：十字形结构 + 交互 45° 旋转。
+       这些只是 DOM 与 class，单元测试碰不到；样式改坏了画面照样「正常」，
+       所以在这里钉死结构，再用真实交互驱动一次状态迁移。
+       「按住确认」的完整流程在第 4 步。 */
+    const barsOk = ['.ch-t', '.ch-b', '.ch-l', '.ch-r'].every(s => t.el('#crosshair ' + s));
+    check('准星是十字形（4 条线 + 中心点 + 进度环）',
+      barsOk && !!t.el('#crosshair .ch-dot') && !!t.el('#crosshair .ch-ring-fill'));
+
+    await t.sleep(150);
+    const chEl = t.el('#crosshair');
+    const chFill = t.el('#crosshair .ch-ring-fill');
+    const chInteract = await t.waitFor('准星进入交互态',
+      () => chEl && chEl.classList.contains('interact'), 2000)
+      .then(() => true).catch(() => false);
+    check('瞄到可交互物时准星进入交互态（45° 旋转）', chInteract,
+      chEl ? `class="${chEl.className}"` : '找不到 #crosshair');
+
+    /* 没蓄力时环必须是空的。判据取「dashoffset ≥ 真实路径长度」而不是某个写死的数：
+       改准星尺寸时如果漏改 viewBox / r，弧长就会和真实路径对不上，
+       于是没按任何键也常驻一小段弧 —— 这个 bug 只能靠这条断言钉住。 */
+    const ringTotal = chFill && chFill.getTotalLength ? chFill.getTotalLength() : NaN;
+    const dashRest = parseFloat((chFill && chFill.style.strokeDashoffset) || 'NaN');
+    check('没蓄力时进度环是空的（环长与 dashoffset 对齐）',
+      Number.isFinite(ringTotal) && dashRest >= ringTotal - 0.5,
+      `dashoffset=${dashRest} 路径长=${ringTotal}`);
+
+    /* 4. 按住 E 蓄力确认（VR 指针手感）：
+       短按什么都不该发生；按住时进度环要走；中途松手要取消；
+       只有走满一圈才真的打开 IDE（openCode → 题面懒加载）。
+       环的进度只体现在 stroke-dashoffset 上，所以直接量它。 */
+    const dash = () => parseFloat((chFill && chFill.style.strokeDashoffset) || 'NaN');
+
     t.key('KeyE', 'keydown');
-    await t.sleep(300);
+    await t.sleep(120);
+    t.key('KeyE', 'keyup');
+    await t.sleep(500);
+    check('短按 E 不触发交互（改成按住确认）', !t.visible('#codeUI'));
+
+    t.key('KeyE', 'keydown');
+    await t.sleep(150);
+    const holdClass = !!chEl && chEl.classList.contains('hold');
+    const dashMid = dash();
+    t.key('KeyE', 'keyup');
+    await t.sleep(450);
+    check('按住时进度环在走（既不是 0 也没有走满）',
+      holdClass && dashMid > 0 && dashMid < 75,
+      `class="${chEl && chEl.className}" dashoffset=${dashMid}`);
+    check('中途松手即取消：仍然不开 IDE', !t.visible('#codeUI'));
+
+    t.key('KeyE', 'keydown');
+    await t.sleep(700);
     const ideOpened = t.visible('#codeUI');
-    check('E 键打开代码界面', ideOpened);
+    check('按住 E 走满一圈后打开代码界面', ideOpened);
+    t.key('KeyE', 'keyup');
 
     const paneLoaded = await t.waitFor('题面加载完成',
       () => !/题面载入中/.test(t.text('#problemPane')) &&
@@ -407,6 +488,10 @@ function pageScript(opts = {}){
       () => !t.el('#btnSubmit').disabled && /评测结果/.test(t.text('#verdict')), 15000)
       .then(() => true).catch(() => false);
     check('提交后完成评测并渲染结果', judged, t.text('#verdict').slice(0, 80));
+    /* 赛中跑的是预测试（10 点），界面上必须说清楚 ——
+       否则玩家会把预测试分数当成最终成绩 */
+    check('评测结果标注为预测试', /预测试/.test(t.text('#verdict')),
+      t.text('#verdict').slice(0, 100));
     /* 评测得分必须传导到 HUD 总分（recalcScore → 主循环写 DOM） */
     const scored = Number(/(\d+)\s*分/.exec(t.text('#verdict'))?.[1] || 0);
     const hudKeyed = await t.waitFor('HUD 总分刷新',
@@ -441,6 +526,31 @@ function pageScript(opts = {}){
        留着遮罩会让后续截图拍到旧帧。 */
     t.click('#btnResume');
     await t.sleep(200);
+
+    /* 9. 交卷 → 赛后系统测试（20 点）→ 揭榜
+       这一段是「预测试 ≠ 最终成绩」的端到端判据：
+       交卷时 confirm（CDP 侧统一按确定处理）→ 系统测试逐点揭晓 → 揭榜。
+       截图阶段会重新 navigate 一次，所以把比赛打完不会污染后面的画面。 */
+    t.click('#btnEnd');
+    const sysShown = await t.waitFor('进入系统测试',
+      () => t.visible('#sysTest') && t.text('#stLog').length > 0, 10000)
+      .then(() => true).catch(() => false);
+    check('交卷后进入系统测试', sysShown, t.text('#stLog').slice(0, 60));
+
+    const cells = t.el('#stRuns') ? t.el('#stRuns').querySelectorAll('.st-case').length : 0;
+    check('系统测试渲染出 4 题 × 20 个测试点', cells === 80, `格子数=${cells}`);
+
+    const revealed = await t.waitFor('系统测试揭榜',
+      () => t.visible('#endResult') && !t.visible('#sysTest') && t.text('#endDetail').length > 0,
+      20000).then(() => true).catch(() => false);
+    check('系统测试跑完并揭榜', revealed, t.text('#endSub').slice(0, 60));
+
+    const finalScore = Number((t.text('#endScore') || '').trim());
+    check('揭榜显示最终总分', Number.isFinite(finalScore) && finalScore >= 0,
+      `#endScore="${t.text('#endScore')}"`);
+    check('结算明细带上系统测试成绩与预测试对照',
+      /系统测试/.test(t.text('#endDetail')) && /预测试/.test(t.text('#endDetail')),
+      t.text('#endDetail').slice(0, 80));
 
     return { steps, failures };
   })();
@@ -538,6 +648,17 @@ async function main(){
       });
       if (r.result.value === true) break;
     }
+    /* 启动屏三个分页各来一张：分页只切 .hidden，断言证明得了「切过去了」，
+       证明不了「没切歪」（元素重叠、溢出、留白失衡），那只能靠眼睛。 */
+    for (const page of ['intro', 'settings', 'about']){
+      await cdp.send('Runtime.evaluate', {
+        expression: `document.querySelector('[data-start-tab="${page}"]').click()`,
+        returnByValue: true
+      });
+      await sleep(300);
+      await shoot('start-' + page);
+    }
+
     await cdp.send('Runtime.evaluate', {
       expression: `document.getElementById('btnStart').click()`, returnByValue: true
     });

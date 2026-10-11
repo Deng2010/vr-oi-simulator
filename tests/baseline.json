@@ -5,42 +5,42 @@
       "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
       "out": {
         "status": "PART",
-        "score": 40,
+        "score": 20,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.156s"
+            "time": "0.109s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.628s"
+            "time": "0.396s"
           },
           {
             "id": 3,
-            "status": "AC",
-            "time": "0.666s"
+            "status": "WA",
+            "time": "0.673s"
           },
           {
             "id": 4,
-            "status": "AC",
-            "time": "0.780s"
+            "status": "WA",
+            "time": "0.027s"
           },
           {
             "id": 5,
-            "status": "WA",
-            "time": "0.425s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 6,
             "status": "WA",
-            "time": "0.188s"
+            "time": "0.282s"
           },
           {
             "id": 7,
-            "status": "RE",
-            "time": "0.640s"
+            "status": "WA",
+            "time": "0.635s"
           },
           {
             "id": 8,
@@ -50,15 +50,16 @@
           {
             "id": 9,
             "status": "RE",
-            "time": "0.262s"
+            "time": "0.640s"
           },
           {
             "id": 10,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "RE",
+            "time": "0.565s"
           }
         ],
-        "passed": 4
+        "passed": 2,
+        "total": 10
       }
     },
     {
@@ -71,55 +72,56 @@
           {
             "id": 1,
             "status": "AC",
-            "time": "0.200s"
+            "time": "0.333s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.226s"
+            "time": "0.522s"
           },
           {
             "id": 3,
             "status": "AC",
-            "time": "0.470s"
+            "time": "0.223s"
           },
           {
             "id": 4,
             "status": "AC",
-            "time": "0.478s"
+            "time": "0.387s"
           },
           {
             "id": 5,
             "status": "AC",
-            "time": "0.632s"
+            "time": "0.334s"
           },
           {
             "id": 6,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.742s"
           },
           {
             "id": 7,
             "status": "WA",
-            "time": "0.788s"
+            "time": "0.223s"
           },
           {
             "id": 8,
-            "status": "WA",
-            "time": "0.014s"
+            "status": "RE",
+            "time": "0.752s"
           },
           {
             "id": 9,
-            "status": "RE",
-            "time": "0.714s"
+            "status": "WA",
+            "time": "0.638s"
           },
           {
             "id": 10,
-            "status": "WA",
-            "time": "0.622s"
+            "status": "TLE",
+            "time": ">3.0s"
           }
         ],
-        "passed": 5
+        "passed": 5,
+        "total": 10
       }
     },
     {
@@ -179,7 +181,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -239,7 +243,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -299,7 +305,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -307,60 +315,61 @@
       "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
       "out": {
         "status": "PART",
-        "score": 40,
+        "score": 30,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.469s"
+            "time": "0.689s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.060s"
+            "time": "0.336s"
           },
           {
             "id": 3,
             "status": "AC",
-            "time": "0.589s"
+            "time": "0.128s"
           },
           {
             "id": 4,
-            "status": "AC",
-            "time": "0.053s"
+            "status": "RE",
+            "time": "0.611s"
           },
           {
             "id": 5,
-            "status": "RE",
-            "time": "0.345s"
+            "status": "WA",
+            "time": "0.242s"
           },
           {
             "id": 6,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.464s"
           },
           {
             "id": 7,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.440s"
           },
           {
             "id": 8,
             "status": "WA",
-            "time": "0.361s"
+            "time": "0.124s"
           },
           {
             "id": 9,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.113s"
           },
           {
             "id": 10,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.446s"
           }
         ],
-        "passed": 4
+        "passed": 3,
+        "total": 10
       }
     },
     {
@@ -368,32 +377,32 @@
       "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
       "out": {
         "status": "PART",
-        "score": 40,
+        "score": 30,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.398s"
+            "time": "0.432s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.665s"
+            "time": "0.497s"
           },
           {
             "id": 3,
             "status": "AC",
-            "time": "0.126s"
+            "time": "0.395s"
           },
           {
             "id": 4,
-            "status": "AC",
-            "time": "0.472s"
+            "status": "WA",
+            "time": "0.285s"
           },
           {
             "id": 5,
-            "status": "WA",
-            "time": "0.124s"
+            "status": "RE",
+            "time": "0.809s"
           },
           {
             "id": 6,
@@ -407,21 +416,22 @@
           },
           {
             "id": 8,
-            "status": "RE",
-            "time": "0.202s"
+            "status": "WA",
+            "time": "0.216s"
           },
           {
             "id": 9,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.590s"
           },
           {
             "id": 10,
-            "status": "WA",
-            "time": "0.371s"
+            "status": "RE",
+            "time": "0.527s"
           }
         ],
-        "passed": 4
+        "passed": 3,
+        "total": 10
       }
     },
     {
@@ -429,37 +439,37 @@
       "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
       "out": {
         "status": "PART",
-        "score": 30,
+        "score": 10,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.756s"
+            "time": "0.208s"
           },
           {
             "id": 2,
-            "status": "AC",
-            "time": "0.341s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 3,
-            "status": "AC",
-            "time": "0.108s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 4,
             "status": "WA",
-            "time": "0.610s"
+            "time": "0.440s"
           },
           {
             "id": 5,
             "status": "WA",
-            "time": "0.630s"
+            "time": "0.446s"
           },
           {
             "id": 6,
-            "status": "WA",
-            "time": "0.508s"
+            "status": "RE",
+            "time": "0.224s"
           },
           {
             "id": 7,
@@ -468,21 +478,22 @@
           },
           {
             "id": 8,
-            "status": "WA",
-            "time": "0.396s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 9,
             "status": "WA",
-            "time": "0.481s"
+            "time": "0.621s"
           },
           {
             "id": 10,
             "status": "WA",
-            "time": "0.391s"
+            "time": "0.808s"
           }
         ],
-        "passed": 3
+        "passed": 1,
+        "total": 10
       }
     },
     {
@@ -490,60 +501,61 @@
       "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
       "out": {
         "status": "PART",
-        "score": 40,
+        "score": 30,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.728s"
+            "time": "0.698s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.383s"
+            "time": "0.494s"
           },
           {
             "id": 3,
             "status": "AC",
-            "time": "0.407s"
+            "time": "0.216s"
           },
           {
             "id": 4,
-            "status": "AC",
-            "time": "0.195s"
+            "status": "WA",
+            "time": "0.613s"
           },
           {
             "id": 5,
-            "status": "RE",
-            "time": "0.768s"
+            "status": "WA",
+            "time": "0.028s"
           },
           {
             "id": 6,
             "status": "WA",
-            "time": "0.379s"
+            "time": "0.208s"
           },
           {
             "id": 7,
             "status": "WA",
-            "time": "0.388s"
+            "time": "0.306s"
           },
           {
             "id": 8,
-            "status": "WA",
-            "time": "0.553s"
+            "status": "RE",
+            "time": "0.392s"
           },
           {
             "id": 9,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.547s"
           },
           {
             "id": 10,
-            "status": "RE",
-            "time": "0.136s"
+            "status": "WA",
+            "time": "0.632s"
           }
         ],
-        "passed": 4
+        "passed": 3,
+        "total": 10
       }
     },
     {
@@ -556,27 +568,27 @@
           {
             "id": 1,
             "status": "AC",
-            "time": "0.250s"
+            "time": "0.481s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.270s"
+            "time": "0.094s"
           },
           {
             "id": 3,
             "status": "AC",
-            "time": "0.309s"
+            "time": "0.767s"
           },
           {
             "id": 4,
             "status": "AC",
-            "time": "0.787s"
+            "time": "0.329s"
           },
           {
             "id": 5,
             "status": "AC",
-            "time": "0.263s"
+            "time": "0.139s"
           },
           {
             "id": 6,
@@ -586,25 +598,26 @@
           {
             "id": 7,
             "status": "WA",
-            "time": "0.400s"
+            "time": "0.069s"
           },
           {
             "id": 8,
             "status": "WA",
-            "time": "0.029s"
+            "time": "0.417s"
           },
           {
             "id": 9,
             "status": "WA",
-            "time": "0.421s"
+            "time": "0.293s"
           },
           {
             "id": 10,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.571s"
           }
         ],
-        "passed": 5
+        "passed": 5,
+        "total": 10
       }
     },
     {
@@ -664,7 +677,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -724,7 +739,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -784,7 +801,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -792,22 +811,84 @@
       "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
       "out": {
         "status": "PART",
-        "score": 30,
+        "score": 20,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.728s"
+            "time": "0.153s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.026s"
+            "time": "0.202s"
           },
           {
             "id": 3,
+            "status": "RE",
+            "time": "0.380s"
+          },
+          {
+            "id": 4,
+            "status": "WA",
+            "time": "0.422s"
+          },
+          {
+            "id": 5,
+            "status": "WA",
+            "time": "0.030s"
+          },
+          {
+            "id": 6,
+            "status": "WA",
+            "time": "0.180s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.685s"
+          },
+          {
+            "id": 8,
+            "status": "RE",
+            "time": "0.561s"
+          },
+          {
+            "id": 9,
+            "status": "WA",
+            "time": "0.497s"
+          },
+          {
+            "id": 10,
+            "status": "RE",
+            "time": "0.789s"
+          }
+        ],
+        "passed": 2,
+        "total": 10
+      }
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
+      "out": {
+        "status": "PART",
+        "score": 10,
+        "cases": [
+          {
+            "id": 1,
             "status": "AC",
-            "time": "0.581s"
+            "time": "0.771s"
+          },
+          {
+            "id": 2,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 3,
+            "status": "RE",
+            "time": "0.151s"
           },
           {
             "id": 4,
@@ -816,97 +897,37 @@
           },
           {
             "id": 5,
-            "status": "RE",
-            "time": "0.678s"
-          },
-          {
-            "id": 6,
-            "status": "WA",
-            "time": "0.115s"
-          },
-          {
-            "id": 7,
-            "status": "WA",
-            "time": "0.623s"
-          },
-          {
-            "id": 8,
             "status": "WA",
             "time": "0.430s"
           },
           {
-            "id": 9,
-            "status": "WA",
-            "time": "0.749s"
-          },
-          {
-            "id": 10,
-            "status": "RE",
-            "time": "0.764s"
-          }
-        ],
-        "passed": 3
-      }
-    },
-    {
-      "id": "P16184",
-      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
-      "out": {
-        "status": "PART",
-        "score": 40,
-        "cases": [
-          {
-            "id": 1,
-            "status": "AC",
-            "time": "0.121s"
-          },
-          {
-            "id": 2,
-            "status": "AC",
-            "time": "0.146s"
-          },
-          {
-            "id": 3,
-            "status": "AC",
-            "time": "0.726s"
-          },
-          {
-            "id": 4,
-            "status": "AC",
-            "time": "0.620s"
-          },
-          {
-            "id": 5,
-            "status": "WA",
-            "time": "0.032s"
-          },
-          {
             "id": 6,
             "status": "WA",
-            "time": "0.457s"
+            "time": "0.293s"
           },
           {
             "id": 7,
             "status": "WA",
-            "time": "0.559s"
+            "time": "0.794s"
           },
           {
             "id": 8,
-            "status": "RE",
-            "time": "0.396s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 9,
             "status": "WA",
-            "time": "0.758s"
+            "time": "0.347s"
           },
           {
             "id": 10,
-            "status": "RE",
-            "time": "0.631s"
+            "status": "WA",
+            "time": "0.099s"
           }
         ],
-        "passed": 4
+        "passed": 1,
+        "total": 10
       }
     },
     {
@@ -919,32 +940,32 @@
           {
             "id": 1,
             "status": "AC",
-            "time": "0.708s"
+            "time": "0.205s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.377s"
+            "time": "0.728s"
           },
           {
             "id": 3,
             "status": "WA",
-            "time": "0.297s"
+            "time": "0.274s"
           },
           {
             "id": 4,
-            "status": "RE",
-            "time": "0.081s"
+            "status": "WA",
+            "time": "0.056s"
           },
           {
             "id": 5,
             "status": "RE",
-            "time": "0.488s"
+            "time": "0.196s"
           },
           {
             "id": 6,
-            "status": "RE",
-            "time": "0.476s"
+            "status": "WA",
+            "time": "0.613s"
           },
           {
             "id": 7,
@@ -954,12 +975,12 @@
           {
             "id": 8,
             "status": "WA",
-            "time": "0.182s"
+            "time": "0.015s"
           },
           {
             "id": 9,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.384s"
           },
           {
             "id": 10,
@@ -967,7 +988,8 @@
             "time": ">3.0s"
           }
         ],
-        "passed": 2
+        "passed": 2,
+        "total": 10
       }
     },
     {
@@ -975,60 +997,61 @@
       "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
       "out": {
         "status": "PART",
-        "score": 50,
+        "score": 30,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.737s"
+            "time": "0.708s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.776s"
+            "time": "0.263s"
           },
           {
             "id": 3,
             "status": "AC",
-            "time": "0.531s"
+            "time": "0.110s"
           },
           {
             "id": 4,
-            "status": "AC",
-            "time": "0.248s"
+            "status": "RE",
+            "time": "0.234s"
           },
           {
             "id": 5,
-            "status": "AC",
-            "time": "0.728s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 6,
             "status": "WA",
-            "time": "0.787s"
+            "time": "0.671s"
           },
           {
             "id": 7,
-            "status": "WA",
-            "time": "0.258s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 8,
             "status": "WA",
-            "time": "0.798s"
+            "time": "0.544s"
           },
           {
             "id": 9,
             "status": "WA",
-            "time": "0.750s"
+            "time": "0.713s"
           },
           {
             "id": 10,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "RE",
+            "time": "0.500s"
           }
         ],
-        "passed": 5
+        "passed": 3,
+        "total": 10
       }
     },
     {
@@ -1036,60 +1059,61 @@
       "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(){ios::sync_with_stdio(false);cin.tie(0);int n;cin>>n;vector<int> a(n);for(int i=0;i<n;i++)cin>>a[i];sort(a.begin(),a.end());long long ans=0;for(int i=0;i<n;i++)ans+=a[i];cout<<ans<<endl;return 0;}",
       "out": {
         "status": "PART",
-        "score": 60,
+        "score": 40,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.237s"
+            "time": "0.651s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.266s"
+            "time": "0.386s"
           },
           {
             "id": 3,
             "status": "AC",
-            "time": "0.155s"
+            "time": "0.061s"
           },
           {
             "id": 4,
             "status": "AC",
-            "time": "0.055s"
+            "time": "0.781s"
           },
           {
             "id": 5,
-            "status": "AC",
-            "time": "0.319s"
+            "status": "WA",
+            "time": "0.627s"
           },
           {
             "id": 6,
-            "status": "AC",
-            "time": "0.634s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 7,
             "status": "WA",
-            "time": "0.507s"
+            "time": "0.241s"
           },
           {
             "id": 8,
-            "status": "RE",
-            "time": "0.133s"
+            "status": "TLE",
+            "time": ">3.0s"
           },
           {
             "id": 9,
-            "status": "RE",
-            "time": "0.190s"
+            "status": "WA",
+            "time": "0.574s"
           },
           {
             "id": 10,
-            "status": "WA",
-            "time": "0.290s"
+            "status": "TLE",
+            "time": ">3.0s"
           }
         ],
-        "passed": 6
+        "passed": 4,
+        "total": 10
       }
     },
     {
@@ -1149,7 +1173,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -1209,7 +1235,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -1269,7 +1297,9 @@
             "status": "CE",
             "time": "-"
           }
-        ]
+        ],
+        "passed": 0,
+        "total": 10
       }
     },
     {
@@ -1277,60 +1307,61 @@
       "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
       "out": {
         "status": "PART",
-        "score": 30,
+        "score": 20,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.661s"
+            "time": "0.756s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.220s"
+            "time": "0.657s"
           },
           {
             "id": 3,
-            "status": "AC",
-            "time": "0.751s"
+            "status": "RE",
+            "time": "0.301s"
           },
           {
             "id": 4,
-            "status": "WA",
-            "time": "0.306s"
+            "status": "RE",
+            "time": "0.640s"
           },
           {
             "id": 5,
-            "status": "WA",
-            "time": "0.275s"
-          },
-          {
-            "id": 6,
-            "status": "WA",
-            "time": "0.418s"
-          },
-          {
-            "id": 7,
             "status": "TLE",
             "time": ">3.0s"
           },
           {
+            "id": 6,
+            "status": "WA",
+            "time": "0.118s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.759s"
+          },
+          {
             "id": 8,
             "status": "WA",
-            "time": "0.265s"
+            "time": "0.314s"
           },
           {
             "id": 9,
             "status": "WA",
-            "time": "0.387s"
+            "time": "0.185s"
           },
           {
             "id": 10,
             "status": "RE",
-            "time": "0.109s"
+            "time": "0.197s"
           }
         ],
-        "passed": 3
+        "passed": 2,
+        "total": 10
       }
     },
     {
@@ -1338,47 +1369,47 @@
       "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
       "out": {
         "status": "PART",
-        "score": 50,
+        "score": 10,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.376s"
+            "time": "0.557s"
           },
           {
             "id": 2,
-            "status": "AC",
-            "time": "0.458s"
+            "status": "WA",
+            "time": "0.522s"
           },
           {
             "id": 3,
-            "status": "AC",
-            "time": "0.718s"
+            "status": "RE",
+            "time": "0.219s"
           },
           {
             "id": 4,
-            "status": "AC",
-            "time": "0.142s"
-          },
-          {
-            "id": 5,
-            "status": "AC",
-            "time": "0.336s"
-          },
-          {
-            "id": 6,
             "status": "TLE",
             "time": ">3.0s"
           },
           {
-            "id": 7,
+            "id": 5,
             "status": "WA",
-            "time": "0.517s"
+            "time": "0.215s"
+          },
+          {
+            "id": 6,
+            "status": "RE",
+            "time": "0.686s"
+          },
+          {
+            "id": 7,
+            "status": "RE",
+            "time": "0.502s"
           },
           {
             "id": 8,
-            "status": "WA",
-            "time": "0.483s"
+            "status": "RE",
+            "time": "0.597s"
           },
           {
             "id": 9,
@@ -1387,11 +1418,12 @@
           },
           {
             "id": 10,
-            "status": "TLE",
-            "time": ">3.0s"
+            "status": "WA",
+            "time": "0.187s"
           }
         ],
-        "passed": 5
+        "passed": 1,
+        "total": 10
       }
     },
     {
@@ -1399,61 +1431,232 @@
       "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
       "out": {
         "status": "PART",
-        "score": 30,
+        "score": 20,
         "cases": [
           {
             "id": 1,
             "status": "AC",
-            "time": "0.058s"
+            "time": "0.415s"
           },
           {
             "id": 2,
             "status": "AC",
-            "time": "0.267s"
+            "time": "0.405s"
           },
           {
             "id": 3,
-            "status": "AC",
-            "time": "0.142s"
-          },
-          {
-            "id": 4,
-            "status": "WA",
-            "time": "0.625s"
-          },
-          {
-            "id": 5,
-            "status": "WA",
-            "time": "0.791s"
-          },
-          {
-            "id": 6,
-            "status": "WA",
-            "time": "0.761s"
-          },
-          {
-            "id": 7,
-            "status": "WA",
-            "time": "0.545s"
-          },
-          {
-            "id": 8,
             "status": "TLE",
             "time": ">3.0s"
           },
           {
+            "id": 4,
+            "status": "WA",
+            "time": "0.011s"
+          },
+          {
+            "id": 5,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 6,
+            "status": "TLE",
+            "time": ">3.0s"
+          },
+          {
+            "id": 7,
+            "status": "WA",
+            "time": "0.117s"
+          },
+          {
+            "id": 8,
+            "status": "RE",
+            "time": "0.519s"
+          },
+          {
             "id": 9,
             "status": "WA",
-            "time": "0.520s"
+            "time": "0.547s"
           },
           {
             "id": 10,
             "status": "WA",
-            "time": "0.401s"
+            "time": "0.277s"
           }
         ],
-        "passed": 3
+        "passed": 2,
+        "total": 10
       }
+    }
+  ],
+  "systemJudgment": [
+    {
+      "id": "P14962",
+      "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
+      "score": 20,
+      "passed": 4,
+      "statuses": "ACACACACWAREREWAWAWAREWATLEWAWAWAWAREWAWA"
+    },
+    {
+      "id": "P14962",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(){ios::sync_with_stdio(false);cin.tie(0);int n;cin>>n;vector<int> a(n);for(int i=0;i<n;i++)cin>>a[i];sort(a.begin(),a.end());long long ans=0;for(int i=0;i<n;i++)ans+=a[i];cout<<ans<<endl;return 0;}",
+      "score": 50,
+      "passed": 10,
+      "statuses": "ACACACACACACACACACACWAWAWAWAREWATLEWATLEWA"
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){ return 0; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P14962",
+      "code": "// 只有注释\n/* 块注释 */\nint main(){ printf(\"hi\"); return 0; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){ string s=\"int main() { return 0; }\"; cout<<s; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
+      "score": 30,
+      "passed": 6,
+      "statuses": "ACACACACACACWATLETLERETLEWAREREWAWATLEWATLERE"
+    },
+    {
+      "id": "P14962",
+      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
+      "score": 30,
+      "passed": 6,
+      "statuses": "ACACACACACACWATLETLETLETLERETLEWAWAREWAWAREWA"
+    },
+    {
+      "id": "P14962",
+      "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
+      "score": 5,
+      "passed": 1,
+      "statuses": "ACWAWATLEREWAWAWAWAWAWAWAWAWAWAWAWAWAWAWA"
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
+      "score": 25,
+      "passed": 5,
+      "statuses": "ACACACACACTLEWATLEWAWATLEWAWAWAWAWAWARETLERE"
+    },
+    {
+      "id": "P16184",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(){ios::sync_with_stdio(false);cin.tie(0);int n;cin>>n;vector<int> a(n);for(int i=0;i<n;i++)cin>>a[i];sort(a.begin(),a.end());long long ans=0;for(int i=0;i<n;i++)ans+=a[i];cout<<ans<<endl;return 0;}",
+      "score": 45,
+      "passed": 9,
+      "statuses": "ACACACACACACACACACTLETLETLEWAWARETLETLERETLEWA"
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){ return 0; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P16184",
+      "code": "// 只有注释\n/* 块注释 */\nint main(){ printf(\"hi\"); return 0; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){ string s=\"int main() { return 0; }\"; cout<<s; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
+      "score": 20,
+      "passed": 4,
+      "statuses": "ACACACACTLEWAWATLEWAWAREWATLEREWAWAWAWAREWA"
+    },
+    {
+      "id": "P16184",
+      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
+      "score": 5,
+      "passed": 1,
+      "statuses": "ACWAWATLETLEWAWAWAWAWATLEWARERERETLEREWAWAWA"
+    },
+    {
+      "id": "P16184",
+      "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
+      "score": 10,
+      "passed": 2,
+      "statuses": "ACACWAREWATLEWAWATLETLERETLETLEWATLEWAWATLEWAWA"
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){int a;cin>>a;cout<<a<<endl;return 0;}",
+      "score": 20,
+      "passed": 4,
+      "statuses": "ACACACACRETLEWAWATLEWAWATLEWAWAWARETLEWAWARE"
+    },
+    {
+      "id": "P17434",
+      "code": "#include <bits/stdc++.h>\nusing namespace std;\nint main(){ios::sync_with_stdio(false);cin.tie(0);int n;cin>>n;vector<int> a(n);for(int i=0;i<n;i++)cin>>a[i];sort(a.begin(),a.end());long long ans=0;for(int i=0;i<n;i++)ans+=a[i];cout<<ans<<endl;return 0;}",
+      "score": 35,
+      "passed": 7,
+      "statuses": "ACACACACACACACTLEWATLEWATLEWAWAWAWATLEWAWARE"
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){ return 0; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P17434",
+      "code": "// 只有注释\n/* 块注释 */\nint main(){ printf(\"hi\"); return 0; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){ string s=\"int main() { return 0; }\"; cout<<s; }",
+      "score": 0,
+      "passed": 0,
+      "statuses": "CECECECECECECECECECECECECECECECECECECECE"
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){for(int i=0;i<10;i++){if(i%2)continue;while(0)break;}int x=0;x++;x--;return 0;}",
+      "score": 15,
+      "passed": 3,
+      "statuses": "ACACACWAWARETLETLEWAWATLEWATLEWAWAWAWAREWARE"
+    },
+    {
+      "id": "P17434",
+      "code": "int main(){vector<int>v;map<int,int>m;set<int>s;queue<int>q;stack<int>st;priority_queue<int>pq;sort(v.begin(),v.end());lower_bound(v.begin(),v.end(),1);return 0;}",
+      "score": 15,
+      "passed": 3,
+      "statuses": "ACACACWAWATLEWAWATLEWARETLEWATLEWAWAWAWAREWA"
+    },
+    {
+      "id": "P17434",
+      "code": "int gcd(int a,int b){return b?gcd(b,a%b):a;}int main(){int d=gcd(4,6);int e=abs(-1);double f=sqrt(2.0);int g=pow(2,3);return 0;}",
+      "score": 10,
+      "passed": 2,
+      "statuses": "ACACWAWAWATLEWAWAWAWAWAWAWAWAWAWAWAWAWATLE"
     }
   ],
   "npc": [
