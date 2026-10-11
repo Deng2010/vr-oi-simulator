@@ -3,16 +3,22 @@
    ---------------------------------------------------------
    分两层，兼顾「列表即时可用」与「题面按需下载」：
 
-     · manifest.js —— 轻量清单（id / 名称 / 分值 / 时空限制），
+     · manifest.js —— 轻量清单（id / 名称 / 分值 / 时空限制 / 难度），
        随主包同步加载，渲染题目列表、计分、存档恢复都不需要更多数据。
      · <id>.js + <id>.md —— 题面正文与起手代码，通过
        import.meta.glob 懒加载，每题单独切一个 chunk。
        一局只抽 4 道题，所以打开电脑时最多只下载 4 份题面，
        而不是把 16 道题的题面全塞进首包。
+
+   抽题与难度排序在 selection.js（那里没有 import.meta.glob，
+   所以抽题规则能被 tests/run.mjs 直接单测），这里只做转出。
    ========================================================= */
 import { PROBLEM_MANIFEST } from './manifest.js';
 
 export { PROBLEM_MANIFEST };
+
+/* 抽题规则：随机抽 4 道 + 按难度升序（实现与判据见 selection.js） */
+export { pickProblems } from './selection.js';
 
 /* O(1) 按 id 取元数据（存档恢复、HUD、显示器贴图都用它） */
 export const PROBLEM_BY_ID = new Map(PROBLEM_MANIFEST.map(p => [p.id, p]));
@@ -47,18 +53,4 @@ export function loadProblemData(id){
   });
   pending.set(id, job);
   return job;
-}
-
-/* 抽题：从清单随机抽 count 道。
-   部分 Fisher-Yates 洗牌，只洗前 count 个，避免 splice 的 O(n) 挪动。 */
-export function pickProblems(count = 4){
-  const pool = PROBLEM_MANIFEST.slice();
-  const n = Math.min(count, pool.length);
-  for (let i = 0; i < n; i++){
-    const j = i + Math.floor(Math.random() * (pool.length - i));
-    const tmp = pool[i];
-    pool[i] = pool[j];
-    pool[j] = tmp;
-  }
-  return pool.slice(0, n);
 }
