@@ -279,11 +279,13 @@ Canvas2D 不需要 GPU，所以 `--no-sandbox --disable-gpu` 的无头实例就�
 （SwiftShader 软渲染）真跑一遍：
 
 ```
-初始化 → 开始比赛 → 计时器推进 → 低头用准星命中显示器 → E 打开 IDE
-→ 题面懒加载完成 → 提交评测 → HUD 总分同步 → 离开 IDE → Esc 设置面板 → 存档写盘
+初始化 → 启动屏分页（简介 / 设置 / 关于）→ 开始比赛 → 计时器推进
+→ 低头用准星命中显示器 → E 打开 IDE → 题面懒加载完成 → 提交评测
+→ HUD 总分同步 → 离开 IDE → Esc 设置面板 → 存档写盘
 ```
 
-共 25 项断言，任何一项失败或控制台出现错误都会让 CI 变红。
+共 21 项断言（dev 模式另有 7 项场景完整性检查，共 28 项），
+任何一项失败或控制台出现错误都会让 CI 变红。
 浏览器由 `npx playwright install chromium` 提供，`tools/smoke-test.mjs`
 自己会在 `~/.cache/ms-playwright` 里找到它（项目本身不依赖 playwright 包）。
 
@@ -486,8 +488,8 @@ git push && git push --tags
 **第二层 · 静态检查**：`src/` 只配置浏览器全局变量，`no-undef` 必须零错误 ——
 这直接证明「41 个模块之间的接线是完整的」，而不是靠残留的全局变量侥幸跑通。
 
-**第三层 · 真浏览器端到端**（`tools/smoke-test.mjs`，25 项断言）
-覆盖初始化 → 主循环 → 准星交互 → IDE → 题面懒加载 → 提交评测 → 计分 → 存档写盘，
+**第三层 · 真浏览器端到端**（`tools/smoke-test.mjs`，21 项断言；`--dev` 28 项）
+覆盖启动屏分页 → 初始化 → 主循环 → 准星交互 → IDE → 题面懒加载 → 提交评测 → 计分 → 存档写盘，
 并要求**控制台零错误**。
 
 三层之间的分工是明确的：第一层保证「逻辑没变」，第二层保证「接线完整」，
@@ -533,7 +535,7 @@ npm run bake:assets     # 重新生成 assets/textures/（幂等）
 npm run lint            # ESLint：0 error
 npm test                # 164 项回归断言
 npm run build           # 产物在 dist/
-node tools/smoke-test.mjs   # 真浏览器 25 项端到端断言，控制台零错误
+node tools/smoke-test.mjs   # 真浏览器 21 项端到端断言，控制台零错误
 npm run dev             # 本地开发（HTML 局部模板支持热重载）
 ```
 
@@ -552,4 +554,4 @@ git push origin main --tags    # 打 tag 才会触发 Pages 发布
 | 只在 tag 发布 | `deploy.yml` 只监听 `push.tags: v*`；tag 与 `package.json` 版本不一致时直接失败 |
 | 体积 | 首屏 gzip 202,077 → 189,652 B；自有代码 gzip -25%；题面按需加载 |
 | 性能 | 场景网格 204 → 120；键盘贴图/材质 6 → 1；pixelRatio 自适应（策略有单测） |
-| 行为不变 | 评分器 / NPC 生成 / 题面哈希 / 题库元数据全部与重构前一致；共 164 + 25 项断言 |
+| 行为不变 | 评分器 / NPC 生成 / 题面哈希 / 题库元数据全部与重构前一致；共 164 + 21 项断言 |

@@ -16,7 +16,7 @@
 ## 0. 三十秒交代
 
 - 纯前端 3D 游戏：**Three.js r128 + Vite 5**，无后端、无 UI 框架、无 TypeScript。
-- `src/` 下 **68 个 ESM 模块 / 约 4200 行**，全部是浏览器端代码。
+- `src/` 下 **71 个 ESM 模块 / 约 4780 行**，全部是浏览器端代码。
 - 界面拆成 10 个 HTML 局部模板（`src/ui/partials/*.html`）：1 个常驻层（画布 + HUD + Toast）
   + 9 个互斥的全屏覆盖层；由 `build/vite-plugin-html-partials.mjs` 在开发与构建时
   内联回 `index.html`（语法：`<!--#include src/ui/partials/xxx.html -->`）。
@@ -37,9 +37,9 @@
 | `npm run build` | 生产构建 | 产物在 `dist/`；`three` 单独成一个 chunk |
 | `npm run preview` | 预览 `dist/` | <http://127.0.0.1:4173> |
 | `npm run lint` | ESLint | **0 error / 0 warning** |
-| `npm test` | Node 回归测试（无需浏览器） | **164 项断言全部通过** |
-| `npm run smoke` | 真浏览器端到端（需先 build） | **18 项断言 + 控制台零错误** |
-| `npm run smoke:dev` | 同上但跑源码 | **25 项断言**（需另开 `npm run dev`） |
+| `npm test` | Node 回归测试（无需浏览器） | **223 项断言全部通过** |
+| `npm run smoke` | 真浏览器端到端（需先 build） | **33 项断言 + 控制台零错误** |
+| `npm run smoke:dev` | 同上但跑源码 | **40 项断言**（需另开 `npm run dev`） |
 | `npm run bake:assets` | 重新烘焙静态贴图 | 幂等；产出 `assets/textures/*.webp` |
 | `npm run verify` | lint + test + build | 无需浏览器的门禁 |
 | `npm run verify:full` | verify + smoke | 完整门禁 |
@@ -59,9 +59,9 @@
 
 ```bash
 npm run lint          # 0 error / 0 warning
-npm test              # 164 项断言
+npm test              # 223 项断言
 npm run build
-npm run smoke         # 18 项断言 + 控制台零错误
+npm run smoke         # 33 项断言 + 控制台零错误
 ```
 
 **按改动类型追加**：
@@ -101,18 +101,23 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
 | `src/world/` | 场景组装、实体注册表、碰撞 | `world.js` `entities.js` |
 | `src/systems/` | 评分、NPC 代码生成、存档、交互、各类 AI、过场 | `scoring.js` `npc-codegen.js` `npc.js` `guards.js` |
 | `src/ui/` | 各界面模块 + `partials/*.html` | `editor.js` `verdict.js` `panels.js` |
-| `src/data/` | 关键字表、题库（清单 + 每题 js/md） | `problems/index.js` `problems/manifest.js` |
+| `src/data/` | 关键字表、题库（清单 + 每题 js/md）、抽题与难度排序 | `problems/index.js` `problems/manifest.js` `problems/selection.js` |
 | `src/audio/` | WebAudio 程序化音效（**仓库里没有任何音频文件**） | `audio.js` |
 | `tests/` | 回归测试与行为基线 | `run.mjs` `baseline.json` `problem-hashes.json` |
 | `tools/` | 冒烟测试、贴图烘焙、浏览器 profile 管理 | `smoke-test.mjs` `bake-assets.mjs` `lib/chrome-profile.mjs` |
 
 **关键数据流**
 
-- 抽题：`pickProblems()` 只返回**清单元数据**（id/名称/分值/时空限制）；
+- 抽题：`pickProblems()`（`problems/selection.js`）从清单随机抽 4 道，
+  **按难度升序**返回 —— 名单顺序就是题目列表 / HUD / 显示器贴图的顺序。
+  难度组合不固定为 1~4（从 16 道里均匀抽），且**难度字段不进界面**。
+  抽题只返回**清单元数据**（id/名称/分值/时空限制）；
   题面与 `starter` 在 `loadProblemData(id)` 时才下载 → 所以首屏代码**不能**读 `problem.desc` / `problem.starter`。
 - 渲染：`core/loop.js` 的 `animate()` 按 `state.view` 裁剪更新与渲染
   （IDE / 草稿纸等覆盖层视图会**跳过 render**，`VIEW_NO_RENDER`）。
-- 计分：`ui/verdict.js` → `systems/scoring.js` `judgeUnified()` → `systems/score.js` → HUD + 显示器贴图。
+- 计分：赛中 `ui/verdict.js` → `systems/scoring.js` `judgePretest()`（10 点，预测试）
+  → `systems/score.js` → HUD（标着「预测试」）+ 显示器贴图；
+  交卷后 `ui/ending.js` → `judgeSystem()`（20 点，最终成绩，逐点揭晓）→ 结算总分与成就。
 
 ---
 
@@ -127,12 +132,25 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
   `systems/scoring.js` 与 `systems/npc-codegen.js` 只能从这里 import。
 - **注意区分**：玩法层大量使用 `Math.random()`（抽题、保安出现角度、人物相位、音效抖动、
   NPC 行为…），那是**故意不确定**的，不受本条约束。本条只锁「同样的代码必须得到同样的分数」这条线。
-- **为什么**：分数由 `hashStr(code + prob.id)` 决定 —— 同样的代码永远得同样的分
+- **为什么**：分数由 `hashStr(code + prob.id + '|阶段')` 决定 —— 同样的代码永远得同样的分
   （反复提交刷不了分），NPC 生成也靠它保持稳定。改一个比特，历史分数与存档全部失效。
-- **守卫**：`tests/run.mjs` 比对 `tests/baseline.json`
-  （评分 24 组固定输入逐字段比对 + NPC 生成 15 组逐字节比对）。
-- **如果你确实要改随机行为**：必须显式重新生成基线
-  （`node tests/capture-baseline.mjs <重构前的 git rev>`），并在提交信息里说明为什么。
+- **评测分两个阶段**（都在 `systems/scoring.js`）：赛中提交跑 `judgePretest()`（10 个点，
+  本地即时出分，只作赛中参照）；交卷 / 时间到跑 `judgeSystem()`（20 个点，**最终成绩**）。
+  system test 不另掷骰子，而是在 pretest 分数上叠确定性漂移 —— 两阶段必须相关，
+  否则「预测试」就没有参考意义。改评分曲线就是改这条线，见下面两条守卫。
+- **守卫 1（快照）**：`tests/run.mjs` 比对 `tests/baseline.json`
+  （pretest 24 组逐字段 + system 24 组点数/分数/逐点状态 + NPC 生成 15 组逐字节）。
+  快照只证明「没有意外漂移」，**不证明「算得对」**。
+- **守卫 2（语义判据）**：`tests/run.mjs` 的「评测器语义判据」一节才是正确性判据 ——
+  注释灌水必须低于认真解、加 150 行注释不得改变基础分、关键词堆砌不得高于认真解、
+  每题特征词都来自全局词表、抖动幅度有界且平均不偏高。这几条在旧评分器上会红。
+- **如果你确实要改评分行为**：先改代码，再显式重冻评分快照 ——
+  `node tests/capture-judge-baseline.mjs`（**只重冻 judgment / systemJudgment**，
+  npc 与题库清单原样保留），并在提交信息里说明为什么。
+  `node tests/capture-baseline.mjs <重构前的 git rev>` 是另一回事：它按 git 版本
+  重建全部三节，只在「搬运旧实现」时用，**改评分时不要跑它**（会把 judgment 退化成旧行为）。
+- **改评分就要想存档**：`oi_save_v8` 里存了 `code`，所以 `tryLoadSave()` 会用新规则
+  重算每题分数（旧口径的分数不可比）。改评分时别把这条迁移路拆掉。
 
 ### 4.2 题面文本
 
@@ -224,7 +242,14 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
 
 1. `src/data/problems/<题号>.md` —— Markdown 题面正文；
 2. `src/data/problems/<题号>.js` —— 元数据 + `import desc from './<题号>.md?raw'`；
-3. `src/data/problems/manifest.js` 里补一行元数据。
+3. `src/data/problems/manifest.js` 里补一行元数据，**连同 `keywords` / `hints` / `difficulty`**：
+   - `keywords` / `hints`：题目差异化评分用的特征词与代码片段（§4.1）；
+   - `difficulty`：1~4，**题号连续的 4 道题从前到后依次为 1~4**（清单按场次成组排）。
+     它只用于把一局的题目列表排成易→难（`selection.js`），
+     **界面一律不显示** —— `npm test` 有一条静态断言：这个字段只准出现在
+     `manifest.js` 与 `selection.js` 里，别处引用（含显示器贴图）都会红。
+   - 抽题规则本身（一局 4 道、按难度升序、难度组合不强制 1~4）也在 `selection.js`，
+     刻意避开 `index.js` 的 `import.meta.glob`，好让 `tests/run.mjs` 直接单测这条规则。
 
 模板见 `README.md`。新题目会各自成为一个按需加载的 chunk，不会进首屏。
 注意 `npm test` 的哈希断言只覆盖**已有题目**，新题不在其中。
@@ -238,6 +263,24 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
 | 透明材质 | 合批会自动跳过（排序敏感），不用特殊处理 |
 | 想彻底不参与合批 | 设 `userData.noBatch = true` |
 
+> 交互分两种手感，**不要统一**：
+> - **E / F 是按住确认**（VR 指针手感）：按下后准星进度环走满 `HOLD_SECONDS`（0.3s）
+>   才执行，松手 / 换目标 / 丢焦点一律取消。改动这块要同时照顾四处：
+>   `systems/interaction.js`（`beginInteractHold` / `updateInteractHold` / `cancelInteractHold`
+>   与提示文案）、`ui/crosshair.js`（环的进度）、`core/loop.js`（每帧推进 + 离开世界视图时清零）、
+>   `core/input.js`（keydown **和** keyup 两侧 —— 只接 down 会让按键卡住）。
+> - **空格（攻击）是按下即生效**：走 `attackNow()`，不蓄力、**不显示进度环**、
+>   不依赖 keyup，而且**照收键盘自动重复** —— 按住不放就该持续出手
+>   （保安走进范围的那一刻会被下一发打掉，不必松手重按）。
+>   出手节奏由 `ATTACK_INTERVAL`（0.25s）限住：每拳会在 0.9s 后补进 2 名保安，
+>   输入层完全不限速的话按住两秒能刷出上百名保安把游戏拖死。
+>   注意**不要在 `input.js` 里用 `e.repeat` 过滤空格**，那会把「按住连打」一起挡掉
+>   （踩过：玩家反馈「按着空格、保安走到脸上也不出手」）。
+>   `npm test` 有三条静态判据钉住这条接线（真跑一遍要先放保安，会把冒烟测试后续步骤打乱）。
+> 另外环的 `stroke-dasharray` 由 `crosshair.js` 按 `getTotalLength()` 现算：
+> 改准星尺寸时若只改 CSS 宽高、忘了改 SVG 的 `viewBox`/`r`，弧长就会对不上，
+> 没按任何键也常驻一小段弧（冒烟测试有一条断言钉这个不变量）。
+
 ### 5.3 新增一个界面面板
 
 1. `src/ui/partials/<name>.html`（然后在 `index.html` 加一条 `<!--#include ... -->`，注意顺序）；
@@ -246,6 +289,11 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
    `VIEW_NO_RENDER`（否则世界会在遮罩下面白渲染）；
 4. 在 `core/input.js` 的 Esc 分支里接上关闭逻辑；
 5. 元素引用统一放 `src/ui/dom.js`。
+
+> 例外：启动屏（`src/ui/partials/start.html`）不是「一个视图一个覆盖层」，
+> 而是 `#start` 内的三个 `.start-page` 分页（简介 / 设置 / 关于），
+> 由 `src/ui/start.js` 的 `showStartPage()` 按 `data-start-page` 切 `.hidden`。
+> 加分页时同步补上 `START_PAGES`、选项卡按钮与冒烟测试的分页断言。
 
 ### 5.4 改静态贴图（黑板 / 出口牌 / 键盘）
 
@@ -263,7 +311,7 @@ npm run dev          # 一个终端
 npm run smoke:dev    # 另一个终端：会打印网格数、合批组数、skippedDynamic、frameMs
 ```
 
-- **看「场景网格数」**（204 → 120），不要看固定视角的 draw call（§2 验证纪律 3）。
+- **看「场景网格数」**（198 → 114），不要看固定视角的 draw call（§2 验证纪律 3）。
 - `src/core/perf.js` 的 `perfStats` 只在 dev 存在（`import.meta.env.DEV` 守卫，
   生产构建里会被 Rollup 摇掉，且有断言守着）。要加指标就加在这里。
 - DPR 自适应策略在 `src/core/perf-policy.js`，是**纯函数 + 独立单测** ——
@@ -288,7 +336,7 @@ npm run smoke:dev    # 另一个终端：会打印网格数、合批组数、ski
 6. **首屏代码不能读 `problem.desc` / `problem.starter`**（§3 数据流）。
    需要起手模板时 import `src/data/problems/template.js` 的 `STARTER_TEMPLATE`。
 7. **`import.meta.env.DEV` 守卫的探针在生产构建里必须消失**，冒烟测试对此有断言
-   （dist 跑 18 项、dev 跑 25 项，差的就是这些 dev-only 检查）。
+   （dist 跑 33 项、dev 跑 40 项，差的就是这些 dev-only 检查）。
 8. **合批发生在保安生成之前**，所以保安从来不会被合批；但 `guard.js` 仍保留
    `userData.dynamic` 标记，以防以后多合批一次。
 9. **`src/` 里不要用 Node API**，也不要往 ESLint 的 `globals` 里加名字来蒙混过关。
@@ -359,6 +407,7 @@ git push origin --tags   # 触发 .github/workflows/deploy.yml
 | 计分 / 分数曲线 | `src/systems/scoring.js` → §4.1 |
 | NPC 生成的代码长什么样 | `src/systems/npc-codegen.js` → §4.1 |
 | 题目内容 / 加题 | `src/data/problems/` → §5.1、§4.2 |
+| 一局抽几道题 / 按难度排序 / 难度字段 | `src/data/problems/selection.js` + `manifest.js` → §5.1 |
 | 房间 / 课桌 / 人物 / 保安外观 | `src/models/` → §4.4 |
 | 人物腿、姿态、走路 | `src/models/person.js` + `src/systems/npc.js` → §4.4 |
 | 场景里东西太多、卡 | `src/render/batch.js` → §5.5 |

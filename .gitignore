@@ -25,3 +25,6 @@ yarn-error.log*
 tests/tmp/
 tools/out/
 .chrome-*/
+
+# 代码索引（CodeGraph 本地生成，几 MB，随时可重建）
+.codegraph/
