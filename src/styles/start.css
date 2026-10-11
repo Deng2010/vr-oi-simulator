@@ -1,4 +1,4 @@
-/* 开始界面 / 设置卡片 / 滑条 / 开关
+/* 开始界面 / 分页选项卡 / 设置卡片 / 滑条 / 开关
    由原 index.html 内联 <style> 第 21-85 行原样拆出，
    在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
   /* ---------- 开始界面 ---------- */
@@ -17,6 +17,27 @@
     color:#aab3c5;backdrop-filter:blur(8px);margin:0 auto;
   }
   #start .card b{color:#e8edf7;font-weight:600;}
+
+  /* ---------- 启动屏分页（简介 / 设置 / 关于） ---------- */
+  /* 三个分页高度差别很大（简介最长、关于最短），给个最小高度，
+     切页时底部的版本号不会跟着上下跳。 */
+  .start-page{max-width:700px;min-height:280px;margin:0 auto;}
+  .start-tabs{display:flex;justify-content:center;gap:8px;margin:0 auto 22px;max-width:700px;}
+  .start-tab{
+    background:transparent;border:1px solid #2a3346;color:#8b97ad;
+    padding:8px 24px;border-radius:9px;font-size:13px;letter-spacing:2px;
+    cursor:pointer;transition:.18s;font-family:inherit;
+  }
+  .start-tab:hover{color:#cbd4e5;border-color:#3d4a66;}
+  .start-tab.on{
+    color:#fff;border-color:transparent;
+    background:linear-gradient(135deg,#3b6df0,#6b4ef0);
+    box-shadow:0 6px 22px -8px #4a6bffcc;
+  }
+  /* 分页卡片里的第一段小标题不需要分隔线（卡片自带内边距） */
+  .start-page .set-title:first-child{border-top:none;margin-top:0;padding-top:0;}
+  #start .hint{color:#5d6880;font-size:12px;line-height:1.9;margin:14px 6px 0;}
+  .start-page .placeholder{color:#5d6880;font-size:12.5px;line-height:2;margin:0;}
   kbd{display:inline-block;background:#232a38;border:1px solid #39415280;
     border-bottom-width:2px;border-radius:5px;padding:1px 7px;font-size:11px;
     font-family:monospace;color:#cfd8ea;margin:0 2px;}

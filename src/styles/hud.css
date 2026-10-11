@@ -36,10 +36,77 @@
   #btnSettings{right:118px;}
   #btnSettings:hover{background:#243048;border-color:#3d5278;color:#c3d3f5;}
 
+  /* 准星：十字 + 交互/攻击 45° 旋转 + 按住确认进度环（VR 指针手感）
+     外层 #crosshair 负责定位与攻击态放大；十字本体包在 .ch-cross 里单独变换，
+     进度环不跟着转（否则弧的起点会从 12 点漂走）。
+     状态类由 src/ui/crosshair.js 维护：
+       .interact —— 瞄到可交互物：45° 变叉 + 收拢一档 + 进度环淡入
+       .attack   —— 可攻击目标：红化 + 放大 + 45° 变叉（不显示环，按下即打）
+       .hold     —— 正按住 E / F 蓄力：再收拢一档，环开始走
+       .confirm  —— 蓄满触发：环向外扩散淡出，一次性的「已确认」回执 */
   #crosshair{
-    position:fixed;top:50%;left:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
-    border-radius:50%;background:#ffffffcc;z-index:9;pointer-events:none;
-    box-shadow:0 0 4px #000,0 0 2px #000;
+    position:fixed;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;
+    z-index:9;pointer-events:none;
+    --ch:rgba(255,255,255,.92);
+    --ch-ring:rgba(255,255,255,.14);
+    --ch-fill:#7fd4ff;
+    /* 缓动不带过冲：VR 指针要「贴手」，回弹看着廉价 */
+    transition:transform .26s cubic-bezier(.22,.61,.36,1);
+  }
+  #crosshair .ch-cross{
+    position:absolute;inset:0;
+    /* 深色包边：白板、黑板这种亮底上也得看得清 */
+    filter:drop-shadow(0 0 1px rgba(0,0,0,.85));
+    transition:transform .26s cubic-bezier(.22,.61,.36,1);
+  }
+  #crosshair .ch-bar{
+    position:absolute;background:var(--ch);border-radius:1px;
+    box-shadow:0 0 3px #000;transition:background .18s;
+  }
+  /* 十字：30px 盒子里 9px 长、2px 粗，内端离中心 5px（不挡住瞄准点） */
+  #crosshair .ch-t,#crosshair .ch-b{left:14px;width:2px;height:9px;}
+  #crosshair .ch-l,#crosshair .ch-r{top:14px;width:9px;height:2px;}
+  #crosshair .ch-t{top:1px;}
+  #crosshair .ch-b{bottom:1px;}
+  #crosshair .ch-l{left:1px;}
+  #crosshair .ch-r{right:1px;}
+  #crosshair .ch-dot{
+    position:absolute;left:14px;top:14px;width:2px;height:2px;border-radius:1px;
+    background:var(--ch);box-shadow:0 0 3px #000;transition:background .18s;
+  }
+  #crosshair .ch-ring{
+    position:absolute;inset:0;width:30px;height:30px;
+    transform:rotate(-90deg);opacity:0;transition:opacity .18s ease-out;
+  }
+  #crosshair .ch-ring circle{fill:none;stroke-width:1.5;}
+  #crosshair .ch-ring-track{stroke:var(--ch-ring);}
+  #crosshair .ch-ring-fill{
+    /* dasharray 由 src/ui/crosshair.js 按 getTotalLength() 写死成整圈；
+       这里的值只是脚本跑起来之前的初始态（覆盖 viewBox 与 r 全部匹配的情形） */
+    stroke:var(--ch-fill);stroke-linecap:round;
+    stroke-dasharray:75.398;stroke-dashoffset:75.398;
+    /* 进度为 0 时把弧整个藏掉：round 线帽会在 12 点留下一个 1.5px 的点，
+       没按任何键就挂着一颗亮点很显眼 */
+    stroke-opacity:0;transition:stroke-opacity .1s linear;
+  }
+  #crosshair.hold .ch-ring-fill,
+  #crosshair.confirm .ch-ring-fill{stroke-opacity:1;}
+  /* 咬合目标：45° 变叉并收拢一档，像把指针按在目标上 */
+  #crosshair.interact .ch-cross,
+  #crosshair.attack .ch-cross{transform:rotate(45deg) scale(.88);}
+  /* 环只在「可以按住确认」时出现：攻击是按下即生效，不给环 */
+  #crosshair.interact .ch-ring,
+  #crosshair.hold .ch-ring{opacity:1;}
+  /* 蓄力中：再收一档，配合环给出「正在按住」的体感 */
+  #crosshair.hold .ch-cross{transform:rotate(45deg) scale(.78);}
+  /* 攻击：红化 + 放大（同样 45° 变叉，但不给环） */
+  #crosshair.attack{transform:scale(1.5);--ch:#ff5f6d;}
+  #crosshair.attack .ch-bar,#crosshair.attack .ch-dot{box-shadow:0 0 5px #ff2b3d;}
+  /* 触发回执：环向外扩散淡出（时长与 crosshair.js 的 CONFIRM_SECONDS 对齐） */
+  #crosshair.confirm .ch-ring{animation:chConfirm .3s ease-out;}
+  @keyframes chConfirm{
+    0%{transform:rotate(-90deg) scale(1);opacity:1;}
+    100%{transform:rotate(-90deg) scale(1.5);opacity:0;}
   }
   #prompt{
     position:fixed;bottom:12%;left:50%;transform:translateX(-50%);z-index:11;

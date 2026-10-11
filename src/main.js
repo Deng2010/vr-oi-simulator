@@ -18,11 +18,13 @@ import { updateAllDeskScreens } from './render/screen-textures.js';
 import { renderHudProbs } from './ui/hud.js';
 import { initPaperEvents } from './ui/paper.js';
 import { syncViewUI } from './ui/settings-panel.js';
+import { bindStartTabs } from './ui/start.js';
 import { buildWorld } from './world/world.js';
 
 export function init(){
   loadViewSettings();
   syncViewUI();
+  bindStartTabs();
 
   initGraphics();
 

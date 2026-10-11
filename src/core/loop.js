@@ -10,12 +10,13 @@ import { camera, clock, renderer, scene } from '../render/gfx.js';
 import { startBathroom, takePendingExit, updateBathroom } from '../systems/bathroom.js';
 import { enterCorridor, takePendingArrival, updateCorridor } from '../systems/corridor.js';
 import { updateGuards } from '../systems/guards.js';
-import { updateInteract } from '../systems/interaction.js';
+import { cancelInteractHold, updateInteract, updateInteractHold } from '../systems/interaction.js';
 import { applyLook } from '../systems/look.js';
 import { updateNPCs } from '../systems/npc.js';
 import { updatePlayer } from '../systems/player.js';
 import { applyWanderPenalty, showTeacherWarning, triggerTeacherWarning } from '../systems/warn.js';
 import { hudScore, hudTimer } from '../ui/dom.js';
+import { resetCrosshair, updateCrosshair } from '../ui/crosshair.js';
 import { endContest } from '../ui/ending.js';
 import { drawMinimap } from '../ui/minimap.js';
 import { aliveGuardCount, securityGuards, teacher } from '../world/entities.js';
@@ -157,6 +158,16 @@ export function animate(){
       lastInteractUpdate = now;
       updateInteract();
     }
+
+    /* 按住确认的蓄力与准星都逐帧推进：
+       目标判定走上面的 80ms 节流，0.3s 的蓄力进度只能用帧来喂 */
+    updateInteractHold(realDt);
+    updateCrosshair(realDt);
+  } else {
+    /* IDE / 走廊 / 结算等视图下准星虽然被 .hidden 藏了，
+       蓄力与进度仍要清零，否则回到世界会带着一个满环 / 卡住的按键 */
+    resetCrosshair();
+    cancelInteractHold();
   }
 
   /* HUD */
@@ -178,6 +189,7 @@ export function animate(){
         : '';
       hudScore.innerHTML =
         `总分 <b>${state.totalScore}</b> / 400　` +
+        `<span style="color:#5b8cff;font-size:11px">预测试</span>　` +
         `<span style="color:#5d6880;font-size:11px">警告 ${state.warnCount} 次</span>${guardInfo}`;
     }
     drawMinimap();

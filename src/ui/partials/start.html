@@ -1,49 +1,95 @@
-<!-- 开始界面（考试须知 + 手感调校）
+<!-- 开始界面（分页：简介 / 设置 / 关于）
      由原 index.html 第 450-494 行拆出，通过 build/vite-plugin-html-partials.mjs
-     在开发与构建时原样内联回 index.html。 -->
+     在开发与构建时原样内联回 index.html。
+     三个分页共用同一个 #start 覆盖层，只切换 .start-page 的可见性。
+     #btnStart 与各滑条的 id 保持不变 —— 冒烟测试、input.js、settings-panel.js
+     都按 id 找它们，改名会静默失效。 -->
 <!-- ===================== 开始界面 ===================== -->
 <div id="start">
   <h1>VR OI 考场</h1>
   <div class="sub">NATIONAL OLYMPIAD IN INFORMATICS · VIRTUAL ARENA</div>
-  <div class="card">
-    <b>考试须知</b><br>
-    比赛时长 <b>4 小时</b>，共 <b>4 道题</b>，满分 <b>400 分</b>。<br><br>
-    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 &nbsp;·&nbsp;
-    <kbd>←</kbd><kbd>→</kbd> 左右转身 &nbsp;·&nbsp;
-    <kbd>↑</kbd><kbd>↓</kbd> 抬头 / 低头<br>
-    <kbd>Shift</kbd> 疾走 &nbsp;·&nbsp;
-    <kbd>E</kbd> 或 <kbd>鼠标左键</kbd> 交互（电脑 · 草稿纸 · 水杯 · 出门）<br>
-    <kbd>F</kbd> 干扰同学 &nbsp;·&nbsp;
-    <kbd>空格</kbd> 出拳（老师 / 保安，后果自负）&nbsp;·&nbsp;
-    <kbd>H</kbd> 举手呼叫监考 &nbsp;·&nbsp; <kbd>Esc</kbd> 打开设置<br><br>
 
-    <div class="set-title">视角手感调校</div>
-    <div class="setting-row">
-      <label>转向速度</label>
-      <input type="range" id="turnSliderStart" min="1" max="20" value="10">
-      <span class="val" id="turnValueStart">2.2</span>
+  <nav class="start-tabs" id="startTabs">
+    <button class="start-tab on" data-start-tab="intro">简介</button>
+    <button class="start-tab" data-start-tab="settings">设置</button>
+    <button class="start-tab" data-start-tab="about">关于</button>
+  </nav>
+
+  <!-- ---------- 简介：操作指南 + 启动 ---------- -->
+  <section class="start-page" data-start-page="intro">
+    <div class="card">
+      <h3>欢迎来到 VR OI 模拟器！</h3>
+      <br />
+      <b>考试须知</b><br />
+      比赛时长 <b>4 小时</b>，共 <b>4 道题</b>，满分 <b>400 分</b>。<br /><br />
+      <b>操作指南</b><br />
+      <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 &nbsp;·&nbsp;
+      <kbd>←</kbd><kbd>→</kbd> 左右转身 &nbsp;·&nbsp; <kbd>↑</kbd
+      ><kbd>↓</kbd> 抬头 / 低头<br />
+      <kbd>Shift</kbd> 疾走 &nbsp;·&nbsp; <kbd>E</kbd> 或
+      <kbd>鼠标左键</kbd> 交互（电脑 · 草稿纸 · 水杯 · 出门）<br />
+      <kbd>F</kbd> 干扰同学 &nbsp;·&nbsp; <kbd>空格</kbd> 出拳（老师 /
+      保安，后果自负）&nbsp;·&nbsp; <kbd>H</kbd> 举手呼叫监考 &nbsp;·&nbsp;
+      <kbd>Esc</kbd> 打开设置<br /><br />
+      <b>友情提醒：本游戏含有危险行为，请勿在现实中模仿。</b><br />
     </div>
-    <div class="setting-row">
-      <label>转向平滑</label>
-      <input type="range" id="smoothSliderStart" min="0" max="90" value="35">
-      <span class="val" id="smoothValueStart">35%</span>
+    <button id="btnStart">进 入 考 场</button>
+    <div class="hint">
+      视角手感、时间流速与音量在「设置」页调整；进场后按
+      <kbd>Esc</kbd> 也能随时打开设置。
     </div>
-    <div class="setting-row">
-      <label>时间流速</label>
-      <input type="range" id="timeSliderStart" min="1" max="60" value="15">
-      <span class="val" id="timeValueStart">15×</span>
+  </section>
+
+  <!-- ---------- 设置：键盘手感 / 比赛 / 存档 ---------- -->
+  <section class="start-page hidden" data-start-page="settings">
+    <div class="card">
+      <div class="set-title">键盘手感</div>
+      <div class="setting-row">
+        <label>转向速度</label>
+        <input type="range" id="turnSliderStart" min="1" max="20" value="10" />
+        <span class="val" id="turnValueStart">2.2</span>
+      </div>
+      <div class="setting-row">
+        <label>转向平滑</label>
+        <input
+          type="range"
+          id="smoothSliderStart"
+          min="0"
+          max="90"
+          value="35"
+        />
+        <span class="val" id="smoothValueStart">35%</span>
+      </div>
+      <div class="set-title">比赛</div>
+      <div class="setting-row">
+        <label>时间流速</label>
+        <input type="range" id="timeSliderStart" min="1" max="60" value="15" />
+        <span class="val" id="timeValueStart">15×</span>
+      </div>
+      <div class="setting-row">
+        <label>音量</label>
+        <input type="range" id="volSliderStart" min="0" max="100" value="60" />
+        <span class="val" id="volValueStart">60%</span>
+      </div>
+      <div class="set-title">存档</div>
+      <button class="btn ghost" id="btnClearSaveStart">清空存档</button>
+      <div class="hint">清空后已保存的代码与比赛进度都会丢失，且无法恢复。</div>
     </div>
-    <div class="setting-row">
-      <label>音量</label>
-      <input type="range" id="volSliderStart" min="0" max="100" value="60">
-      <span class="val" id="volValueStart">60%</span>
+  </section>
+
+  <!-- ---------- 关于 ---------- -->
+  <section class="start-page hidden" data-start-page="about">
+    <div class="card">
+      <!-- ↓ 关于页内容：写在这里即可（普通 HTML；可复用本文件的 .card / .set-title / .hint） ↓ -->
+      <h3>VR OI 模拟器 by KobeBeanBryantCox & DZ1000</h3>
+      <b>Github 仓库</b>：https://github.com/Deng2010/vr-oi-simulator/<br />
+      <b>官方 QQ 交流群</b>：291324801<br /><br />
+      <h3>更新日志</h3>
+      <b>2026-10-11 v1.1.0</b> 启动界面优化；准星优化；评测优化<br />
+      <b>2026-10-06 v1.0.0</v1></b> 正式发布。
+      <!-- ↑ 关于页内容 ↑ -->
     </div>
-  </div>
-  <button id="btnStart">进 入 考 场</button>
-  <button id="btnClearSaveStart" style="margin:14px auto 0;display:block;padding:9px 26px;
-    background:transparent;border:1px solid #4a3a3a;color:#c08a8a;border-radius:8px;
-    font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:2px">
-  清空存档
-  </button>
+  </section>
+
   <div class="ver" id="appVersion"></div>
 </div>

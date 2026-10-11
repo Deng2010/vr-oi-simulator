@@ -12,6 +12,9 @@
   .btn:hover{background:#28313f;border-color:#4a5878;}
   .btn.primary{background:linear-gradient(135deg,#3b6df0,#6b4ef0);border:none;color:#fff;font-weight:600;}
   .btn.primary:hover{filter:brightness(1.12);}
+  /* 危险 / 次要操作（清空存档）：不能用 .primary 的蓝色，太像正常流程 */
+  .btn.ghost{background:transparent;border-color:#4a3a3a;color:#c08a8a;letter-spacing:2px;}
+  .btn.ghost:hover{background:#241a1a;border-color:#6a4a4a;}
   .btn:disabled{opacity:.4;cursor:not-allowed;}
 
   #pauseMenu .pbox{

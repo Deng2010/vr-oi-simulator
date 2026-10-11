@@ -4,7 +4,22 @@
 <canvas id="scene"></canvas>
 <div id="redFlash"></div>
 <div id="dangerVignette"></div>
-<div id="crosshair" class="hidden"></div>
+<!-- 准星：十字 4 条线 + 中心点 + 蓄力进度环（SVG）。
+     显隐仍由各模块加/去 .hidden 控制；.interact / .attack / .ready
+     由 src/ui/crosshair.js 每帧维护。 -->
+<div id="crosshair" class="hidden">
+  <span class="ch-cross">
+    <span class="ch-bar ch-t"></span>
+    <span class="ch-bar ch-b"></span>
+    <span class="ch-bar ch-l"></span>
+    <span class="ch-bar ch-r"></span>
+    <span class="ch-dot"></span>
+  </span>
+  <svg class="ch-ring" viewBox="0 0 30 30" aria-hidden="true">
+    <circle class="ch-ring-track" cx="15" cy="15" r="12"></circle>
+    <circle class="ch-ring-fill" cx="15" cy="15" r="12"></circle>
+  </svg>
+</div>
 
 <div id="hud" class="hidden">
   <div id="hudTimer">04:00:00</div>

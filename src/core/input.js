@@ -11,14 +11,14 @@ import { getLoadedProblem } from '../data/problems/index.js';
 import { STARTER_TEMPLATE } from '../data/problems/template.js';
 import { clock, renderer, resizeViewport } from '../render/gfx.js';
 import { BATHROOM_STEPS, bathroomStepIdx, finishBathroom } from '../systems/bathroom.js';
-import { doInteract } from '../systems/interaction.js';
+import { attackNow, beginInteractHold, cancelInteractHold, endInteractHold } from '../systems/interaction.js';
 import { closeNPCComputer } from '../systems/npc.js';
 import { KEYMAP } from '../systems/player.js';
 import { clearSave, persistSave, tryLoadSave } from '../systems/save.js';
 import { callTeacher, closeTeacherDialog } from '../systems/teacher.js';
 import { codeArea, crosshair, hud, minimapWrap, pauseMenu } from '../ui/dom.js';
 import { codeHighlight, saveCode, scheduleHighlight } from '../ui/editor.js';
-import { endContest } from '../ui/ending.js';
+import { endContest, skipSystemTest } from '../ui/ending.js';
 import { closeCode, closePauseMenu, openPauseMenu } from '../ui/panels.js';
 import { closePaper } from '../ui/paper.js';
 import { syncViewUI } from '../ui/settings-panel.js';
@@ -26,7 +26,14 @@ import { toast } from '../ui/toast.js';
 import { submitCode } from '../ui/verdict.js';
 
 export function bindEvents(){
-  renderer.domElement.addEventListener('click', () => { doInteract('e'); });
+  /* 鼠标左键与 E 键同义：都要按住才确认（VR 指针手感）。
+     松开统一挂在 window 上 —— 鼠标可能拖出画布之后才松开。 */
+  renderer.domElement.addEventListener('mousedown', e => {
+    if (e.button === 0) beginInteractHold('e');
+  });
+  window.addEventListener('mouseup', e => {
+    if (e.button === 0) endInteractHold('e');
+  });
 
   document.addEventListener('keydown', e => {
     /* 走廊 */
@@ -69,13 +76,27 @@ export function bindEvents(){
       state.keys[k] = true;
       if (k.startsWith('look') || 'wasd'.includes(k)) e.preventDefault();
     }
-    if (e.code === 'KeyE'){ doInteract('e'); }
-    if (e.code === 'KeyF'){ doInteract('f'); }
-    if (e.code === 'Space'){ doInteract('space'); e.preventDefault(); }
+    if (e.code === 'KeyE'){ beginInteractHold('e'); }
+    if (e.code === 'KeyF'){ beginInteractHold('f'); }
+    /* 攻击是按下即生效：不看 keyup，也不需要玩家松开。
+       自动重复（一直按着时系统每几十毫秒补一个 keydown）**照收** ——
+       按住不放就该持续出手，保安走进范围时不必松手重按；
+       出手间隔由 interaction.js 的 ATTACK_INTERVAL 限住。 */
+    if (e.code === 'Space'){
+      attackNow();
+      e.preventDefault();
+    }
     if (e.code === 'KeyH') callTeacher();
   });
 
   document.addEventListener('keyup', e => {
+    /* 蓄力键的松手必须在所有视图分支之前处理：
+       蓄力到一半切进 IDE / 走廊时，keyup 仍要把蓄力清掉，
+       否则按键会「卡住」，回到世界后再也蓄不了力。
+       （空格不在其列：攻击按下就结算完了） */
+    if (e.code === 'KeyE') endInteractHold('e');
+    if (e.code === 'KeyF') endInteractHold('f');
+
     if (state.view === 'corridor'){
       if (e.code === 'KeyW' || e.code === 'ArrowUp') state.keys['w'] = false;
       return;
@@ -89,7 +110,9 @@ export function bindEvents(){
     if (k) state.keys[k] = false;
   });
 
-  window.addEventListener('blur', () => { state.keys = {}; });
+  /* 丢焦点：按键状态与「按住确认」的蓄力都得清掉，
+     否则会替玩家把一个没放手的动作触发掉 */
+  window.addEventListener('blur', () => { state.keys = {}; cancelInteractHold(); });
 
   /* resize 防抖：拖窗口时避免反复重建 drawing buffer */
   let resizeTimer = null;
@@ -199,6 +222,8 @@ export function bindEvents(){
     clearSave();
     location.reload();
   };
+  /* 系统测试的演示可以跳过：分数在演示开始前就定死了 */
+  $('btnSkipTest').onclick = skipSystemTest;
 
   $('btnClearSaveStart').onclick = () => {
     if (confirm('确定要清空存档吗？已保存的代码和进度都会丢失。')){
@@ -218,7 +243,7 @@ export function bindEvents(){
     state.startTime = performance.now();
     setLookTarget(state.yaw, state.pitch);
     clock.getDelta();
-    toast('比赛开始！方向键转身，WASD 移动，E 交互。', 2600);
+    toast('比赛开始！方向键转身，WASD 移动，按住 E 交互。', 2600);
     /* 尝试恢复存档 */
     if (tryLoadSave()) toast('已恢复上次的答题进度。', 2200);
   };
