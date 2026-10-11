@@ -14,8 +14,9 @@
    ========================================================= */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
+import { createProfile, sweepStaleProfiles } from './lib/chrome-profile.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -99,8 +100,8 @@ function findChrome(){
 
 async function launchBrowser(){
   const exe = findChrome();
-  const userDataDir = path.join(ROOT, `.chrome-smoke-${process.pid}`);
-  mkdirSync(userDataDir, { recursive: true });
+  const profile = createProfile(ROOT, 'smoke');
+  const userDataDir = profile.dir;
 
   const child = spawn(exe, [
     '--headless=new',
@@ -128,6 +129,8 @@ async function launchBrowser(){
     'about:blank'
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
 
+  profile.trackChild(child);      /* 信号清理时会先杀掉它，再删目录 */
+
   let stderr = '';
   child.stderr.on('data', d => { stderr += d.toString(); });
 
@@ -154,7 +157,7 @@ async function launchBrowser(){
     async close(){
       child.kill('SIGKILL');
       await sleep(200);
-      try { rmSync(userDataDir, { recursive: true, force: true }); } catch (e){ /* ignore */ }
+      profile.dispose();
     }
   };
 }
@@ -445,6 +448,10 @@ function pageScript(opts = {}){
 
 /* ---------- 主流程 ---------- */
 async function main(){
+  /* 顺手清掉上次被强杀留下的浏览器 profile 目录（10~20 MB/个） */
+  const swept = sweepStaleProfiles(ROOT);
+  if (swept) console.log(`已清理 ${swept} 个残留的浏览器 profile 目录`);
+
   const distDir = path.join(ROOT, 'dist');
   if (!USE_DEV && !existsSync(path.join(distDir, 'index.html'))){
     throw new Error('dist/index.html 不存在，先运行 npm run build');

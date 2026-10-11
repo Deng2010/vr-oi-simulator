@@ -18,9 +18,10 @@
 
    只依赖 esbuild + 系统里已装的 Chromium，不引入 Puppeteer/Playwright。
    ========================================================= */
-import { mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { build } from 'esbuild';
+import { createProfile, sweepStaleProfiles } from './lib/chrome-profile.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -88,9 +89,10 @@ async function bundlePainters(){
 /* 极简 CDP 客户端：只需要 Runtime.evaluate */
 async function withBrowser(fn){
   const exe = findChrome();
-  /* profile 放在仓库内（已 gitignore）：受限沙箱环境下 /tmp 未必可写 */
-  const userDataDir = path.join(ROOT, `.chrome-bake-${process.pid}`);
-  mkdirSync(userDataDir, { recursive: true });
+  /* profile 放在仓库内（已 gitignore）：受限沙箱环境下 /tmp 未必可写。
+     用 createProfile 保证正常退出 / 抛错 / 被 Ctrl-C 都会删掉。 */
+  const profile = createProfile(ROOT, 'bake');
+  const userDataDir = profile.dir;
 
   const child = spawn(exe, [
     '--headless=new',
@@ -106,6 +108,8 @@ async function withBrowser(fn){
     `--user-data-dir=${userDataDir}`,
     'about:blank'
   ], { stdio: ['ignore', 'ignore', 'pipe'] });
+
+  profile.trackChild(child);      /* 信号清理时会先杀掉它，再删目录 */
 
   let stderr = '';
   child.stderr.on('data', d => { stderr += d.toString(); });
@@ -136,7 +140,7 @@ async function withBrowser(fn){
   } finally {
     child.kill('SIGKILL');
     await sleep(150);
-    try { rmSync(userDataDir, { recursive: true, force: true }); } catch (e){ /* ignore */ }
+    profile.dispose();
   }
 }
 
@@ -178,6 +182,9 @@ function evaluate(wsUrl, expression){
 }
 
 async function main(){
+  const swept = sweepStaleProfiles(ROOT);
+  if (swept) console.log(`已清理 ${swept} 个残留的浏览器 profile 目录`);
+
   const bundle = await bundlePainters();
   mkdirSync(OUT_DIR, { recursive: true });
 

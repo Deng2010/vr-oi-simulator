@@ -15,8 +15,11 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "node tests/run.mjs",
+    "smoke": "node tools/smoke-test.mjs",
+    "smoke:dev": "node tools/smoke-test.mjs --dev",
     "bake:assets": "node tools/bake-assets.mjs",
-    "verify": "npm run lint && npm test && npm run build"
+    "verify": "npm run lint && npm test && npm run build",
+    "verify:full": "npm run verify && npm run smoke"
   },
   "dependencies": {
     "three": "0.128.0"

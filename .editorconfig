@@ -1,0 +1,19 @@
+# 统一编辑器行为，避免再出现 CRLF/LF 混用与缩进漂移。
+# 仓库历史：原 index.html/judge.js 等是 CRLF，problems.js 是 LF；
+# 现在由 .gitattributes 强制 LF，这里再加一道本地保险。
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+# Markdown 里行尾两个空格是有意义的换行，不要自动删
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,json}]
+indent_size = 2
