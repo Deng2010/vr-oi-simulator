@@ -1,16 +1,31 @@
 <!-- 结算界面
      由原 index.html 第 638-650 行拆出，通过 build/vite-plugin-html-partials.mjs
-     在开发与构建时原样内联回 index.html。 -->
+     在开发与构建时原样内联回 index.html。
+     分两阶段：#sysTest（赛后系统测试，20 点逐点揭晓）→ #endResult（揭榜）。
+     system test 的分数才是最终成绩，所以揭榜必须等它跑完。 -->
 <!-- ===================== 结算 ===================== -->
 <div id="ending" class="screen hidden">
   <div class="box">
     <h2 id="endTitle">比 赛 结 束</h2>
     <p id="endSub">评测机已停止运行，你的代码已被封存。</p>
-    <div class="big" id="endScore">0</div>
-    <div class="stat-grid" id="endStats"></div>
-    <div id="endDetail"></div>
-    <div id="endAch" class="ach-list"></div>
-    <button class="btn primary" id="btnRestart"
-            style="margin-top:24px;padding:11px 40px">再来一场</button>
+
+    <div id="sysTest" class="hidden">
+      <div class="st-bar">
+        <span class="st-live">&#9679; 系统测试进行中</span>
+        <span>System Test · 每题 20 个测试点</span>
+      </div>
+      <div id="stRuns"></div>
+      <div class="st-log" id="stLog">正在连接评测机…</div>
+      <button class="btn" id="btnSkipTest">跳过演示</button>
+    </div>
+
+    <div id="endResult">
+      <div class="big" id="endScore">0</div>
+      <div class="stat-grid" id="endStats"></div>
+      <div id="endDetail"></div>
+      <div id="endAch" class="ach-list"></div>
+      <button class="btn primary" id="btnRestart"
+              style="margin-top:24px;padding:11px 40px">再来一场</button>
+    </div>
   </div>
 </div>

@@ -10,8 +10,10 @@ import { achNotify } from './dom.js';
 let achTimer = null;
 
 export const ACHIEVEMENTS = {
-  first_ac:   { name: '初次 AC',   desc: '拿到第一道题的 Accepted' },
-  full_score: { name: '满分大神',   desc: '四道题全部 AC' },
+  /* 这两个看的是**赛后系统测试**的成绩，不是赛中预测试 ——
+     预测试满分不等于 AC（见 ui/ending.js 的成就判定） */
+  first_ac:   { name: '初次 AC',   desc: '系统测试拿下第一道题的 Accepted' },
+  full_score: { name: '满分大神',   desc: '四道题系统测试全部 AC' },
   guard_5:    { name: '格斗大师',   desc: '击倒 5 名保安' },
   clean_run:  { name: '安分守己',   desc: '零警告完赛' },
   zero_king:  { name: '零分传奇',   desc: '交卷时 0 分' },

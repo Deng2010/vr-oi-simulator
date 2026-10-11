@@ -9,13 +9,14 @@ import { KEYWORDS_LIST } from '../data/keywords.js';
 import { scheduleDeskScreensUpdate } from '../render/screen-textures.js';
 import { containsBannedWord, showBannedWordDialog } from '../systems/banned.js';
 import { recalcScore } from '../systems/score.js';
-import { judgeUnified } from '../systems/scoring.js';
-import { unlockAch } from './achievements.js';
+import { judgePretest, PRETEST_CASES } from '../systems/scoring.js';
 import { verdictEl } from './dom.js';
 import { renderProblemList, saveCode } from './editor.js';
 
+/* 赛中提交跑的是**预测试**：只有 10 个点，分数仅供赛中参照，
+   最终成绩以赛后 system test（20 点）为准。 */
 export function judgeCode(code, prob){
-  return judgeUnified(code, prob, KEYWORDS_LIST);
+  return judgePretest(code, prob, KEYWORDS_LIST);
 }
 
 export function submitCode(){
@@ -56,10 +57,11 @@ export function submitCode(){
       /* 桌面显示器贴图重绘合并到一次调度里 */
       scheduleDeskScreensUpdate();
       btn.disabled = false;
+      /* 预测试满分**不发成就**：成就一律等 system test 跑完再判
+         （见 ui/ending.js），否则「预测试过了就算 AC」的错觉
+         会盖掉这一版想要的悬念。 */
       if (res.score >= prob.max){
         audio.beep(880, 0.15, 0.05);
-        unlockAch('first_ac');
-        if (state.problems.every(p => (state.score[p.id] || 0) >= p.max)) unlockAch('full_score');
       } else if (res.score > 0) audio.beep(560, 0.15, 0.045);
       else audio.beep(220, 0.25, 0.05);
     }
@@ -75,12 +77,18 @@ export function renderVerdict(prob, res){
                 res.status === 'PART' ? '#ffcc57' : '#ff5f6d';
   verdictEl.innerHTML = `
     <h4>${prob.id} 评测结果 <span style="color:${color}">${res.score} 分</span></h4>
-    <div style="color:${color};font-size:12px;margin-bottom:12px;font-family:monospace">${statusText}</div>
+    <div style="color:${color};font-size:12px;margin-bottom:12px;font-family:monospace">
+      ${statusText}　·　预测试 ${PRETEST_CASES} 点
+    </div>
     <div class="cases">${res.cases.map(c =>
       `<div class="case ${c.status}">#${c.id}<br>${c.status}</div>`).join('')}</div>
     <div style="margin-top:12px;font-size:11px;color:#5d6880">
       ${res.status === 'CE' ? '提示：代码中未找到 main 函数或代码过短。' : ''}
       ${res.status !== 'AC' && res.status !== 'CE' ? '提示：检查算法复杂度与边界情况。' : ''}
-      ${res.status === 'AC' ? '\u{1F389} 恭喜！这道题你拿到了满分。' : ''}
+      ${res.status === 'AC' ? '\u{1F389} 预测试满分！' : ''}
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:#5b8cff;line-height:1.7">
+      这只是预测试（${PRETEST_CASES} 点）。交卷后还会跑 20 个点的系统测试，
+      最终成绩以系统测试为准。
     </div>`;
 }

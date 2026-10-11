@@ -14,6 +14,10 @@ export const state = {
   pos: new THREE.Vector3(0, 1.65, -1.72),
   keys: {},
   code: {}, score: {}, curProb: '', totalScore: 0,
+  /* score 是**预测试**分数（赛中即时、10 个点）；
+     finalScore 是赛后系统测试分数（20 个点），只有它才是最终成绩。
+     systemTested 用来区分「还没交卷」和「系统测试已跑完」。 */
+  finalScore: {}, systemTested: false,
   problems: [],
   npcProbId: '',       // 本局所有 NPC 展示的题目 id
   bob: 0,
