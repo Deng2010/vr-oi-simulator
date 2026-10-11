@@ -50,16 +50,10 @@ export function buildDesk(x, z, withMonitor){
     /* 记录以便后续刷新（切题 / 得分 / 读档时重新绘制） */
     deskScreens.push({ ctx: sx, tex: tex });
 
-    /* 原先每台显示器一盏 PointLight，累计 6 盏，会把光照 shader 拖慢；
-       这里换成一块微弱自发光平面，零光照开销。 */
-    const glowPanel = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.55, 0.34),
-      new THREE.MeshBasicMaterial({
-        color: 0x35507f, transparent: true, opacity: 0.18, depthWrite: false
-      })
-    );
-    glowPanel.position.set(0, 1.26, -0.06);
-    g.add(glowPanel);
+    /* 这里原先放了一块半透明的发光板（替代每台显示器一盏 PointLight）。
+       它在屏幕前方 0.22m 处悬空，看起来像每台电脑前贴了一张透明板，
+       玩家反馈很出戏，直接去掉：屏幕面本身是 MeshBasicMaterial（自发光），
+       去掉后显示器亮度不变，只是少了一层蓝雾。 */
 
     /* 键盘 */
     /* 键盘贴图来自 assets/textures/keyboard.png（构建期烘焙）。
