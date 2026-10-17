@@ -1,12 +1,16 @@
 name: CI
 
-# 只在 PR 与主干推送时做校验，绝不发布。
-# 发布走 deploy.yml，且必须由 tag 触发 —— 这样往 main 上推任何提交
-# 都不会意外覆盖线上 Pages，线上内容始终对应一个有版本号的 tag。
+# 只做校验，绝不发布。
+#   · PR / 主干推送 → 校验
+#   · tag 推送      → 也只校验（顺手拦一道「tag 与 package.json 对不上」）
+#   · 发布正式版    → 必须在网页上手动发 Release，见 release.yml
+#   · 发布 nightly  → push 到 main 时另行滚动发布预发布，见 nightly.yml
+# 这样往 main 上推任何提交都不会意外覆盖线上 Pages。
 on:
   pull_request:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -29,6 +33,22 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # tag 推送时先拦一道低级错误：tag 与 package.json 版本对不上。
+      # 否则要等到你手动发 Release 那一刻才失败，等于白推一轮。
+      # （release.yml 里还有同一道校验 —— 网页上新建 tag 的路径不经过这里。）
+      - name: 校验 tag 与 package.json 版本一致（仅 tag 推送）
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          PKG="$(node -p "require('./package.json').version")"
+          echo "tag=$TAG  package.json=$PKG"
+          if [ "v$PKG" != "$TAG" ]; then
+            echo "::error::tag ($TAG) 与 package.json 版本 (v$PKG) 不一致，请先同步版本号再打 tag"
+            exit 1
+          fi
 
       - name: 安装依赖
         run: npm ci

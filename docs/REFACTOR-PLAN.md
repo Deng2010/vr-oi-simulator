@@ -14,7 +14,7 @@
 |---|------|----------|
 | 1 | `index.html` 拆为多文件 | HTML 局部模板 + 11 个 CSS 分片 + 41 个 ESM 模块 |
 | 2 | GitHub Actions 打包 | `ci.yml`：lint / 回归测试 / 构建 / 浏览器冒烟测试 |
-| 3 | 只在打 tag 时推送 Pages | `deploy.yml`：`on.push.tags: v*`，并校验 tag ≡ package.json 版本 |
+| 3 | 只在打 tag 时推送 Pages | 原为 `deploy.yml`（`on.push.tags: v*`）；**2026-10 改版**：正式版由人工发布 Release 触发（`release.yml`），主干推送另发 nightly 预发布 —— 见 §6.3 / §6.4 |
 | 4 | 每道题目拆成 js / markdown | `src/data/problems/<id>.js` + `<id>.md`，懒加载 |
 | 5 | 3D 模型放到 assets 下面 | 模型构建代码 → `src/models/`；静态贴图烘焙 → `assets/textures/` |
 | 6 | 代码体积优化 | 分片、tree-shaking、题面懒加载、去重；见 §7 |
@@ -63,7 +63,8 @@ problems.js    1217 行 /  42,097 B   16 道题面全量内联
 ├── .gitattributes                # 仓库内统一 LF（原先 CRLF/LF 混用）
 ├── .github/workflows/
 │   ├── ci.yml                    # PR/主干：lint + test + build + 冒烟，不发布
-│   └── deploy.yml                # 仅 tag：校验版本 → 构建 → 发布 Pages
+│   ├── nightly.yml               # 主干推送：门禁 + 构建 → 滚动更新预发布 nightly
+│   └── release.yml               # 人工发 Release：校验版本 → 构建 → 发布 Pages
 ├── assets/                       # 静态资产（由打包器做内容哈希 + 长缓存）
 │   ├── icon.svg
 │   └── textures/                 # 构建期烘焙，命令：npm run bake:assets
@@ -270,7 +271,7 @@ Canvas2D 不需要 GPU，所以 `--no-sandbox --disable-gpu` 的无头实例就�
 
 ### 6.2 `ci.yml`：PR 与主干只校验，不发布
 
-`on: pull_request / push(main) / workflow_dispatch`，步骤：
+`on: pull_request / push(main) / push(tags: v*) / workflow_dispatch`，步骤：
 依赖安装 → 校验烘焙资产存在 → **ESLint** → **回归测试** → **构建** →
 产物体积写进 job summary → **真浏览器 WebGL 冒烟测试** → 上传 `dist` 工件。
 
@@ -289,31 +290,55 @@ Canvas2D 不需要 GPU，所以 `--no-sandbox --disable-gpu` 的无头实例就�
 浏览器由 `npx playwright install chromium` 提供，`tools/smoke-test.mjs`
 自己会在 `~/.cache/ms-playwright` 里找到它（项目本身不依赖 playwright 包）。
 
-### 6.3 `deploy.yml`：只有 tag 能发布
+### 6.3 `release.yml`：只有「人工发布 Release」才发线上
 
 ```yaml
 on:
-  push:
-    tags: ['v*']            # ← 唯一自动入口
-  workflow_dispatch:
-    inputs: { tag: {...} }  # 应急手动重发，必须显式指定 tag
+  release:
+    types: [published]      # ← 唯一入口，必须有人在网页上点 Publish
 ```
 
-- `main` 的推送**不会**触发本工作流，线上永远是某个 tag 的产物；
+- `main` 的推送、以及**推 tag**，都**不会**触发本工作流 ——
+  推 tag 只会跑 `ci.yml` 做校验（顺带查一遍 tag ≡ package.json 版本）；
+- job 上有一条 `if`：`!release.prerelease && startsWith(release.tag_name, 'v')`。
+  **这条 `if` 不能删**：`published` 事件对**预发布**同样会触发（GitHub 文档明写），
+  没有它，`nightly.yml` 的滚动预发布会把内容发到正式站点上；
 - 发布前强制校验 **tag ≡ package.json 版本**（`v1.2.0` 必须对应 `"version": "1.2.0"`），
   避免出现「站点里写着旧版本号」这种最尴尬的不一致；
 - 发布路径上把 lint + 测试再跑一遍：宁可不发布，也不发布一个坏站点；
 - `permissions` 只有 `contents: read` + `pages: write` + `id-token: write`；
 - `concurrency: pages` 且 `cancel-in-progress: false`，不会出现发布到一半被取消的半成品；
-- 额外写 `.nojekyll`，避免 Pages 的 Jekyll 处理忽略下划线开头的文件。
+- 额外写 `.nojekyll`，避免 Pages 的 Jekyll 处理忽略下划线开头的文件；
+- 没有 `workflow_dispatch`：`github-pages` 环境的 Deployment branches and tags
+  只放行 tag，从分支手动触发会被环境策略挡在部署那一步。release 事件的
+  `github.ref` 正好是 `refs/tags/<tag>`，所以人工发 Release 天然合法。
+
+### 6.4 `nightly.yml`：主干每次推送都出一个可下载的 nightly
+
+`on: push(main) / workflow_dispatch`，跑完和正式版**同一套门禁**
+（lint + 回归测试 + 浏览器冒烟），再构建并**滚动更新**同一个预发布（tag 固定为 `nightly`）。
+
+- 版本号只注入产物：`APP_VERSION = <package.json 版本>-nightly.<日期>.<短 SHA>`，
+  `package.json` 原样不动 —— 它始终代表「下一个正式版」；
+- **不发 Pages**：Pages 每次部署都是整站替换，nightly 上去就会把正式版盖掉。
+  所以 nightly 走 Release 附件（`contents: write`），固定地址永远指向最新构建；
+- 每次重建前先删掉旧的预发布与 tag，避免攒一堆 `nightly-20250101` 之类的 tag；
+  用 `GITHUB_TOKEN` 建 Release，按 GitHub 的规则**不会**再触发 `release.yml`。
+
+> **变更记录（2026-10）**：发布入口原本是「推 tag 就发 Pages」（旧 `deploy.yml`）。
+> 现在拆成上面两条：主干推送自动发 nightly 预发布，正式版必须人工发 Release。
+> 动机是「发布」应当是一次有意识的动作 —— 发布记录、变更说明和线上版本要对得上。
+> §0 的「需求 3」记录的是当时的目标，现状以本节为准。
 
 **首次启用需要在仓库 Settings → Pages 把 Source 设为 “GitHub Actions”。**
 
 发布流程：
 
 ```bash
-npm version patch          # 同步 package.json 版本
-git push && git push --tags
+npm version patch          # 同步 package.json 版本 + 打本地 tag
+git push origin main       # ci.yml 校验 + nightly.yml 更新预发布
+git push origin --tags     # 只校验，不发布
+# 再去 GitHub 网页 Releases → Draft a new release → 选 tag → Publish release
 ```
 
 ---
@@ -551,7 +576,7 @@ git push origin main --tags    # 打 tag 才会触发 Pages 发布
 | `index.html` 已拆多文件 | `index.html` 41 行；`src/` 41 个 JS 模块 + 10 个 HTML 局部模板 + 11 个 CSS 分片 |
 | 每题 js + markdown | `src/data/problems/` 下 16 组 `<id>.js` / `<id>.md` + 轻量清单 |
 | 3D 模型归位 | 模型构建代码在 `src/models/`；静态贴图在 `assets/textures/` 且由脚本可复现生成 |
-| 只在 tag 发布 | `deploy.yml` 只监听 `push.tags: v*`；tag 与 `package.json` 版本不一致时直接失败 |
+| 发布入口可控 | 推 tag 与推 `main` 都不发 Pages；正式版只在人工发布 Release 时更新，且 tag 与 `package.json` 版本不一致时直接失败 |
 | 体积 | 首屏 gzip 202,077 → 189,652 B；自有代码 gzip -25%；题面按需加载 |
 | 性能 | 场景网格 204 → 120；键盘贴图/材质 6 → 1；pixelRatio 自适应（策略有单测） |
 | 行为不变 | 评分器 / NPC 生成 / 题面哈希 / 题库元数据全部与重构前一致；共 164 + 21 项断言 |

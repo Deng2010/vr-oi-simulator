@@ -1,0 +1,143 @@
+name: Nightly
+
+# push 到 main 就构建一个 nightly，滚动发布到同一个**预发布**（固定 tag: nightly），
+# 附一个 dist 压缩包供下载。
+#
+# 为什么不发给 Pages：Pages 每次部署都是**整站替换**，nightly 一旦上去就会把正式版
+# 盖掉。正式版只由 release.yml（人工发布 Release）更新，两条链路互不干扰。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 创建 / 删除预发布需要写权限
+permissions:
+  contents: write
+
+# 连着推两次时只保留最后一次：nightly 的意义就是「main 现在长什么样」
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: 构建并发布 nightly
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 校验烘焙贴图资产
+        run: |
+          for f in board door-sign keyboard; do
+            test -s "assets/textures/$f.webp" \
+              || { echo "::error::缺少 assets/textures/$f.webp，请运行 npm run bake:assets"; exit 1; }
+          done
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: 回归测试
+        run: npm test
+
+      # nightly 是给人下载去玩的，所以和正式版跑同一套门禁：
+      # lint/test 证明不了「模块接线错、懒加载路径断」，只有真浏览器能。
+      # 代价是每个 push 会跑两遍冒烟（ci.yml 在同一个 commit 上并行也跑一遍）。
+      # 哪天嫌 CI 分钟数贵，删掉下面这两步即可，不影响发布正确性 ——
+      # 但那样 nightly 就不再是「已验证」的构建了。
+      - name: 安装无头 Chromium（仅用于冒烟测试）
+        run: npx --yes playwright@1.47.2 install --with-deps chromium
+
+      # 版本号只注入产物（APP_VERSION），**不**改 package.json：
+      # package.json 始终是「下一个正式版」，nightly 只是它的快照。
+      - name: 生成 nightly 版本号
+        id: ver
+        run: |
+          set -euo pipefail
+          BASE="$(node -p "require('./package.json').version")"
+          STAMP="$(git show -s --format=%cd --date=format:%Y%m%d HEAD)"
+          SHA="$(git rev-parse --short=7 HEAD)"
+          echo "nightly=$BASE-nightly.$STAMP.$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: 构建（把 nightly 版本号注入产物）
+        env:
+          APP_VERSION: ${{ steps.ver.outputs.nightly }}
+        run: npm run build
+
+      - name: 浏览器端到端冒烟测试
+        run: node tools/smoke-test.mjs
+
+      - name: 打压缩包
+        id: zip
+        env:
+          VERSION: ${{ steps.ver.outputs.nightly }}
+        run: |
+          set -euo pipefail
+          NAME="vr-oi-simulator-nightly-${VERSION}.zip"
+          # 在 dist/ 里打包，解压出来就是站点根目录，不需要再进一层
+          (cd dist && zip -qr "../${NAME}" .)
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          ls -l "$NAME"
+
+      # 名字里不能出现「冒号 + 空格」：YAML 会把它当映射键，直接解析失败
+      - name: 发布滚动预发布（tag = nightly）
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.ver.outputs.nightly }}
+          ZIP: ${{ steps.zip.outputs.name }}
+        run: |
+          set -euo pipefail
+
+          cat > /tmp/nightly-notes.md <<EOF
+          \`main\` 分支最新提交的**自动构建**，不是正式版。每次 push 都覆盖同一个预发布，
+          所以 [这个固定地址](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/nightly)
+          里的内容永远是最新的 main。正式版请看
+          [最新 Release](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/latest)。
+
+          | | |
+          |---|---|
+          | 版本号 | \`$VERSION\` |
+          | 提交 | [\`${GITHUB_SHA:0:7}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}) |
+          | 门禁 | ESLint + 回归测试 + 浏览器冒烟测试（[本次运行](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})） |
+          | 构建时间 | $(date -u '+%Y-%m-%d %H:%M UTC') |
+
+          包内是完整静态站点。解压后用**任意静态服务器**打开 —— 别直接双击 \`index.html\`，
+          ESM 模块会被浏览器的 file:// 安全策略拦下：
+
+              unzip $ZIP -d vr-oi-nightly
+              npx --yes serve vr-oi-nightly
+          EOF
+
+          # 滚动更新：先把上一版连同 tag 一起删掉，再指向本次 commit 重建。
+          # 这样固定地址永远指向最新构建，而不是攒一堆 nightly-20250101 之类的 tag。
+          # 首次运行时 nightly 还不存在，所以失败要容忍。
+          gh release delete nightly --yes --cleanup-tag 2>/dev/null || true
+          # 兜底：万一 release 被手动删了、tag 还在（--cleanup-tag 没机会跑），
+          # tag 会留在旧 commit 上，gh release create 就会挂着一个旧提交。
+          # 一条 DELETE 把它也清掉，保证 tag 一定指向这次构建。
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/nightly" 2>/dev/null || true
+
+          gh release create nightly "$ZIP" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Nightly $VERSION" \
+            --notes-file /tmp/nightly-notes.md
+
+      - name: 发布摘要
+        env:
+          VERSION: ${{ steps.ver.outputs.nightly }}
+        run: |
+          {
+            echo "### 已发布 nightly $VERSION"
+            echo ""
+            echo "- 预发布（固定地址）：${{ github.server_url }}/${{ github.repository }}/releases/tag/nightly"
+            echo "- 提交：\`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

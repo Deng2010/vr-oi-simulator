@@ -1,20 +1,25 @@
-name: Deploy to GitHub Pages
+name: Release to GitHub Pages
 
-# 关键约束：只有「推送 tag」才会发布。
-#   · push tag       → 发布（唯一入口）
-#   · workflow_dispatch → 应急手动重发（需要指定一个已存在的 tag）
-# main 分支的推送不会触发本工作流，因此线上永远是某个 tag 的产物。
+# 正式版的**唯一入口**：在 GitHub 网页上发布一个 Release
+# （Releases → Draft a new release → 选/建 tag → Publish release）。
+#
+# 触发方式从「推 tag」改成了「发布 Release」：推 tag 现在只跑 ci.yml 做构建校验
+# （见 ci.yml 的 push.tags），发布必须有人在网页上点一次 Publish。
+# 顺带的好处是发布记录、变更说明、产物和线上版本天然对得上。
+#
+# ⚠️ published 事件对「预发布（prerelease）」同样会触发 —— GitHub 文档明确写了
+#    「If you want a workflow to run when stable and pre-releases publish,
+#     subscribe to published instead of released and prereleased」。
+#    所以下面必须用 if 把 nightly.yml 的滚动预发布挡掉：
+#    否则每推一次 main，nightly 都会把预发布内容发到正式站点上。
+#    （日常不会有这个问题：nightly 用的是 GITHUB_TOKEN，而 GITHUB_TOKEN 触发的事件
+#     不会产生新的工作流运行。这道 if 防的是「人手动发了个预发布」和 PAT 那条路。）
 on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: '要发布的 tag（例如 v1.0.0）'
-        required: true
+  release:
+    types: [published]
 
-# GitHub Pages 部署所需权限：OIDC 令牌 + Pages 写入
+# GitHub Pages 部署所需权限：OIDC 令牌 + Pages 写入。
+# 注意这里**没有** contents: write —— 发布正式版不需要动仓库内容。
 permissions:
   contents: read
   pages: write
@@ -29,6 +34,12 @@ concurrency:
 jobs:
   build:
     name: 构建
+    # 只接「正式版 + v* tag」的 Release；预发布（nightly）在这里被跳过。
+    # 服务端 github-pages 环境的 Deployment branches and tags 也是只放行 v* 的 tag，
+    # 而 release 事件的 github.ref 正是 refs/tags/<tag>，所以两道口子对得上。
+    if: >-
+      !github.event.release.prerelease &&
+      startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
@@ -37,8 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # 手动触发时要按输入的 tag 取代码
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          # 发布的是 tag 指向的那次提交，不是分支头
+          ref: ${{ github.event.release.tag_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -47,15 +58,18 @@ jobs:
 
       # ---------- 版本一致性校验 ----------
       # tag 与 package.json 版本必须一致，避免「v1.2.0 的站点里写着 1.1.9」。
+      # 发布路径上必查：Release 可以在网页上顺手建一个新 tag，那条路不经过 ci.yml。
+      # tag 名走 env 传进脚本，不做字符串拼接（避免奇怪字符注入 shell）。
       - name: 校验 tag 与 package.json 版本一致
         id: version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
-          TAG="${{ github.event.inputs.tag || github.ref_name }}"
           PKG="$(node -p "require('./package.json').version")"
           echo "tag=$TAG  package.json=$PKG"
           if [ "v$PKG" != "$TAG" ]; then
-            echo "::error::tag ($TAG) 与 package.json 版本 (v$PKG) 不一致，请先同步版本号再打 tag"
+            echo "::error::Release 的 tag ($TAG) 与 package.json 版本 (v$PKG) 不一致：先 npm version 并推送，再重新发布 Release"
             exit 1
           fi
           echo "version=$PKG" >> "$GITHUB_OUTPUT"
@@ -108,10 +122,14 @@ jobs:
         uses: actions/deploy-pages@v4
 
       - name: 发布摘要
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
           {
-            echo "### 已发布 v${{ needs.build.outputs.version }}"
+            echo "### 已发布 v$VERSION"
             echo ""
             echo "- 站点：${{ steps.deployment.outputs.page_url }}"
-            echo "- 触发：\`${{ github.event.inputs.tag || github.ref_name }}\`"
+            echo "- Release：${{ github.event.release.html_url }}"
+            echo "- 触发：\`$TAG\`"
           } >> "$GITHUB_STEP_SUMMARY"

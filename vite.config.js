@@ -3,8 +3,9 @@ import { defineConfig } from 'vite';
 import { htmlPartials } from './build/vite-plugin-html-partials.mjs';
 
 /* 版本号来自 package.json；发布流水线会用 APP_VERSION 覆盖成 tag 对应的版本。
-   deploy.yml 里已经强制「tag 必须等于 package.json 版本」，
-   所以两者在发布路径上一定一致。 */
+   release.yml 里已经强制「Release 的 tag 必须等于 package.json 版本」，
+   所以两者在发布路径上一定一致；nightly.yml 注入的是
+   「版本号 + -nightly.<日期>.<短 SHA>」，package.json 原样不动。 */
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 const APP_VERSION = process.env.APP_VERSION || pkg.version;
 
