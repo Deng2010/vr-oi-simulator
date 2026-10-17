@@ -56,9 +56,9 @@ npm run preview      # 预览构建产物
 | `npm run build` | 生产构建 |
 | `npm run preview` | 预览 `dist/` |
 | `npm run lint` | ESLint（`src/` 只给浏览器全局变量，`no-undef` 必须零错误） |
-| `npm test` | 回归测试：评分/NPC 确定性、题面哈希、资产、DPR 策略、静态合批、依赖方向（223 项断言） |
-| `node tools/smoke-test.mjs` | 真浏览器端到端冒烟测试（33 项断言，需先 `npm run build`） |
-| `node tools/smoke-test.mjs --dev` | 同上，但跑源代码（40 项断言，需另开 `npm run dev`） |
+| `npm test` | 回归测试：评分/NPC 确定性、题面哈希、资产、DPR 策略、静态合批、依赖方向、结局与统计（329 项断言） |
+| `node tools/smoke-test.mjs` | 真浏览器端到端冒烟测试（44 项断言，需先 `npm run build`） |
+| `node tools/smoke-test.mjs --dev` | 同上，但跑源代码（51 项断言，需另开 `npm run dev`） |
 | `npm run bake:assets` | 重新生成 `assets/textures/*.webp`（幂等） |
 | `npm run verify` | `lint` + `test` + `build` 一把梭 |
 
@@ -76,12 +76,13 @@ src/
   render/             渲染核心、材质缓存、静态合批、屏幕与烘焙贴图
   models/             3D 模型构建（房间 / 课桌 / 人物 / 保安）
   world/              场景组装、实体注册表、碰撞
-  systems/            评分器、NPC 代码生成、存档、交互、老师 / 保安 / NPC AI、过场
+  systems/            评分器、NPC 代码生成、存档、图鉴、统计、结局正文状态机、交互、各类 AI、过场
   ui/                 各界面模块 + partials/*.html
-  styles/             11 个分片样式表，按原顺序 @import
+  styles/             14 个分片样式表，按原顺序 @import
   data/
     keywords.js
     problems/         题库：manifest + 每题 <id>.js / <id>.md
+    endings/          结局：<id>.js（一个结局一个文件）+ index.js + select.js
 tests/                回归测试与行为基线
 tools/                冒烟测试、贴图烘焙
 docs/REFACTOR-PLAN.md 重构方案与实施记录（含全部实测数据）
@@ -117,23 +118,86 @@ docs/REFACTOR-PLAN.md 重构方案与实施记录（含全部实测数据）
 
 ---
 
-## 部署到 GitHub Pages
+## 加一个结局
 
-**只在打 tag 时发布**，`main` 分支的推送不会影响线上：
+结算时开哪个结局，由「统计快照」决定；`npm test` 会检查配置是否合法。
+
+1. 新建 `src/data/endings/<id>.js`（**一个结局一个文件**），导出配置对象：
+
+   ```js
+   export default {
+     id: 'perfect-attendance',
+     stage: 'final',        // final（跑完系统测试再判）| immediate（当场作废、不跑评测）
+     priority: 35,          // 越大越先判
+     badge: '结局 · 全勤',   // 揭榜上的小徽章
+     title: '全 勤 选 手',
+     tone: 'fun',           // good | bad | warn | fun | neutral（配色）
+     voidScore: false,      // immediate 结局必须是 true
+     condition: s => s.warns === 0 && s.bathroomTrips === 0,
+     subtitle: s => `零警告、零离座，用时 ${Math.round(s.elapsed / 60)} 分钟。`,
+     story: [               // 全屏正文：一段一个元素，逐段打字机播放
+       '四道题的数据跑完，挂钟才走了一小时。',
+       '你没有去过洗手间，也没有被监考老师叫住过一次。'
+     ]
+   };
+   ```
+
+2. 在 `src/data/endings/index.js` 的 `ENDINGS` 里加一行 import + 注册
+   （测试会比对「文件数 == 注册数」，忘了加会红）。
+
+`story` 至少 3 段、每段不超过 120 字（`npm test` 会用基准快照逐段检查）。
+正文要引用本场数据就写成 `story: s => [...]`。
+
+判据能读的字段，就是 `src/ui/ending.js` 的 `endingSnapshot()` 合并出来的那份快照；
+要新增数据请在触发点埋点：`bump('npcDisturbed')` / `recordEvent('drink', '喝了一杯水')`
+（`src/systems/stats.js`）。约束与细节见 [`AGENTS.md`](AGENTS.md) 的 §5.6 / §5.7。
+
+新结局第一次被开出来之后，会自动出现在启动屏的「展示墙」里 —— 不需要额外配置。
+
+---
+
+## 发布
+
+两条链路：**nightly 自动发，正式版人工发。**
+
+### nightly：每次 push 到 `main` 自动构建
+
+`nightly.yml` 跑一遍完整门禁（lint + 回归测试 + 浏览器冒烟测试），再构建并滚动发布到
+一个**预发布**上 —— 固定地址，内容永远是最新的 `main`：
+
+<https://github.com/Deng2010/vr-oi-simulator/releases/tag/nightly>
+
+产物版本号形如 `1.1.0-nightly.20261011.c24bfaa`（`package.json` 本身不动），
+包里是完整静态站点，解压后用任意静态服务器打开即可 —— 别双击 `index.html`，
+ESM 会被 file:// 拦下：
 
 ```bash
-npm version minor          # 同步 package.json 版本号
-git push origin main
-git push origin --tags     # 触发 .github/workflows/deploy.yml
+unzip vr-oi-simulator-nightly-*.zip -d vr-oi-nightly
+npx --yes serve vr-oi-nightly
 ```
 
-工作流会先校验 **tag ≡ package.json 版本**，不一致直接失败；
-然后跑 lint + 测试 + 构建，最后发布到 Pages。
+nightly **不碰 GitHub Pages**：Pages 每次部署都是整站替换，nightly 上去就会把正式版盖掉。
+（副作用：每次 push 都会重建这个预发布，仓库 watcher 会收到通知。）
+
+### 正式版：人工在网页上发布 Release 才发布
+
+```bash
+npm version minor          # 同步 package.json 版本号，并打一个本地 tag
+git push origin main
+git push origin --tags     # 只触发 ci.yml 做校验（tag ≡ package.json 版本），不发布
+```
+
+然后到 **Releases → Draft a new release**，选/建 tag `v1.2.0`，点 **Publish release**。
+这一步才会触发 `release.yml`：校验版本 → lint + 测试 → 构建 → 发布 Pages。
+**推 tag 本身不会发布任何东西**，发布永远需要有人在网页上点一次。
 
 首次使用需要在仓库 **Settings → Pages → Source** 选择 **GitHub Actions**。
 
-- `.github/workflows/ci.yml`：PR / 主干推送 → lint + 回归测试 + 构建 + 浏览器冒烟测试（**不发布**）
-- `.github/workflows/deploy.yml`：`push.tags: v*` → 校验版本 → 构建 → 发布 Pages
+| 工作流 | 触发 | 做什么 |
+|--------|------|--------|
+| `ci.yml` | PR / push `main` / push tag `v*` | lint + 回归测试 + 构建 + 浏览器冒烟测试（**不发布**） |
+| `nightly.yml` | push `main` / 手动触发 | 门禁 + 构建 → 滚动更新预发布 `nightly`（tag 固定） |
+| `release.yml` | **人工发布 Release** | 校验 tag ≡ 版本 → 构建 → 发布 GitHub Pages |
 
 ---
 
@@ -154,6 +218,21 @@ git push origin --tags     # 触发 .github/workflows/deploy.yml
   腿组还要切换可见性，所以必须整棵子树排除。
 - **自适应分辨率**：帧率不足时自动把 pixelRatio 从 1.5 降到 1.0（降档 2 个慢窗口、
   升档 4 个快窗口，带滞回防震荡）；决策是纯函数，有单测覆盖。
+- **统计系统**（`src/systems/stats.js`）记录本场的各类数据与**事件流**
+  （殴打老师、偷用他人电脑、喝水、去洗手间、提交、被警告…），
+  只记「别处没有真源」的东西，结算时与 `core/state.js` 里的分数/警告合并成一份快照。
+- **结局系统**（`src/data/endings/`）**一个结局一个文件**：按快照 + 优先级挑出唯一结局。
+  分两个阶段：`immediate`（屏蔽词 / 被保安抓走 / 五次走动 / 作弊 —— 当场作废、
+  不跑系统测试）与 `final`（AK / 交白卷 / 零分 / 闪电交卷 / 考场战神 / 时间到 /
+  完赛兜底）。判定逻辑是纯函数，每个结局都有单测判据。
+- **结局正文是全屏分段打字机**：裁决出结局后先播正文、播完才揭榜。
+  打字过程中按任意键立刻显示完整本段，本段完整后按任意键进入下一段
+  （两条规则在 `src/systems/story.js`，纯函数 + 单测；打字机走 `setTimeout`，
+  因为无头浏览器里 rAF 不触发）。
+- **成就 / 结局展示墙**：启动屏的「展示墙」分页陈列**已经解锁**的成就与结局，
+  没达成的不渲染（不是靠 CSS 藏 —— 名字本身就是剧透）。
+  解锁记录存在本机 `oi_profile_v1`，与比赛存档 `oi_save_v8` 分开：
+  交卷会清比赛存档，图鉴则一直留着、跨场次累积（`src/systems/profile.js`）。
 - **音效是程序化合成的**（WebAudio），仓库里没有任何音频文件。
 
 更详细的设计取舍、体积与性能对照数据见 [`docs/REFACTOR-PLAN.md`](docs/REFACTOR-PLAN.md)。

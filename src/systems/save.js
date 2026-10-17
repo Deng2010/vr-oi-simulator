@@ -9,6 +9,7 @@ import { sortByDifficulty } from '../data/problems/selection.js';
 import { updateAllDeskScreens } from '../render/screen-textures.js';
 import { recalcScore } from './score.js';
 import { judgePretest } from './scoring.js';
+import { restoreStats, statsSnapshot } from './stats.js';
 
 export const SAVE_KEY = 'oi_save_v8';
 
@@ -27,6 +28,9 @@ export function persistSave(){
       curProb: state.curProb, elapsed: state.elapsed,
       warnCount: state.warnCount,
       achievements: Array.from(state.achievements),
+      /* 统计系统的计数器与事件流：不存的话，读档后「本场事件回顾」
+         会只剩读档之后发生的事（作弊次数也会被洗掉） */
+      stats: statsSnapshot(),
       savedAt: Date.now(),
       problems: state.problems.map(p => p.id)
     };
@@ -73,6 +77,8 @@ export function tryLoadSave(){
     if (typeof o.elapsed === 'number') state.elapsed = o.elapsed;
     if (typeof o.warnCount === 'number') state.warnCount = o.warnCount;
     if (Array.isArray(o.achievements)) state.achievements = new Set(o.achievements);
+    /* 统计：字段缺失或类型不符都会被 restoreStats 忽略（旧存档照读） */
+    restoreStats(o.stats);
     recalcScore();
     return true;
   } catch(e){ return false; }

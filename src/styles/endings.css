@@ -1,0 +1,47 @@
+/* =========================================================
+   结局与统计（揭榜界面的结局徽章、统计格子、事件回顾）
+   ---------------------------------------------------------
+   新增分片：按 AGENTS §4.8 追加在 src/styles/index.css 的末尾，
+   不改动任何既有分片的顺序与内容。
+   结局配色走 #ending[data-tone=...]：语气写在结局配置文件里
+   （src/data/endings/<id>.js 的 tone 字段），样式只负责映射成颜色。
+   ========================================================= */
+#ending .box{max-width:680px;}
+
+/* ---------- 结局徽章 ---------- */
+.end-badge{
+  display:inline-block;margin:2px auto 0;padding:5px 16px;border-radius:20px;
+  font-size:12px;letter-spacing:2px;font-family:monospace;
+  background:#161c26;border:1px solid #2a3346;color:#8ea6d8;
+}
+#ending[data-tone="good"] .end-badge{background:#0f2e26;border-color:#1f6b52;color:#3ddc9a;}
+#ending[data-tone="bad"] .end-badge{background:#331a1d;border-color:#7a2a30;color:#ff8f96;}
+#ending[data-tone="warn"] .end-badge{background:#33290f;border-color:#7a5f1c;color:#ffc857;}
+#ending[data-tone="fun"] .end-badge{background:#2a2340;border-color:#5b4a94;color:#c3a8ff;}
+#ending[data-tone="good"] h2{
+  background:linear-gradient(135deg,#7affd0,#4fd1c5);-webkit-background-clip:text;
+  background-clip:text;color:transparent;
+}
+#ending[data-tone="bad"] h2{color:#ff8f96;}
+#ending[data-tone="warn"] h2{color:#ffc857;}
+
+/* ---------- 统计格子：固定 9 格 ---------- */
+#endStats{margin:18px 0 4px;}
+#endStats .sv{font-size:17px;}
+
+/* ---------- 本场事件回顾 ---------- */
+.end-events{margin-top:18px;text-align:left;}
+.end-events h4{
+  font-size:12px;color:#8b95a9;font-weight:400;letter-spacing:2px;
+  border-bottom:1px solid #1e2532;padding-bottom:7px;margin-bottom:8px;
+}
+.end-events ul{list-style:none;margin:0;padding:0;max-height:150px;overflow-y:auto;}
+.end-events li{
+  display:flex;align-items:baseline;gap:9px;
+  font-size:12px;color:#a9b4c8;padding:4px 2px;
+}
+.end-events li + li{border-top:1px solid #161c26;}
+.end-events .ev-at{font-family:monospace;font-size:11px;color:#5d6880;flex:0 0 auto;}
+.end-events .ev-lb{flex:1 1 auto;}
+.end-events .ev-n{font-family:monospace;font-size:11px;color:#7aa2ff;flex:0 0 auto;}
+.end-events .ev-empty{color:#5d6880;font-style:italic;}

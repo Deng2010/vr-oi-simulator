@@ -1,7 +1,7 @@
-<!-- 开始界面（分页：简介 / 设置 / 关于）
+<!-- 开始界面（分页：简介 / 设置 / 展示墙 / 关于）
      由原 index.html 第 450-494 行拆出，通过 build/vite-plugin-html-partials.mjs
      在开发与构建时原样内联回 index.html。
-     三个分页共用同一个 #start 覆盖层，只切换 .start-page 的可见性。
+     四个分页共用同一个 #start 覆盖层，只切换 .start-page 的可见性。
      #btnStart 与各滑条的 id 保持不变 —— 冒烟测试、input.js、settings-panel.js
      都按 id 找它们，改名会静默失效。 -->
 <!-- ===================== 开始界面 ===================== -->
@@ -12,6 +12,7 @@
   <nav class="start-tabs" id="startTabs">
     <button class="start-tab on" data-start-tab="intro">简介</button>
     <button class="start-tab" data-start-tab="settings">设置</button>
+    <button class="start-tab" data-start-tab="wall">展示墙</button>
     <button class="start-tab" data-start-tab="about">关于</button>
   </nav>
 
@@ -74,6 +75,22 @@
       <div class="set-title">存档</div>
       <button class="btn ghost" id="btnClearSaveStart">清空存档</button>
       <div class="hint">清空后已保存的代码与比赛进度都会丢失，且无法恢复。</div>
+    </div>
+  </section>
+
+  <!-- ---------- 展示墙：已解锁的成就与结局 ----------
+       列表内容由 src/ui/wall.js 渲染。没解锁的条目**不进 DOM**，
+       所以这里只是两个空容器 + 标题上的「已解锁 / 总数」。 -->
+  <section class="start-page hidden" data-start-page="wall">
+    <div class="card">
+      <div class="set-title">已获成就<span class="wall-count" id="wallAchCount"></span></div>
+      <div class="wall-list" id="wallAch"></div>
+      <div class="set-title">已开结局<span class="wall-count" id="wallEndCount"></span></div>
+      <div class="wall-list" id="wallEnd"></div>
+      <div class="hint">
+        只陈列已经拿到的成就与结局，没达成的不显示 —— 自己去考场上试出来。
+        记录保存在本机浏览器里（清空浏览器数据会一并丢失）。
+      </div>
     </div>
   </section>
 

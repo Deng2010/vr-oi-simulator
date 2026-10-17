@@ -14,6 +14,7 @@ import { securityGuards } from '../world/entities.js';
 import { GUARD_PUNCH_RANGE, punchGuard } from './guards.js';
 import { disturbNPC, useNPCComputer } from './npc.js';
 import { punchTeacher } from './teacher.js';
+import { bump, recordEvent } from './stats.js';
 import { promptEl } from '../ui/dom.js';
 import { confirmCrosshair, setCrosshairHold, setCrosshairTarget } from '../ui/crosshair.js';
 import { toast } from '../ui/toast.js';
@@ -252,6 +253,8 @@ export function attackNow(){
 }
 
 export function drinkWater(){
+  bump('drinkWater');
+  recordEvent('drink', '喝了一杯水');
   audio.beep(520, 0.08, 0.05);
   setTimeout(() => audio.beep(420, 0.1, 0.04), 110);
   toast('\u{1F964} 你喝了一口水，感觉清醒了一些。', 1600);

@@ -6,6 +6,7 @@ import { audio } from '../audio/audio.js';
 import { state } from '../core/state.js';
 import { $ } from '../core/util.js';
 import { genNpcCode } from './npc-codegen.js';
+import { bump, recordEvent } from './stats.js';
 import { closeTeacherDialog } from './teacher.js';
 import { unlockAch } from '../ui/achievements.js';
 import { crosshair, dlgActions, dlgHead, dlgText, npcComputerUI, promptEl, teacherDlg } from '../ui/dom.js';
@@ -26,6 +27,7 @@ export function disturbNPC(i){
 
   const ud = n.userData;
   ud.anger++;
+  bump('npcDisturbed');
   audio.beep(280 + Math.random() * 200, 0.08, 0.04);
   audio.beep(180, 0.12, 0.05, 'triangle');
 
@@ -61,6 +63,9 @@ export function useNPCComputer(i){
   state.view = 'npcComputer';
   crosshair.classList.add('hidden');
   promptEl.classList.add('hidden');
+  /* 偷用他人电脑是「作弊结局」的唯一判据，见 data/endings/cheat.js */
+  bump('npcComputersUsed');
+  recordEvent('npc-computer', '偷看了其他选手的电脑');
   $('npcCompHead').textContent = `\u{1F4BB} ${ud.name}的电脑`;
   $('npcCompCode').textContent = genNpcCode(ud.name, state.npcProbId);
   npcComputerUI.classList.remove('hidden');
@@ -85,6 +90,8 @@ export function closeNPCComputer(){
 /* ---------- 投诉 ---------- */
 
 export function triggerNPCComplaint(name){
+  bump('npcComplaints');
+  recordEvent('npc-complaint', `${name}向监考老师投诉了你`);
   dlgHead.textContent = '\u{1F468}\u200D\u{1F3EB} 监考老师';
   dlgText.textContent =
     `${name}举手报告：“老师！他一直在干扰我答题！”\n\n` +

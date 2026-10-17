@@ -10,7 +10,7 @@ import { syncViewUI } from './settings-panel.js';
 
 export function hideAllPanels(){
   ['hud', 'pauseMenu', 'codeUI', 'paperUI', 'corridorUI',
-   'bathroomUI', 'npcComputerUI', 'teacherDlg', 'minimapWrap']
+   'bathroomUI', 'npcComputerUI', 'teacherDlg', 'minimapWrap', 'endingStory']
     .forEach(id => { const e = $(id); if (e) e.classList.add('hidden'); });
   crosshair.classList.add('hidden');
   promptEl.classList.add('hidden');

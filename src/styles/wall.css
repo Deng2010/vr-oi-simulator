@@ -1,0 +1,43 @@
+/* =========================================================
+   启动屏「展示墙」：已解锁的成就与结局
+   ---------------------------------------------------------
+   新增分片：按 AGENTS §4.8 追加在 src/styles/index.css 的末尾。
+   内容由 ui/wall.js 渲染；这里只管版式与语气配色
+   （结局的 data-tone 与 src/data/endings/<id>.js 的 tone 一一对应）。
+   ========================================================= */
+#start .wall-count{
+  font-family:monospace;font-size:11px;color:#7aa2ff;margin-left:8px;letter-spacing:0;
+}
+.wall-list{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:6px 0 2px;
+}
+.wall-item{
+  background:#0d1119;border:1px solid #1e2532;border-left:3px solid #3b6df0;
+  border-radius:9px;padding:10px 12px;
+}
+.wall-item .wi-name{font-size:12.5px;color:#dfe6f5;font-weight:600;line-height:1.6;}
+.wall-item .wi-desc{font-size:11.5px;color:#7c869c;line-height:1.75;margin-top:3px;}
+.wall-item .wi-n{
+  font-family:monospace;font-size:10.5px;color:#7aa2ff;margin-left:6px;font-weight:400;
+}
+.wall-empty{
+  grid-column:1 / -1;color:#5d6880;font-size:12px;line-height:1.9;margin:2px 0;
+}
+
+/* 结局卡片：小徽章 + 大字标题，左边框按语气上色 */
+.wall-item .wi-tag{
+  font-family:monospace;font-size:10.5px;color:#8ea6d8;letter-spacing:1px;
+}
+.wall-item .wi-title{
+  font-size:13px;color:#e8edf7;font-weight:600;letter-spacing:2px;margin-top:2px;
+}
+.wall-item[data-tone="good"]{border-left-color:#3ddc9a;}
+.wall-item[data-tone="bad"]{border-left-color:#ff6b78;}
+.wall-item[data-tone="warn"]{border-left-color:#ffc857;}
+.wall-item[data-tone="fun"]{border-left-color:#a78bfa;}
+.wall-item[data-tone="neutral"]{border-left-color:#5d6880;}
+
+/* 窄屏下一列，别把卡片挤成竖条 */
+@media (max-width: 560px){
+  .wall-list{grid-template-columns:1fr;}
+}

@@ -16,11 +16,11 @@
 ## 0. 三十秒交代
 
 - 纯前端 3D 游戏：**Three.js r128 + Vite 5**，无后端、无 UI 框架、无 TypeScript。
-- `src/` 下 **71 个 ESM 模块 / 约 4780 行**，全部是浏览器端代码。
-- 界面拆成 10 个 HTML 局部模板（`src/ui/partials/*.html`）：1 个常驻层（画布 + HUD + Toast）
-  + 9 个互斥的全屏覆盖层；由 `build/vite-plugin-html-partials.mjs` 在开发与构建时
+- `src/` 下 **89 个 ESM 模块 / 约 6200 行**，全部是浏览器端代码。
+- 界面拆成 11 个 HTML 局部模板（`src/ui/partials/*.html`）：1 个常驻层（画布 + HUD + Toast）
+  + 10 个互斥的全屏覆盖层；由 `build/vite-plugin-html-partials.mjs` 在开发与构建时
   内联回 `index.html`（语法：`<!--#include src/ui/partials/xxx.html -->`）。
-- 样式是 11 个 CSS 分片 + 1 个入口 `src/styles/index.css`，由入口**按固定顺序** `@import`。
+- 样式是 14 个 CSS 分片 + 1 个入口 `src/styles/index.css`，由入口**按固定顺序** `@import`。
 - 计分是**确定性的伪评测**（不真编译代码）：分数只由「代码 + 题号」的哈希决定，
   与 `Math.random()` 无关（详见 §4.1）。
 - 一局只抽 4 道题，题面与起手代码按题懒加载（16 个独立 chunk）。
@@ -42,9 +42,9 @@ Node 20 在 2026-04 已 EOL，不必再兼容。
 | `npm run build` | 生产构建 | 产物在 `dist/`；`three` 单独成一个 chunk |
 | `npm run preview` | 预览 `dist/` | <http://127.0.0.1:4173> |
 | `npm run lint` | ESLint | **0 error / 0 warning** |
-| `npm test` | Node 回归测试（无需浏览器） | **223 项断言全部通过** |
-| `npm run smoke` | 真浏览器端到端（需先 build） | **33 项断言 + 控制台零错误** |
-| `npm run smoke:dev` | 同上但跑源码 | **40 项断言**（需另开 `npm run dev`） |
+| `npm test` | Node 回归测试（无需浏览器） | **329 项断言全部通过** |
+| `npm run smoke` | 真浏览器端到端（需先 build） | **44 项断言 + 控制台零错误** |
+| `npm run smoke:dev` | 同上但跑源码 | **51 项断言**（需另开 `npm run dev`） |
 | `npm run bake:assets` | 重新烘焙静态贴图 | 幂等；产出 `assets/textures/*.webp` |
 | `npm run verify` | lint + test + build | 无需浏览器的门禁 |
 | `npm run verify:full` | verify + smoke | 完整门禁 |
@@ -64,9 +64,9 @@ Node 20 在 2026-04 已 EOL，不必再兼容。
 
 ```bash
 npm run lint          # 0 error / 0 warning
-npm test              # 223 项断言
+npm test              # 329 项断言
 npm run build
-npm run smoke         # 33 项断言 + 控制台零错误
+npm run smoke         # 44 项断言 + 控制台零错误
 ```
 
 **按改动类型追加**：
@@ -94,7 +94,7 @@ npm run smoke         # 33 项断言 + 控制台零错误
 ## 3. 架构地图
 
 ```
-index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
+index.html ── 42 行外壳：meta + 首屏关键样式 + 11 条 include
    └── src/main.js ── 唯一入口：initGraphics → 抽题 → buildWorld → bindEvents → animate
 ```
 
@@ -104,9 +104,9 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
 | `src/render/` | 渲染核心、材质缓存、**静态合批**、屏幕与烘焙贴图 | `gfx.js` `batch.js` `materials.js` |
 | `src/models/` | 3D 模型构建（房间 / 课桌 / 人物 / 保安） | `person.js` `desk.js` |
 | `src/world/` | 场景组装、实体注册表、碰撞 | `world.js` `entities.js` |
-| `src/systems/` | 评分、NPC 代码生成、存档、交互、各类 AI、过场 | `scoring.js` `npc-codegen.js` `npc.js` `guards.js` |
-| `src/ui/` | 各界面模块 + `partials/*.html` | `editor.js` `verdict.js` `panels.js` |
-| `src/data/` | 关键字表、题库（清单 + 每题 js/md）、抽题与难度排序 | `problems/index.js` `problems/manifest.js` `problems/selection.js` |
+| `src/systems/` | 评分、NPC 代码生成、存档、**图鉴**、交互、**统计**、**结局正文状态机**、各类 AI、过场 | `scoring.js` `stats.js` `story.js` `profile.js` |
+| `src/ui/` | 各界面模块 + `partials/*.html` | `editor.js` `verdict.js` `ending.js` `story.js` `wall.js` |
+| `src/data/` | 关键字表、题库、**结局配置** | `problems/selection.js` `endings/index.js` `endings/select.js` |
 | `src/audio/` | WebAudio 程序化音效（**仓库里没有任何音频文件**） | `audio.js` |
 | `tests/` | 回归测试与行为基线 | `run.mjs` `baseline.json` `problem-hashes.json` |
 | `tools/` | 冒烟测试、贴图烘焙、浏览器 profile 管理 | `smoke-test.mjs` `bake-assets.mjs` `lib/chrome-profile.mjs` |
@@ -123,6 +123,14 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
 - 计分：赛中 `ui/verdict.js` → `systems/scoring.js` `judgePretest()`（10 点，预测试）
   → `systems/score.js` → HUD（标着「预测试」）+ 显示器贴图；
   交卷后 `ui/ending.js` → `judgeSystem()`（20 点，最终成绩，逐点揭晓）→ 结算总分与成就。
+- 结算与结局：交卷时 `ui/ending.js` 先用**赛中快照**解析 `stage='immediate'` 的结局
+  （屏蔽词 / 被保安抓走 / 五次走动 / 作弊 → **不跑系统测试**，成绩当场作废）；
+  没有违规才跑系统测试，跑完再用带上最终分数的快照解析 `stage='final'` 的结局
+  （AK / 白卷 / 零分 / 神速 / 考场战神 / 时间到 / 完赛兜底）。
+  揭榜界面上的统计格子与「本场事件回顾」也来自同一个快照（非主线的数据为 0 时整格不显示，所以是 4~9 格）。
+- 结局正文：裁决出结局后**先播全屏正文**（`ui/story.js` 按 `data/endings/<id>.js` 的
+  `story` 分段逐字打出来），玩家按任意键推进，播完才揭榜 —— 顺序反了的话，
+  玩家会先看到分数再看故事，情绪就散了。
 
 ---
 
@@ -205,9 +213,13 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
 
 ### 4.5 存档键名与字段是兼容契约
 
-- `oi_view_v8`（视角/音量设置）、`oi_save_v8`（比赛进度）**不要改名**，
+- `oi_view_v8`（视角/音量设置）、`oi_save_v8`（比赛进度）、
+  `oi_profile_v1`（**图鉴**：已解锁的成就与结局）**都不要改名**，
   字段增删要同时改 `systems/save.js` 的 `persistSave` 与 `tryLoadSave`，
   并保证旧存档能读（`tryLoadSave` 对缺字段是宽容的）。
+- **图鉴故意不放进 `oi_save_v8`**：比赛存档交卷就 `clearSave()`，
+  而那正是玩家想留下的东西。两者生命周期不同，别合并 ——
+  图和存的关系见 §5.8。
 - 存档恢复依赖 `PROBLEM_BY_ID`（来自清单，不需要懒加载），不要改成读题面。
 
 ### 4.6 Three.js 锁在 r128
@@ -222,7 +234,9 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
     `takePendingArrival()`，`bathroom.js` 只登记 `takePendingExit()`，
     由 `core/loop.js` 仲裁去向。加新过场照抄这个模式。
   - **保安 ↔ 结算**：保安注册表与存活统计在 `world/entities.js`（实体层），
-    所以 `ui/ending.js` 只依赖实体、`systems/guards.js` 依赖 `endContest`。
+    所以 `ui/ending.js` 只依赖实体，而 `systems/guards.js` / `systems/banned.js`
+    只调 `ui/ending.js` 的 `showViolationEnding()`（自己不碰结算界面）。
+    结局文案一律写在 `src/data/endings/` 里，不要写回这两个系统模块。
 - **守卫**：`npm test` 会 DFS 整个 `src/` 报出循环。
 
 ### 4.8 CSS 分片顺序不能改
@@ -236,6 +250,28 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
   由打包器做内容哈希 + 长缓存。`base: './'` 是为了项目站点子路径部署。
 - 因此**没有** `/assets/xxx` 这种运行时硬编码 URL（除了 `index.html` 里的 favicon，
   它由 Vite 的 HTML 处理改写）。新增资源请 `import` 它。
+
+### 4.10 统计只有一份真源，结局判定必须是纯函数
+
+- **约束 1（统计口径）**：`systems/stats.js` **只记别处没有真源的数据**
+  （殴打老师、偷用电脑、喝水、事件流…）。提交次数、预测试分数、警告次数、击倒保安
+  在 `core/state.js` 里已经是真源，**不要**在统计系统里再存一份 ——
+  结算时由 `ui/ending.js` 的 `endingSnapshot()` 把两边合并成快照。
+- **为什么**：两个计数器各自增长、最后对不上，是这类系统最经典的事故；
+  而「谁才是真源」没法自动检查，只能靠这条边界守住。
+- **约束 2（结局判定）**：`data/endings/select.js` 的 `resolveEnding()` 必须保持**纯函数** ——
+  只读快照、不碰 DOM、不读 `state`、不掷骰子。快照是**唯一**输入。
+- **为什么**：纯函数才能被 `tests/run.mjs` 直接单测（每个结局一条正向判据），
+  也才能解释「为什么同一份代码总是同一个结局」。
+- **约束 3（配置）**：每个结局一个文件；`final` 阶段必须**恰好一个**兜底
+  （不写 `condition` 的那个），`immediate` 阶段的结局**必须都有 `condition`**
+  且 `voidScore: true`。忘了注册文件（`endings/index.js` 少一行）也会被测试抓到。
+- **守卫**：`tests/run.mjs`「结局系统」「统计系统」「图鉴存档与展示墙」三节共 81 项断言
+  （配置自检的反向判据、每个结局一条正向判据、阶段隔离、事件去重/上限、
+  快照副本、存档宽容恢复、未解锁条目绝不渲染），以及 `npm run smoke` 的 11 条端到端断言
+  （结局徽章 / 统计格子与「0 不显示」 / 事件回顾 / 展示墙开局空态与揭榜后落库 /
+  结局正文的打字机与两条按键规则）。
+  验证纪律照旧：改判定逻辑前先把某条判据改红跑一遍，确认它不是假绿。
 
 ---
 
@@ -296,9 +332,10 @@ index.html ── 41 行外壳：meta + 首屏关键样式 + 10 条 include
 5. 元素引用统一放 `src/ui/dom.js`。
 
 > 例外：启动屏（`src/ui/partials/start.html`）不是「一个视图一个覆盖层」，
-> 而是 `#start` 内的三个 `.start-page` 分页（简介 / 设置 / 关于），
+> 而是 `#start` 内的四个 `.start-page` 分页（简介 / 设置 / 展示墙 / 关于），
 > 由 `src/ui/start.js` 的 `showStartPage()` 按 `data-start-page` 切 `.hidden`。
 > 加分页时同步补上 `START_PAGES`、选项卡按钮与冒烟测试的分页断言。
+> **展示墙那一页是动态内容**（见 §5.8），不要在 HTML 里写死任何成就/结局。
 
 ### 5.4 改静态贴图（黑板 / 出口牌 / 键盘）
 
@@ -322,6 +359,95 @@ npm run smoke:dev    # 另一个终端：会打印网格数、合批组数、ski
 - DPR 自适应策略在 `src/core/perf-policy.js`，是**纯函数 + 独立单测** ——
   改策略请改那个文件并补用例，不要去动 `perf.js` 里的采样。
 
+### 5.6 新增一个结局
+
+**一个结局 = 一个文件**（`src/data/endings/<id>.js`）+ 在 `endings/index.js` 里加一行
+（`npm test` 会比对「文件数 == 注册数」，忘了加行会红）。
+
+```js
+export default {
+  id: 'zero',            // 唯一，等于文件名
+  stage: 'final',        // 'final'（跑完系统测试再判）| 'immediate'（当场作废、不跑评测）
+  priority: 55,          // 越大越先判；final 的兜底必须是最小的那个
+  badge: '结局 · 零分',   // 揭榜上的小徽章
+  title: '零 分 结 局',   // #endTitle（大字，用全角空格分隔更有样式感）
+  tone: 'warn',          // good | bad | warn | fun | neutral，映射到 endings.css 的配色
+  voidScore: false,      // immediate 结局必须 true（分数显示成 0）
+  achievements: ['zero_king'],
+  condition: s => (s.finalScore || 0) === 0,   // 快照是唯一输入；不写 = 该阶段兜底
+  subtitle: s => `提交了 ${s.submits} 次，最终得分 0。`,   // 字符串或函数都行
+  story: [                     // 全屏正文，一段一个数组元素（见 §5.9）
+    '评测机把四道题的数据跑了一遍又一遍，红色越来越多。',
+    '你终于明白：样例是出题人给的第一颗糖，大数据才是那记闷棍。'
+  ]
+};
+```
+
+- 新判据要用到的字段如果快照里没有，先在 `ui/ending.js` 的 `endingSnapshot()` 里补 ——
+  它负责把 `core/state.js` 的真源合并进统计快照，字段名就是 `condition` 能用的名字。
+- `immediate` 阶段只在「交卷那一刻」判一次；**不要在 immediate 里写需要最终分数的条件**
+  （那时系统测试还没跑，`finalScore` 是 0）。
+- 想新增违规开关：在触发点 `flag('xxx', true)`（见 `banned.js` / `guards.js`），
+  再在结局文件里读它 —— 顺序不能反，快照是先建后判的。
+- `story` 至少要 3 段、每段不超过 `STORY_SEGMENT_LIMIT`（120 字）——
+  `npm test` 会拿基准快照逐段检查，写超了会红（一屏放不下）。
+
+### 5.7 新增一个统计项（埋点）
+
+```js
+import { bump, recordEvent } from './stats.js';   // 在 systems/ 内
+bump('npcDisturbed');                             // 计数器：同类事件累计
+recordEvent('npc-computer', '偷看了其他选手的电脑'); // 事件流：同 id 合并成 ×n
+```
+
+- 只埋**别处没有真源**的数据（§4.10）。已有的计数器不要去 `state` 里再抄一份。
+- 展示用不上的就别埋：统计格子最多 9 格（`statRows()`；主线 4 项恒显示，
+  **非主线为 0 时整格隐藏**），事件流有 120 条上限，
+  加字段要同时想清楚「哪一格 / 哪条事件」显示它。
+- 事件文案会进 innerHTML，`ui/ending.js` 会转义；埋点里不要自己拼 HTML。
+
+### 5.8 展示墙 / 图鉴（跨场次的成就与结局）
+
+启动屏的「展示墙」分页（`ui/wall.js`）读的是 **`systems/profile.js` 的 `oi_profile_v1`**，
+不是 `state.achievements`（那是本场的，进场前是空的）。
+
+两条记录入口，加新成就/结局**不需要动展示墙**：
+
+| 入口 | 位置 | 说明 |
+|------|------|------|
+| `recordAchievement(id)` | `ui/achievements.js` 的 `unlockAch()` | 新成就自动进墙 |
+| `recordEnding(id)` | `ui/ending.js` 的 `showEnding()` | 新结局自动进墙 |
+
+- **没解锁的条目绝不进 DOM**（不是 CSS 藏起来）—— 成就/结局的名字本身就剧透，
+  用 F12 就能把藏起来的东西看回来。这条有单测（`未解锁的成就连文字都不出现`）
+  与冒烟断言（开局前 `.wall-item` 数量为 0）两道守卫。
+- 目录（`ACHIEVEMENTS` / `ENDINGS`）由**调用方**传给 `achievementRows()` / `endingRows()`，
+  `profile.js` 不 import 它们 —— 否则会把「数据 → UI」的方向倒挂，还会绕出循环依赖。
+- 存档里残留的旧 id（目录里已删掉的）会被自然过滤；重复解锁只累加次数、保留首次时间
+  （墙按首次解锁倒序排）。
+- `localStorage` 不可用（无痕 / 配额满 / Node）时全部静默降级，**不许抛**：
+  这面墙是纯装饰，不能因为它让启动页崩掉。冒烟测试的 `?shot` 截图模式也会拍这张，
+  版式（卡片两列、结局按 tone 上色）靠它人工核对。
+
+### 5.9 结局正文（全屏分段打字机）
+
+裁决出结局后、揭榜之前，先播一遍全屏正文（`ui/partials/story.html` + `ui/story.js`）。
+
+- **正文写在结局文件里**（`story`），不写在 UI 里：加一个结局只需要加一个文件。
+  写数组就行；要引用本场数据（分数、偷用电脑次数、忌词…）就写成
+  `story: s => [...]`，`storySegmentsOf()` 会把它规范化。
+- **交互只有两条**，规则在 `systems/story.js`（纯函数）：
+  打字中按键 → 立刻显示完**本段**（不跳段）；本段完整时按键 → 下一段；
+  最后一段之后 → 揭榜。按住不放不会连跳（`e.repeat` 被过滤）。
+- 为什么把状态机单独拆出来：这两条规则最容易写成一条（按一下跳两段）或漏掉最后一段，
+  而拆出来之后能在 Node 里逐条单测 —— `npm test` 的「结局正文播放器」一节盯着它们。
+- **打字机用 `setTimeout` 而不是 rAF**：无头 Chromium 里 rAF 一次都不触发（§6 第 2 条），
+  而冒烟测试要真的看见「字一个一个冒出来」—— `npm run smoke` 有 4 条断言钉这一步。
+- 播放期间 `state.view = 'story'`（在 `VIEW_NO_RENDER` 里，世界冻在最后一帧当背景），
+  播完恢复 `'world'` 再揭榜；右上角的成就通知条会在这时收起来，免得盖住第一段。
+- 改正文只改 `story` 数组：**别在 UI 里拼文案**，也别把 `detail` 那套字段搬回来
+  （成绩单的明细现在只放系统测试的逐题结果）。
+
 ---
 
 ## 6. 陷阱清单
@@ -341,7 +467,7 @@ npm run smoke:dev    # 另一个终端：会打印网格数、合批组数、ski
 6. **首屏代码不能读 `problem.desc` / `problem.starter`**（§3 数据流）。
    需要起手模板时 import `src/data/problems/template.js` 的 `STARTER_TEMPLATE`。
 7. **`import.meta.env.DEV` 守卫的探针在生产构建里必须消失**，冒烟测试对此有断言
-   （dist 跑 33 项、dev 跑 40 项，差的就是这些 dev-only 检查）。
+   （dist 跑 44 项、dev 跑 51 项，差的就是这些 dev-only 检查）。
 8. **合批发生在保安生成之前**，所以保安从来不会被合批；但 `guard.js` 仍保留
    `userData.dynamic` 标记，以防以后多合批一次。
 9. **`src/` 里不要用 Node API**，也不要往 ESLint 的 `globals` 里加名字来蒙混过关。
@@ -377,24 +503,46 @@ npm run smoke:dev    # 另一个终端：会打印网格数、合批组数、ski
 **绝对不要提交**：`node_modules/`、`dist/`、`.npm-cache/`、`.chrome-*`、`.DS_Store`
 （都已在 `.gitignore` 里）。`assets/textures/*.webp` 是例外 —— **必须提交**。
 
-**发布（只有打 tag 才会发到 GitHub Pages）**：
+**发布（两条链路：nightly 自动，正式版必须人工发 Release）**：
+
+| 产物 | 触发 | 工作流 |
+|------|------|--------|
+| nightly：滚动预发布 + 压缩包 | 往 `main` 推 | `nightly.yml` |
+| 正式版：GitHub Pages | **人工在网页上发布 Release** | `release.yml` |
+
+正式版发一次：
 
 ```bash
-npm version patch        # 或 minor，同步 package.json 版本号
-git push origin main
-git push origin --tags   # 触发 .github/workflows/deploy.yml
+npm version patch        # 或 minor：同步 package.json 版本号 + 打本地 tag
+git push origin main     # ci.yml 校验 + nightly.yml 更新预发布
+git push origin --tags   # 只跑 ci.yml 校验「tag ≡ package.json 版本」，不发布
+
+# 然后去 GitHub 网页：Releases → Draft a new release → 选 tag v1.2.0 → Publish release
+# 点下 Publish 才触发 release.yml 发布 Pages
 ```
 
-- `main` 的推送**不会**发布，只会跑 `ci.yml`（lint + test + build + 冒烟，不发布）。
-- `deploy.yml` 会强制校验 **tag ≡ `package.json` 版本**（`v1.2.0` ↔ `"1.2.0"`），
+- `main` 的推送**不会**发布正式版：它只会跑 `ci.yml`（lint + test + build + 冒烟）
+  和 `nightly.yml`（同一个 commit 上再跑一遍门禁，然后滚动更新预发布 `nightly`）。
+  nightly 刻意**不发 Pages** —— Pages 是整站替换，发上去就把正式版盖掉了。
+- 推 tag **只做校验**（`ci.yml` 的 `push.tags: ['v*']`）。想改线上，只能有人在网页上点 Publish。
+- **⚠️ 别删 `release.yml` 里 build job 的那条 `if`**：`release: published` 对**预发布**
+  同样会触发（GitHub 文档明写），没有这条 `if`，nightly 会把预发布内容发到正式站点。
+  日常不出事只是因为 nightly 用的是 `GITHUB_TOKEN`，而 `GITHUB_TOKEN` 触发的事件
+  不会产生新的工作流运行 —— 但人手动发一个预发布、或换成 PAT 就会踩到。
+- `release.yml` 会强制校验 **tag ≡ `package.json` 版本**（`v1.2.0` ↔ `"1.2.0"`），
   不一致直接失败。所以**不要手改版本号后跳过着 tag 这一步**。
+  （Release 可以在网页上顺手新建一个 tag，那条路不经过 `ci.yml`，所以发布路径上必须再查一遍。）
 - **仓库设置也是发布链路的一部分**：`github-pages` 这个 environment 的
   Deployment branches and tags 里必须放行 tag（现在有一条 `v*`，type=tag）。
-  只放行 `main` 时构建全绿、却卡在部署那一步，报错是
+  release 事件的 `github.ref` 正好是 `refs/tags/<tag>`，所以「人工发 Release」天然满足它 ——
+  这也是**不要**把发布改成 `workflow_dispatch` 的原因：从分支手动触发会被这条策略
+  挡在部署那一步。只放行 `main` 时构建全绿、却卡在部署那一步，报错是
   「Tag "v1.1.0" is not allowed to deploy to github-pages due to environment protection
   rules」—— 这句只在 Actions 的运行详情里，`git push` 是成功的，很容易误判成代码问题。
   仓库 settings 改不了的话，用 API 加一条策略即可：
   `gh api -X POST repos/<owner>/<repo>/environments/github-pages/deployment-branch-policies -f name='v*' -f type='tag'`。
+- `nightly.yml` 要 `contents: write` 才能建预发布。仓库 **Settings → Actions →
+  Workflow permissions** 若是「Read repository contents」，它会失败在最后一步。
 
 ---
 
@@ -426,6 +574,11 @@ git push origin --tags   # 触发 .github/workflows/deploy.yml
 | 贴图（黑板/出口牌/键盘） | `src/render/texture-painters.js` → §5.4 |
 | 界面面板 / HUD | `src/ui/` + `src/styles/` → §5.3、§4.8 |
 | 过场（走廊/洗手间） | `src/systems/corridor.js` + `bathroom.js` → §4.7 |
+| 结算界面 / 结局文案 | `src/ui/ending.js` + `src/data/endings/` → §5.6、§4.10 |
+| 结局正文（全屏打字机） | `src/systems/story.js` + `src/ui/story.js` → §5.9 |
+| 统计口径 / 想记一个新数据 | `src/systems/stats.js` → §5.7、§4.10 |
+| 展示墙 / 图鉴（成就与结局的解锁记录） | `src/systems/profile.js` + `src/ui/wall.js` → §5.8、§4.5 |
+| 启动屏分页 / 选项卡 | `src/ui/start.js` + `partials/start.html` → §5.3、§5.8 |
 | 存档 | `src/systems/save.js` → §4.5 |
 | 构建 / 部署 / 发布 | `vite.config.js`、`.github/workflows/` → §8 |
 | 测试怎么写 | `tests/run.mjs`、`tools/smoke-test.mjs` → §2 |

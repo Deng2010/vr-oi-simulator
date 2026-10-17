@@ -7,6 +7,7 @@ import { setTimeScale } from '../core/settings.js';
 import { CONTEST_LEN, state } from '../core/state.js';
 import { $ } from '../core/util.js';
 import { closeTeacherDialog } from './teacher.js';
+import { recordEvent } from './stats.js';
 import { crosshair, dlgActions, dlgHead, dlgText, promptEl, teacherDlg } from '../ui/dom.js';
 import { toast } from '../ui/toast.js';
 import { teacher } from '../world/entities.js';
@@ -25,11 +26,14 @@ export function triggerTeacherWarning(){
   state.teacherWarnActive = true;
   state.wanderTimer = 0;
   teacher.userData.mode = 'approach';
+  /* 只记事件，不另记计数：警告次数的真源是 state.warnCount（HUD 也在读它） */
+  recordEvent('warn', '监考老师提出了口头警告');
 }
 
 export function applyWanderPenalty(){
   if (state.wanderPenaltyApplied) return;
   state.wanderPenaltyApplied = true;
+  recordEvent('wander-penalty', '第五次随意走动：成绩被取消');
 
   /* 剩余虚拟时间强制回 10 分钟 */
   state.elapsed = CONTEST_LEN - 600;

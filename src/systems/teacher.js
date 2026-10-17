@@ -6,6 +6,7 @@ import { audio } from '../audio/audio.js';
 import { state } from '../core/state.js';
 import { scene } from '../render/gfx.js';
 import { spawnTwoGuards } from './guards.js';
+import { bump, recordEvent } from './stats.js';
 import { unlockAch } from '../ui/achievements.js';
 import { crosshair, dlgActions, dlgHead, dlgText, promptEl, redFlash, teacherDlg } from '../ui/dom.js';
 import { toast } from '../ui/toast.js';
@@ -23,6 +24,11 @@ export function punchTeacher(){
     toast('你离监考老师太远了。', 1400);
     return;
   }
+
+  /* 统计：打到才算一次（上面「太远了」的分支已经 return，
+     挥空的拳头不该记进战绩，也不该进事件流） */
+  bump('teacherHits');
+  recordEvent('teacher-hit', '殴打了监考老师');
 
   const dx = state.pos.x - teacher.group.position.x;
   const dz = state.pos.z - teacher.group.position.z;
@@ -63,6 +69,10 @@ export function callTeacher(){
     toast('监考老师已经跑了……没人能帮你了。', 2000);
     return;
   }
+  /* 老师不在场就不算一次有效呼叫（上面已经 return），
+     否则「举手」会被记成一个根本没发生的互动 */
+  bump('teacherCalls');
+  recordEvent('call-teacher', '举手呼叫监考老师');
   const opts = [];
   if (!state.bathroomApproved){
     opts.push({
@@ -70,6 +80,7 @@ export function callTeacher(){
       reply: '好，去吧。出门右转走到头就是。快去快回，别耽误太久。',
       action: () => {
         state.bathroomApproved = true;
+        recordEvent('bathroom-pass', '得到老师许可去洗手间');
         toast('老师同意了。走到门口按 E 离开考场。', 3000);
       }
     });

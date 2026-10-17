@@ -15,6 +15,7 @@ import { attackNow, beginInteractHold, cancelInteractHold, endInteractHold } fro
 import { closeNPCComputer } from '../systems/npc.js';
 import { KEYMAP } from '../systems/player.js';
 import { clearSave, persistSave, tryLoadSave } from '../systems/save.js';
+import { bump, recordEvent } from '../systems/stats.js';
 import { callTeacher, closeTeacherDialog } from '../systems/teacher.js';
 import { codeArea, crosshair, hud, minimapWrap, pauseMenu } from '../ui/dom.js';
 import { codeHighlight, saveCode, scheduleHighlight } from '../ui/editor.js';
@@ -172,6 +173,8 @@ export function bindEvents(){
   codeArea.addEventListener('input', () => {
     saveCode();
     scheduleHighlight();
+    /* 只计数、不进事件流：键盘每一下都记一条会把事件流刷爆 */
+    bump('keystrokes');
     if (Math.random() < 0.7) audio.key();
   });
   codeArea.addEventListener('keydown', e => {
@@ -241,6 +244,9 @@ export function bindEvents(){
     crosshair.classList.remove('hidden');
     state.started = true;
     state.startTime = performance.now();
+    /* 先记「比赛开始」再读档：读档会用存档里的事件流整体覆盖，
+       而存档里本来就有一条同样的 start（dedupe 按 id 合并） */
+    recordEvent('start', '比赛开始');
     setLookTarget(state.yaw, state.pitch);
     clock.getDelta();
     toast('比赛开始！方向键转身，WASD 移动，按住 E 交互。', 2600);

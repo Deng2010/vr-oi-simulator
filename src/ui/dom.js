@@ -40,10 +40,24 @@ export const startTabEls = Array.from(document.querySelectorAll('[data-start-tab
 
 export const startPageEls = Array.from(document.querySelectorAll('[data-start-page]'));
 
-/* 赛后系统测试的节点（见 partials/ending.html）。
+/* 赛后系统测试与揭榜的节点（见 partials/ending.html）。
    这些是静态 DOM，模块加载时一次性抓齐即可。
    跳过按钮由 core/input.js 用 $('btnSkipTest') 绑定，这里不需要导出。 */
 export const sysTestEl = $('sysTest'), endResultEl = $('endResult'),
       stRuns = $('stRuns'), stLog = $('stLog');
+
+/* 结局徽章 / 事件回顾（结局系统用，见 ui/ending.js） */
+export const endBadgeEl = $('endBadge'), endEventsEl = $('endEvents');
+
+/* 启动屏「展示墙」的节点（见 partials/start.html）：
+   标题上的「已解锁 / 总数」与两个列表。内容由 ui/wall.js 渲染。 */
+export const wallAchEl = $('wallAch'), wallAchCountEl = $('wallAchCount'),
+      wallEndEl = $('wallEnd'), wallEndCountEl = $('wallEndCount');
+
+/* 结局正文播放器（见 partials/story.html + ui/story.js）：
+   全屏覆盖层、逐段打出来的正文、底部提示与进度。 */
+export const storyUI = $('endingStory'), storyBodyEl = $('storyText'),
+      storyBadgeEl = $('storyBadge'), storyHintEl = $('storyHint'),
+      storyProgressEl = $('storyProgress');
 
 /* ---------- 视角参数 ---------- */

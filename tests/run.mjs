@@ -15,6 +15,10 @@
      7.   自适应 pixelRatio 策略
      8.   静态合批的动态物体排除（人物 4 条腿 / 老师冻结）
      9.   src/ 无循环 import
+     10.  结局系统：配置自检 + 每个结局的触发判据 + 注册表与文件配对
+     11.  统计系统：计数 / 开关 / 事件流（去重、上限、快照副本、存档恢复）
+     12.  图鉴存档与展示墙：宽容解析、解锁累加、只显示已解锁的
+     13.  结局正文播放器：分段内容、打字机推进、两条按键规则
 
    用法：  npm test
    ========================================================= */
@@ -40,6 +44,27 @@ import {
 } from '../src/core/perf-policy.js';
 import * as THREE from 'three';
 import { mergeStaticMeshes } from '../src/render/batch.js';
+import { ENDINGS } from '../src/data/endings/index.js';
+import {
+  ENDING_STAGES, endingText, resolveEnding, sortedEndings, validateEndings
+} from '../src/data/endings/select.js';
+import { BRAWLER_KILLS } from '../src/data/endings/brawler.js';
+import { CHEAT_COMPUTER_USES } from '../src/data/endings/cheat.js';
+import {
+  SPEEDRUN_MAX_SECONDS, SPEEDRUN_MIN_SCORE
+} from '../src/data/endings/speedrun.js';
+import {
+  EVENT_LIMIT, bump, eventList, flag, recordEvent, resetStats, restoreStats, statRows,
+  stats, statsSnapshot
+} from '../src/systems/stats.js';
+import {
+  PROFILE_BUCKETS, PROFILE_KEY, achievementRows, applyUnlock, emptyProfile,
+  endingRows, parseProfile, readProfile, recordAchievement, serializeProfile
+} from '../src/systems/profile.js';
+import {
+  HINT_LAST, HINT_NEXT, HINT_SKIP, STORY_SEGMENT_LIMIT, advanceStory, createStory,
+  isSegmentDone, progressLabel, revealNext, storyHint, storySegmentsOf, visibleText
+} from '../src/systems/story.js';
 
 /* 用 fileURLToPath 而不是 URL.pathname：后者在部分 Node 版本上
    会丢掉结尾斜杠，导致拼接出来的路径少一层分隔符。 */
@@ -559,6 +584,399 @@ console.log('\n▸ 模块依赖方向');
   for (const f of files) dfs(f, []);
   check('src/ 无循环 import', cycles.length === 0, cycles.join('\n      '));
   check('模块数量合理（≥ 30）', files.length >= 30, `${files.length} 个模块`);
+}
+
+/* ---------- 10. 结局系统 ---------- */
+/* 一个「正常完赛」的基准快照：各用例只改它关心的那几个字段。
+   注意这里的所有字段名都必须和 ui/ending.js 的 endingSnapshot() 一致 ——
+   结局判据与正文分段都在替那份快照的字段名把关。 */
+const baseEndingSnapshot = () => ({
+  elapsed: 7200, problemCount: 4, submits: 4, solves: 2, pretestBest: 90,
+  finalSolves: 2, finalScore: 250,
+  warns: 1, wanderCount: 1, wanderPenalty: false, guardKills: 0,
+  npcDisturbed: 0, npcComputersUsed: 0, npcComplaints: 0,
+  teacherHits: 0, teacherCalls: 1, drinkWater: 0, paperOpened: 0, bathroomTrips: 0,
+  keystrokes: 100, acceptedSubmits: 1,
+  banned: false, bannedWord: '', caughtByGuards: false,
+  manualSubmit: true, timeUp: false, events: []
+});
+
+console.log('\n▸ 结局系统（src/data/endings/：配置自检 + 触发判据 + 文件配对）');
+{
+  const baseSnap = baseEndingSnapshot;
+  /* 两个阶段的入口分开：
+     违纪/被抓/作弊是 stage='immediate'（交卷那一刻就判，不跑系统测试），
+     分数类与收场类才是 stage='final'（跑完系统测试再判）。
+     混用会红 —— 这正是下面两组判据要钉住的接线。 */
+  const pickAt = (stage, patch) => resolveEnding({ ...baseSnap(), ...patch }, stage);
+  const idAt = (stage, patch) => { const e = pickAt(stage, patch); return e ? e.id : null; };
+  const pickId = patch => idAt('final', patch);
+
+  /* --- 配置自检 --- */
+  const problems = validateEndings();
+  check('注册表自检无问题（字段齐全 / id 唯一 / 每阶段有兜底）',
+    problems.length === 0, problems.join(' '));
+
+  /* 文件配对：加了结局文件却忘了在 index.js 里注册，会在这里红
+     （和题库「清单 ↔ 文件必须配对」是同一条纪律） */
+  const endingFiles = readdirSync(path.join(ROOT, 'src/data/endings'))
+    .filter(f => f.endsWith('.js') && f !== 'index.js' && f !== 'select.js');
+  check('每个结局一个文件，且都已注册进 ENDINGS',
+    endingFiles.length === ENDINGS.length,
+    `${endingFiles.length} 个文件 / ${ENDINGS.length} 条注册`);
+  check('结局 id 唯一', new Set(ENDINGS.map(e => e.id)).size === ENDINGS.length);
+  check('两个阶段都有结局', ENDING_STAGES.every(
+    st => ENDINGS.some(e => (e.stage || 'final') === st)));
+
+  /* 自检本身要有效：给它一份坏配置，必须报出来（否则它就是一条假绿断言） */
+  {
+    const broken = validateEndings([
+      { id: 'dup', stage: 'immediate', priority: 1, title: 't', tone: 'bad' },   // 缺 badge、没作废分数
+      { id: 'dup', stage: 'nope', priority: 2, title: 't', badge: 'b', tone: 'bad' }
+    ]);
+    check('自检抓得住重复 id', broken.some(p => /重复/.test(p)), broken.join(' '));
+    check('自检抓得住非法 stage', broken.some(p => /stage/.test(p)), broken.join(' '));
+    check('自检抓得住「immediate 却没有 voidScore」',
+      broken.some(p => /voidScore/.test(p)), broken.join(' '));
+    check('自检抓得住「这个阶段没有兜底结局」',
+      broken.some(p => /兜底/.test(p)), broken.join(' '));
+    check('自检抓得住缺字段', broken.some(p => /badge/.test(p)), broken.join(' '));
+  }
+
+  /* --- 每个结局各有一条正向判据 --- */
+  eq('正常完赛 → 比赛结束（兜底）', pickId({}), 'finished');
+  eq('系统测试四题全 AC → AK 结局',
+    pickId({ finalSolves: 4, finalScore: 400 }), 'ak');
+  eq('系统测试 0 分 → 零分结局', pickId({ finalScore: 0, finalSolves: 0 }), 'zero');
+  eq('一次都没提交 → 交白卷（压在零分之上）',
+    pickId({ submits: 0, solves: 0, finalScore: 0 }), 'blank');
+  eq('时间到自动收卷 → 时间到',
+    pickId({ manualSubmit: false, timeUp: true }), 'timeup');
+  eq('提前交卷 + 1 小时内 + 200 分 → 闪电交卷',
+    pickId({ elapsed: SPEEDRUN_MAX_SECONDS - 60, finalScore: SPEEDRUN_MIN_SCORE }), 'speedrun');
+  eq('提前交卷很快但分数不够 → 不判闪电交卷',
+    pickId({ elapsed: SPEEDRUN_MAX_SECONDS - 60, finalScore: SPEEDRUN_MIN_SCORE - 1 }), 'finished');
+  eq('击倒 8 名保安 → 考场战神',
+    pickId({ guardKills: BRAWLER_KILLS }), 'brawler');
+  eq('击倒 7 名保安 → 还不到战神',
+    pickId({ guardKills: BRAWLER_KILLS - 1 }), 'finished');
+
+  /* --- 违规结局：都在 immediate 阶段（不跑系统测试） --- */
+  eq('没有违规时 immediate 阶段不命中结局（照跑系统测试）',
+    idAt('immediate', {}), null);
+  eq('偷用他人电脑到阈值 → 作弊结局（AK 也救不了）',
+    idAt('immediate', { npcComputersUsed: CHEAT_COMPUTER_USES, finalSolves: 4, finalScore: 400 }), 'cheat');
+  eq('被保安抓住 → 被保安抓走（满分也照抓）',
+    idAt('immediate', { caughtByGuards: true, finalSolves: 4, finalScore: 400 }), 'caught');
+  eq('屏蔽词优先于其它一切违规',
+    idAt('immediate', { banned: true, bannedWord: 'fuck', caughtByGuards: true, npcComputersUsed: 9 }), 'banned');
+  eq('五次随意走动 → 成绩已取消',
+    idAt('immediate', { wanderPenalty: true, finalScore: 0 }), 'disqualified');
+  /* 同一份「作弊 + 满分」快照，两个阶段给出的答案必须不同：
+     这正是「违纪不进评测队列」的接线判据 —— 一旦有人把 cheat 改成
+     final 阶段，这条会立刻红。 */
+  eq('作弊快照在 final 阶段只是普通 AK（违纪判定不在这边）',
+    idAt('final', { npcComputersUsed: CHEAT_COMPUTER_USES, finalSolves: 4, finalScore: 400 }), 'ak');
+
+  /* --- 阶段、优先级与确定性 --- */
+  check('immediate 阶段的结局一律作废分数（不跑系统测试）',
+    sortedEndings('immediate').every(e => e.voidScore === true),
+    sortedEndings('immediate').map(e => `${e.id}:${e.voidScore}`).join(' '));
+  check('immediate 阶段不会挑出 final 阶段的结局',
+    sortedEndings('immediate').every(e => e.stage === 'immediate'));
+
+  /* 空快照不能把判定器噎住（字段全缺时也该给一个结局） */
+  check('空快照也能解析出结局（兜底生效）', resolveEnding({}, 'final') !== null);
+  check('空快照解析出的是白卷（0 次提交）',
+    (resolveEnding({}, 'final') || {}).id === 'blank');
+
+  /* 确定性：同一快照解析两次必须一致（判定必须是纯函数） */
+  const snap = { ...baseSnap(), finalSolves: 4, finalScore: 400 };
+  eq('判定是纯函数：同一快照两次解析结果一致',
+    resolveEnding(snap, 'final').id, resolveEnding(snap, 'final').id);
+  check('判定不会修改传入的快照',
+    JSON.stringify(snap) === JSON.stringify({ ...baseSnap(), finalSolves: 4, finalScore: 400 }));
+
+  /* 文案：字符串与函数两种写法都要能渲染出文本
+     （防手滑写错字段名，让结局界面上出现 undefined / 空白）。
+     正文分段（story）在下面「结局正文播放器」一节单独校验。 */
+  check('endingText 支持字符串与函数两种写法',
+    endingText('x', {}) === 'x' && endingText(s => `y${s.a}`, { a: 1 }) === 'y1');
+  const emptySub = ENDINGS.filter(e => endingText(e.subtitle, baseSnap()).length === 0)
+    .map(e => e.id);
+  check('每个结局的副标题都能渲染出文本', emptySub.length === 0, emptySub.join(' '));
+}
+
+/* ---------- 11. 统计系统 ---------- */
+console.log('\n▸ 统计系统（src/systems/stats.js：计数 / 开关 / 事件流 / 快照 / 存档恢复）');
+{
+  resetStats();
+  check('resetStats 后所有计数器与开关都归零',
+    Object.keys(stats).every(k => !stats[k]), JSON.stringify(stats));
+
+  bump('npcDisturbed');
+  bump('npcDisturbed', 2);
+  eq('bump 默认加 1，也可以一次加 n', stats.npcDisturbed, 3);
+
+  flag('caughtByGuards');
+  flag('manualSubmit', false);
+  check('flag 能置真也能置假', stats.caughtByGuards === true && stats.manualSubmit === false);
+
+  recordEvent('a', '第一件事');
+  recordEvent('a', '第一件事');
+  recordEvent('b', '第二件事');
+  eq('同一 id 的事件合并计数', eventList().map(e => [e.id, e.n]), [['a', 2], ['b', 1]]);
+  check('每条事件都带虚拟用时', eventList().every(e => Number.isFinite(e.at) && e.at >= 0));
+  recordEvent('c', '第三件事', { dedupe: false });
+  recordEvent('c', '第三件事', { dedupe: false });
+  eq('dedupe:false 时同一 id 记成多条',
+    eventList().filter(e => e.id === 'c').length, 2);
+
+  /* 事件流上限：它会进存档，无上限地记会把 localStorage 撑大 */
+  resetStats();
+  for (let i = 0; i < EVENT_LIMIT + 20; i++) recordEvent('e' + i, 'x' + i);
+  eq('事件流有上限，不会无界增长', eventList().length, EVENT_LIMIT);
+  eq('超上限后 recordEvent 返回 null', recordEvent('overflow', 'x'), null);
+
+  /* 快照：extra 覆盖同名键，且是**副本**（改快照不能污染真源） */
+  resetStats();
+  recordEvent('a', 'A');
+  const snap = statsSnapshot({ finalScore: 123 });
+  eq('快照里 extra 覆盖同名字段', snap.finalScore, 123);
+  snap.events[0].n = 99;
+  snap.npcDisturbed = 77;
+  eq('快照是事件的副本（改快照不污染事件流）', eventList()[0].n, 1);
+  eq('快照是计数器的副本（改快照不污染计数器）', stats.npcDisturbed, 0);
+
+  /* 存档恢复：对缺字段 / 类型不符一律宽容（AGENTS §4.5） */
+  resetStats();
+  restoreStats({
+    npcComputersUsed: 2, banned: 'yes', nope: 1,
+    events: [{ id: 'k', label: 'L' }, { nope: 1 }, 'x']
+  });
+  eq('restoreStats 读得进合法字段', stats.npcComputersUsed, 2);
+  check('restoreStats 拒绝类型不符的字段（旧的字符串存档）', stats.banned === false);
+  eq('restoreStats 过滤掉坏事件', eventList().map(e => e.id), ['k']);
+  eq('restoreStats 给缺字段的事件补默认值',
+    [eventList()[0].at, eventList()[0].n], [0, 1]);
+  restoreStats(null);
+  restoreStats({ events: 'nope' });
+  check('restoreStats 对 null / 坏类型不抛错', true);
+
+  /* 统计格子：主线四项恒显示（哪怕全是 0），非主线为 0 时整格隐藏。
+     为什么值得一条判据：「0 次警告」不该占一格 —— 但它很容易在重构里
+     变回「永远 9 格」，所以这条既钉隐藏、也钉主线不会被一起隐藏掉。
+     先清一次，否则上面存过的「坏事件」会让「触发事件」那一格一直非 0。 */
+  resetStats();
+  const OPTIONAL_LABELS = ['警告次数', '击倒保安', '干扰同学', '偷用电脑', '触发事件'];
+  const emptyRows = statRows(statsSnapshot({ problemCount: 4 }));
+  eq('统计格子：主线四项恒显示（全是 0 也显示）',
+    emptyRows.map(r => r.label),
+    ['实际用时', '提交次数', '预测试 AC', '系统测试 AC']);
+
+  const busySnapshot = statsSnapshot({
+    problemCount: 4, submits: 3, solves: 1, finalSolves: 2,
+    warns: 1, guardKills: 5, npcDisturbed: 2, npcComputersUsed: 1,
+    events: [{ id: 'a', label: 'A', at: 0, n: 1 }]
+  });
+  const busyRows = statRows(busySnapshot);
+  eq('统计格子：非主线非 0 时全部显示（最多 9 格）', busyRows.length, 9);
+  check('统计格子：9 格时含全部非主线标签',
+    OPTIONAL_LABELS.every(l => busyRows.some(r => r.label === l)),
+    busyRows.map(r => r.label).join(' '));
+
+  /* 逐个隔离：只把某一项调成非 0，就只有那一格出现 */
+  for (const [label, patch] of [
+    ['警告次数', { warns: 2 }],
+    ['击倒保安', { guardKills: 3 }],
+    ['干扰同学', { npcDisturbed: 1 }],
+    ['偷用电脑', { npcComputersUsed: 2 }],
+    ['触发事件', { events: [{ id: 'e', label: 'E', at: 1, n: 1 }] }]
+  ]){
+    const labels = statRows(statsSnapshot({ problemCount: 4, ...patch })).map(r => r.label);
+    eq(`统计格子：只有「${label}」非 0 时只多出这一格`,
+      labels, ['实际用时', '提交次数', '预测试 AC', '系统测试 AC', label]);
+  }
+
+  check('统计格子只暴露 label / value 两个字段',
+    busyRows.every(r => Object.keys(r).length === 2 && typeof r.label === 'string'),
+    JSON.stringify(busyRows[0]));
+  check('统计格子含格式化用时与 AC 计数',
+    statRows(statsSnapshot({ problemCount: 4, elapsed: 3661, solves: 1, finalSolves: 2 }))
+      .some(r => r.value === '01:01:01') &&
+    statRows(statsSnapshot({ problemCount: 4, solves: 1 })).some(r => r.value === '1 / 4'));
+  check('统计格子里的数值来自快照而不是内部状态',
+    statRows(statsSnapshot({ guardKills: 42 })).some(r => r.value === 42));
+  resetStats();
+}
+
+/* ---------- 12. 图鉴存档与展示墙 ---------- */
+/* 启动屏的展示墙读的是 oi_profile_v1（跨场次），不是 state.achievements（本场）。
+   这里钉三件事：存档要宽容、解锁要累加、**没解锁的绝不能出现在展示行里**
+   （那是剧透 —— 未解锁的条目必须连 DOM 都不进，不是靠 CSS 藏）。 */
+console.log('\n▸ 图鉴存档与展示墙（src/systems/profile.js）');
+{
+  /* --- 宽容解析：缺字段 / 坏 JSON / 坏条目都不能抛 --- */
+  eq('空存档解析成空图鉴', parseProfile(null), { achievements: {}, endings: {} });
+  eq('坏 JSON 解析成空图鉴', parseProfile('{ 这不是 json'), { achievements: {}, endings: {} });
+  eq('非对象解析成空图鉴', parseProfile('[]'), { achievements: {}, endings: {} });
+
+  const parsed = parseProfile(JSON.stringify({
+    achievements: { a: { at: 5, n: 3 }, b: null, c: { n: 'x' } },
+    endings: { z: { at: 'y' } },
+    别的字段: 1
+  }));
+  eq('坏条目补默认值（at=0 / n=1）',
+    [parsed.achievements.a, parsed.achievements.b, parsed.achievements.c],
+    [{ at: 5, n: 3 }, { at: 0, n: 1 }, { at: 0, n: 1 }]);
+  eq('结局分区同样宽容', parsed.endings.z, { at: 0, n: 1 });
+  eq('未知分区被忽略', Object.keys(parsed).sort(), PROFILE_BUCKETS.slice().sort());
+
+  /* --- 累加：重复解锁保留首次时间（展示墙按首次解锁倒序排） --- */
+  const p = emptyProfile();
+  applyUnlock(p, 'achievements', 'x', 100);
+  applyUnlock(p, 'achievements', 'x', 200);
+  eq('重复解锁累加次数并保留首次解锁时间', p.achievements.x, { at: 100, n: 2 });
+  applyUnlock(p, 'endings', 'e1', 300);
+  eq('成就与结局分开记', [!!p.endings.e1, !!p.achievements.e1], [true, false]);
+  const before = JSON.stringify(p);
+  applyUnlock(p, 'nope', 'x', 400);
+  applyUnlock(p, 'achievements', '', 400);
+  eq('非法分区 / 空 id 不写入', JSON.stringify(p), before);
+  eq('序列化后能原样解析回来', parseProfile(serializeProfile(p)), p);
+
+  /* --- 展示墙：只输出已解锁的 --- */
+  const achCatalog = [
+    { id: 'a', name: '甲成就', desc: '说明 A' },
+    { id: 'b', name: '乙成就', desc: '说明 B' },
+    { id: 'c', name: '丙成就', desc: '说明 C' }
+  ];
+  const achWall = emptyProfile();
+  applyUnlock(achWall, 'achievements', 'a', 100);
+  applyUnlock(achWall, 'achievements', 'c', 300);
+  const achRows = achievementRows(achWall, achCatalog);
+  eq('展示墙只输出已解锁的成就（按解锁时间倒序）', achRows.map(r => r.id), ['c', 'a']);
+  check('未解锁的成就连文字都不出现（不是 CSS 藏）',
+    !achRows.some(r => r.name === '乙成就') && !JSON.stringify(achRows).includes('乙成就'),
+    JSON.stringify(achRows));
+  eq('成就行带名称 / 描述 / 次数',
+    [achRows[0].name, achRows[0].desc, achRows[0].n], ['丙成就', '说明 C', 1]);
+  eq('空图鉴 → 空展示墙', achievementRows(emptyProfile(), achCatalog), []);
+
+  /* 存档里残留的旧 id（目录里已删掉）不会渲染 */
+  const stale = emptyProfile();
+  applyUnlock(stale, 'achievements', 'old-removed-id', 50);
+  eq('目录里已经没有的旧 id 不渲染', achievementRows(stale, achCatalog), []);
+
+  /* --- 结局行：徽章 / 标题 / 语气 --- */
+  const endCatalog = [
+    { id: 'zero', badge: '结局 · 零分', title: '零 分 结 局', tone: 'warn' },
+    { id: 'finished', badge: '结局 · 完赛', title: '比 赛 结 束' },
+    { id: 'ak', badge: '结局 · AK', title: 'A K 全 场', tone: 'good' }
+  ];
+  const endWall = emptyProfile();
+  applyUnlock(endWall, 'endings', 'finished', 10);
+  applyUnlock(endWall, 'endings', 'ak', 20);
+  applyUnlock(endWall, 'endings', 'ak', 30);
+  const endRows = endingRows(endWall, endCatalog);
+  eq('结局展示墙只输出已解锁的', endRows.map(r => r.id), ['ak', 'finished']);
+  check('未解锁的结局不出现（不剧透）', !endRows.some(r => r.id === 'zero'));
+  eq('结局行带徽章 / 标题 / 次数',
+    [endRows[0].badge, endRows[0].title, endRows[0].n], ['结局 · AK', 'A K 全 场', 2]);
+  eq('结局缺 tone 时回落 neutral', endRows[1].tone, 'neutral');
+
+  /* --- 没有 localStorage 的环境（Node / 无痕模式）不能把页面带崩 --- */
+  let threw = null;
+  try { recordAchievement('x'); } catch (e){ threw = e; }
+  check('没有 localStorage 时写图鉴不抛错', threw === null,
+    threw ? threw.message : '');
+  const nodeProfile = readProfile();
+  check('读图鉴总能返回可用的结构',
+    !!nodeProfile && typeof nodeProfile.achievements === 'object' &&
+    typeof nodeProfile.endings === 'object');
+  check('图鉴键名是稳定契约（跨场次进度靠它读回来）',
+    PROFILE_KEY === 'oi_profile_v1', PROFILE_KEY);
+}
+
+/* ---------- 13. 结局正文播放器 ---------- */
+/* 两条交互规则最容易写成一条（按一下跳两段）或漏掉最后一段，
+   所以状态机做成纯函数，在这里把每一条都钉死。
+   顺带校验每个结局的正文：段数、单段长度 —— 太长会溢出屏幕。 */
+console.log('\n▸ 结局正文播放器（src/systems/story.js：分段 / 打字机 / 按键规则）');
+{
+  const baseSnap = baseEndingSnapshot;
+
+  /* --- 每个结局都有一段能播的正文 --- */
+  const tooFew = ENDINGS.filter(e => storySegmentsOf(e, baseSnap()).length < 3).map(e => e.id);
+  check('每个结局至少 3 段正文', tooFew.length === 0, tooFew.join(' '));
+
+  const tooLong = [];
+  const suspicious = [];
+  for (const e of ENDINGS){
+    for (const seg of storySegmentsOf(e, baseSnap())){
+      if (seg.length > STORY_SEGMENT_LIMIT) tooLong.push(`${e.id}(${seg.length})`);
+      /* 快照字段名写错时，函数式正文里会冒出一个 "undefined" 出来 */
+      if (/undefined|NaN|\[object/.test(seg)) suspicious.push(`${e.id}: ${seg.slice(0, 40)}`);
+    }
+  }
+  check(`每段正文都不超过 ${STORY_SEGMENT_LIMIT} 字（一屏放得下）`,
+    tooLong.length === 0, tooLong.join(' '));
+  check('正文里没有 undefined / NaN（快照字段名没写错）',
+    suspicious.length === 0, suspicious.join(' ｜ '));
+
+  /* 动态段落确实用了本场数据（零分结局的第一段里有提交次数与最高分） */
+  const zeroStory = storySegmentsOf({ story: s => [`提交了 ${s.submits} 次`] }, { submits: 5 });
+  eq('正文支持 (snapshot) => 数组 的写法，且能读本场数据', zeroStory, ['提交了 5 次']);
+  eq('没有 story 的结局解析成空数组', storySegmentsOf(null, baseSnap()), []);
+  eq('story 不是数组时也解析成空数组', storySegmentsOf({ story: '文字' }, {}), []);
+
+  /* --- 状态机 --- */
+  const st = createStory(['abc', 'de']);
+  eq('初始状态：停在第 0 段、一个字都没打', [st.index, st.revealed, st.finished], [0, 0, false]);
+  eq('createStory 丢掉空段与空白段',
+    createStory(['a', '', '   ', null, 'b']).segments, ['a', 'b']);
+  check('没有正文时直接是结束态（UI 会跳过播放器）', createStory([]).finished === true);
+  eq('初始进度是 1 / 2', progressLabel(st), '1 / 2');
+
+  eq('打字机每次推进一步', visibleText(revealNext(st)), 'a');
+  let typed = st;
+  for (let i = 0; i < 10; i++) typed = revealNext(typed);
+  eq('段尾之后停住、不会越界', [typed.revealed, visibleText(typed)], [3, 'abc']);
+  check('段尾之后 isSegmentDone 为真', isSegmentDone(typed));
+
+  eq('打字中提示「显示完整本段」', storyHint(st), HINT_SKIP);
+  eq('本段完整且还有下一段时提示「继续」', storyHint(typed), HINT_NEXT);
+  eq('最后一段完整时提示「揭晓成绩」',
+    storyHint({ segments: ['abc', 'de'], index: 1, revealed: 2, finished: false }), HINT_LAST);
+  eq('结束态没有提示与进度',
+    [storyHint({ segments: [], index: 0, revealed: 0, finished: true }),
+     progressLabel({ segments: [], index: 0, revealed: 0, finished: true })], ['', '']);
+
+  /* 规则 1：打字中按键 → 显示完本段，**不跳段** */
+  const typing = { segments: ['abc', 'de'], index: 0, revealed: 1, finished: false };
+  const afterFirstPress = advanceStory(typing);
+  eq('打字中按键：本段立刻显示完整', visibleText(afterFirstPress), 'abc');
+  eq('打字中按键：不会顺手跳到下一段',
+    [afterFirstPress.index, afterFirstPress.finished], [0, false]);
+
+  /* 规则 2：本段完整时按键 → 下一段（从头开始打） */
+  const afterSecondPress = advanceStory(afterFirstPress);
+  eq('本段完整后按键：进入下一段并从第一个字开始打',
+    [afterSecondPress.index, afterSecondPress.revealed], [1, 0]);
+  eq('进入下一段后进度更新', progressLabel(afterSecondPress), '2 / 2');
+
+  /* 最后一段之后 → 结束；再按不出变化 */
+  const lastDone = { segments: ['abc', 'de'], index: 1, revealed: 2, finished: false };
+  const finished = advanceStory(lastDone);
+  check('最后一段完整后按键：结束', finished.finished === true);
+  check('结束之后再按键没有任何变化', advanceStory(finished) === finished);
+  eq('结束态不显示文字', visibleText(finished), '');
+
+  /* 状态是不可变的：每个动作都返回新对象，不改传入的那个 */
+  const before = JSON.stringify(typing);
+  advanceStory(typing);
+  revealNext(typing);
+  eq('动作不修改传入的状态（不可变）', JSON.stringify(typing), before);
 }
 
 /* ---------- 汇总 ---------- */

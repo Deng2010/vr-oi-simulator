@@ -9,7 +9,8 @@
    证明不了绑错模块、初始化顺序错、懒加载路径断掉。
    这里用无头 Chromium（SwiftShader 软渲染 WebGL）真跑一遍：
      初始化 → 开始比赛 → 低头看向显示器 → E 打开 IDE →
-     题面懒加载 → 提交评测 → 评测结果 → 离开 IDE → Esc 设置面板。
+     题面懒加载 → 提交评测 → 评测结果 → 离开 IDE → Esc 设置面板 →
+     交卷 → 赛后系统测试 → 揭榜（结局徽章 / 统计格子 / 事件回顾）。
    任何一步失败或控制台报错都会让脚本以非 0 退出。
    ========================================================= */
 import { spawn } from 'node:child_process';
@@ -279,16 +280,17 @@ function pageScript(opts = {}){
       canvas && canvas.width > 0 && canvas.height > 0,
       canvas ? `${canvas.width}×${canvas.height}` : 'no canvas');
 
-    /* 1.5 启动屏分页：三页互斥，默认停在「简介」。
+    /* 1.5 启动屏分页：四页互斥，默认停在「简介」。
        分页只是切 .hidden，没有别的守卫 —— 漏写或改名会让
-       「设置」「关于」静默变成空白页，所以在这里钉死。 */
-    const pageNames = ['intro', 'settings', 'about'];
+       「设置」「展示墙」「关于」静默变成空白页，所以在这里钉死。 */
+    const pageNames = ['intro', 'settings', 'wall', 'about'];
     const tabsOk = pageNames.every(n => t.el(`[data-start-tab="${n}"]`));
     const pagesOk = pageNames.every(n => t.el(`[data-start-page="${n}"]`));
-    check('启动屏分页齐备（简介 / 设置 / 关于）', tabsOk && pagesOk);
+    check('启动屏分页齐备（简介 / 设置 / 展示墙 / 关于）', tabsOk && pagesOk);
     check('启动屏默认只显示「简介」',
       t.visible('[data-start-page="intro"]') &&
       !t.visible('[data-start-page="settings"]') &&
+      !t.visible('[data-start-page="wall"]') &&
       !t.visible('[data-start-page="about"]'));
 
     t.click('[data-start-tab="settings"]');
@@ -297,9 +299,26 @@ function pageScript(opts = {}){
     t.click('[data-start-tab="about"]');
     const aboutShown = t.visible('[data-start-page="about"]') &&
       !t.visible('[data-start-page="settings"]');
+
+    /* 展示墙：这一次浏览器 profile 是全新的，所以一条记录都没有。
+       未解锁的条目必须**根本不进 DOM**（不是 CSS 藏着）——
+       否则「把全部成就列一遍」这种剧透式实现也能蒙混过去。 */
+    t.click('[data-start-tab="wall"]');
+    await t.sleep(150);
+    const wallShown = t.visible('[data-start-page="wall"]') &&
+      t.visible('#wallAch') && t.visible('#wallEnd');
+    const achBefore = t.el('#wallAch') ? t.el('#wallAch').querySelectorAll('.wall-item').length : 0;
+    const endBefore = t.el('#wallEnd') ? t.el('#wallEnd').querySelectorAll('.wall-item').length : 0;
+    check('展示墙分页能打开、开局前是空态（未达成的一条都不渲染）',
+      wallShown && achBefore === 0 && endBefore === 0 &&
+      /还没有解锁任何成就/.test(t.text('#wallAch')) &&
+      /还没有开出任何结局/.test(t.text('#wallEnd')),
+      `成就条目=${achBefore} 结局条目=${endBefore} ｜ ${t.text('#wallAch').slice(0, 60)}`);
+
     t.click('[data-start-tab="intro"]');
     check('选项卡能切换分页并切回「简介」',
-      settingsShown && aboutShown && t.visible('#btnStart'),
+      settingsShown && aboutShown && t.visible('#btnStart') &&
+      !t.visible('[data-start-page="wall"]'),
       `设置页=${settingsShown} 关于页=${aboutShown}`);
 
     /* 2. 开始比赛 */
@@ -540,10 +559,49 @@ function pageScript(opts = {}){
     const cells = t.el('#stRuns') ? t.el('#stRuns').querySelectorAll('.st-case').length : 0;
     check('系统测试渲染出 4 题 × 20 个测试点', cells === 80, `格子数=${cells}`);
 
-    const revealed = await t.waitFor('系统测试揭榜',
-      () => t.visible('#endResult') && !t.visible('#sysTest') && t.text('#endDetail').length > 0,
-      20000).then(() => true).catch(() => false);
-    check('系统测试跑完并揭榜', revealed, t.text('#endSub').slice(0, 60));
+    /* 9.5 结局正文：全屏 / 分段 / 打字机。
+       系统测试跑完之后先进正文播放器，**正文播完才揭榜** ——
+       这一段同时是两条交互规则的端到端判据：
+         · 打字中按任意键 → 本段立刻完整，动画停住；
+         · 本段完整后按任意键 → 下一段（从第一个字重新打）。 */
+    const storyShown = await t.waitFor('结局正文出现',
+      () => t.visible('#endingStory') && t.text('#storyText').length > 0, 20000)
+      .then(() => true).catch(() => false);
+    check('系统测试跑完后先播结局正文（全屏）',
+      storyShown, t.text('#storyText').slice(0, 40));
+
+    const len1 = t.text('#storyText').length;
+    await t.sleep(320);
+    const len2 = t.text('#storyText').length;
+    check('结局正文是逐字打出来的（打字机在跑）',
+      storyShown && len2 > len1, `${len1} → ${len2} 字`);
+
+    /* 打字中按一次：本段立刻完整；再等 400ms 不应继续变长（动画确实停了） */
+    t.key('Space', 'keydown');
+    await t.sleep(120);
+    const lenFull = t.text('#storyText').length;
+    await t.sleep(400);
+    check('打字中按键：本段立刻显示完整并停笔',
+      lenFull > len2 && t.text('#storyText').length === lenFull,
+      `${len2} → ${lenFull}（400ms 后 ${t.text('#storyText').length}）`);
+
+    /* 再按一次：进入下一段 —— 正文从短重新长起来，进度 +1 */
+    t.key('Space', 'keydown');
+    await t.sleep(100);
+    const lenNext = t.text('#storyText').length;
+    check('本段完整后再按一次才进入下一段',
+      lenNext < lenFull && /^2 \/ \d+$/.test(t.text('#storyProgress')),
+      `长度 ${lenNext} ｜ 进度 "${t.text('#storyProgress')}"`);
+
+    /* 一路按到底 → 揭榜 */
+    let presses = 0;
+    while (!t.visible('#endResult') && presses++ < 100){
+      t.key('Space', 'keydown');
+      await t.sleep(60);
+    }
+    check('正文按完后正常揭榜',
+      presses < 100 && t.visible('#endResult') && !t.visible('#endingStory'),
+      `按键 ${presses} 次 ｜ 进度 "${t.text('#storyProgress')}"`);
 
     const finalScore = Number((t.text('#endScore') || '').trim());
     check('揭榜显示最终总分', Number.isFinite(finalScore) && finalScore >= 0,
@@ -551,6 +609,34 @@ function pageScript(opts = {}){
     check('结算明细带上系统测试成绩与预测试对照',
       /系统测试/.test(t.text('#endDetail')) && /预测试/.test(t.text('#endDetail')),
       t.text('#endDetail').slice(0, 80));
+
+    /* 10. 结局系统与统计系统（都是纯前端渲染，只能在真浏览器里验）
+       揭榜的标题/副标题/徽章/统计格子/事件回顾全部来自
+       data/endings/<id>.js + systems/stats.js 的快照。 */
+    check('揭榜带结局徽章（结局系统生效）',
+      (t.text('#endBadge') || '').length > 0, `#endBadge="${t.text('#endBadge')}"`);
+    const statCells = t.el('#endStats') ? t.el('#endStats').children.length : 0;
+    check('结算统计格子渲染出来（主线 4 项恒显示，最多 9 项）',
+      statCells >= 4 && statCells <= 9, `格子数=${statCells}`);
+    /* 非主线的数据为 0 时整格不渲染 —— 所以格子里绝不会出现
+       「0警告次数」这种文本。这条不依赖本局跑出什么数据，换一局照样成立。 */
+    const statsText = t.text('#endStats') || '';
+    const zeroShown = ['警告次数', '击倒保安', '干扰同学', '偷用电脑', '触发事件']
+      .filter(l => statsText.includes('0' + l));
+    check('非主线统计为 0 时该格不显示（警告/保安/干扰/偷用电脑/事件）',
+      zeroShown.length === 0, `${zeroShown.join('、')} ｜ ${statsText.slice(0, 100)}`);
+    const evCount = t.el('#endEvents') ? t.el('#endEvents').children.length : 0;
+    check('结算渲染本场事件回顾（事件流非空）', evCount > 0, `事件条数=${evCount}`);
+
+    /* 11. 展示墙落库：揭榜的同时，结局与成就已经写进本机图鉴（oi_profile_v1）。
+       这里点一下（隐藏的）展示墙选项卡，会触发 showStartPage → renderWall 重读。 */
+    t.click('[data-start-tab="wall"]');
+    const wallEndCount = t.el('#wallEnd') ? t.el('#wallEnd').querySelectorAll('.wall-item').length : 0;
+    const wallAchCount = t.el('#wallAch') ? t.el('#wallAch').querySelectorAll('.wall-item').length : 0;
+    check('揭榜后结局进入展示墙（跨场次持久化）',
+      wallEndCount >= 1, `结局条目=${wallEndCount}`);
+    check('揭榜后成就进入展示墙（安分守己 = 零警告完赛）',
+      wallAchCount >= 1, `成就条目=${wallAchCount} ｜ ${t.text('#wallAch').slice(0, 60)}`);
 
     return { steps, failures };
   })();
@@ -657,9 +743,10 @@ async function main(){
       });
       if (r.result.value === true) break;
     }
-    /* 启动屏三个分页各来一张：分页只切 .hidden，断言证明得了「切过去了」，
-       证明不了「没切歪」（元素重叠、溢出、留白失衡），那只能靠眼睛。 */
-    for (const page of ['intro', 'settings', 'about']){
+    /* 启动屏四个分页各来一张：分页只切 .hidden，断言证明得了「切过去了」，
+       证明不了「没切歪」（元素重叠、溢出、留白失衡），那只能靠眼睛。
+       展示墙这一张会带着刚才那一局解锁的成就与结局 —— 顺便人工核对卡片版式。 */
+    for (const page of ['intro', 'settings', 'wall', 'about']){
       await cdp.send('Runtime.evaluate', {
         expression: `document.querySelector('[data-start-tab="${page}"]').click()`,
         returnByValue: true

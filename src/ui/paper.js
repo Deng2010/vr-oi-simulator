@@ -5,6 +5,7 @@
 import { audio } from '../audio/audio.js';
 import { state } from '../core/state.js';
 import { $ } from '../core/util.js';
+import { bump, recordEvent } from '../systems/stats.js';
 import { crosshair, paperCanvas, paperUI, promptEl } from './dom.js';
 
 export let paperCtx = null, drawing = false, lastPt = null;
@@ -16,6 +17,8 @@ export function openPaper(){
   crosshair.classList.add('hidden');
   promptEl.classList.add('hidden');
   paperUI.classList.remove('hidden');
+  bump('paperOpened');
+  recordEvent('paper', '取来草稿纸打草稿');
   const c = paperCanvas;
   requestAnimationFrame(() => {
     const rect = c.getBoundingClientRect();

@@ -4,13 +4,12 @@
    ========================================================= */
 import { audio } from '../audio/audio.js';
 import { state } from '../core/state.js';
-import { $ } from '../core/util.js';
 import { scene } from '../render/gfx.js';
 import { securityGuards } from '../world/entities.js';
-import { unlockAch } from '../ui/achievements.js';
 import { crosshair, dlgActions, dlgHead, dlgText, promptEl, teacherDlg } from '../ui/dom.js';
-import { showEnding } from '../ui/ending.js';
+import { showViolationEnding } from '../ui/ending.js';
 import { hideAllPanels } from '../ui/panels.js';
+import { flag } from './stats.js';
 
 export const BANNED_WORDS = [
   'fuck', 'fucking', 'fucker', 'fucked',
@@ -57,12 +56,10 @@ export function endByBannedWord(word){
   hideAllPanels();
   for (const g of securityGuards) scene.remove(g.group);
   securityGuards.length = 0;
-  unlockAch('banned');
 
-  $('endTitle').textContent = '取 消 成 绩';
-  $('endSub').textContent = `你的代码中包含暴戾语言 "${word.toUpperCase()}"。`;
-  showEnding(0,
-    `监考老师把你的代码截了图，作为证据附在违纪记录里。\n` +
-    `本次比赛成绩作废。\n\n` +
-    `赛场上可以打暴力，不能打嘴炮。\n下次请注意文明用语。`);
+  /* 违规开关先落地再结算：标题、副标题（要带上那个词）、正文与「失言者」
+     成就都在 data/endings/banned.js 里配置 */
+  flag('banned', true);
+  flag('bannedWord', word);
+  showViolationEnding();
 }

@@ -4,16 +4,17 @@
    ========================================================= */
 import { audio } from '../audio/audio.js';
 import { state } from '../core/state.js';
-import { $, clamp } from '../core/util.js';
+import { clamp } from '../core/util.js';
 import { buildSecurityGuard } from '../models/guard.js';
 import { scene } from '../render/gfx.js';
 import { unlockAch } from '../ui/achievements.js';
 import { dangerVig, redFlash } from '../ui/dom.js';
-import { showEnding } from '../ui/ending.js';
+import { showViolationEnding } from '../ui/ending.js';
 import { hideAllPanels } from '../ui/panels.js';
 import { toast } from '../ui/toast.js';
 import { aliveGuardCount, pruneDeadGuards, securityGuards } from '../world/entities.js';
 import { collides } from '../world/obstacles.js';
+import { flag, recordEvent } from './stats.js';
 
 /* 保安注册表与存活统计住在 world/entities.js（实体层）。
    这里只 re-export，保持 systems/guards.js 作为「保安系统」的单一入口。 */
@@ -30,6 +31,8 @@ export const GUARD_PUNCH_RANGE = 2.2;
 export function spawnTwoGuards(){
   if (state.ended) return;
   pruneDeadGuards();
+  /* 两只一起冲进来算一次事件（dedupe 会把重复的合并成 ×n） */
+  recordEvent('guards', '保安冲进考场');
 
   const baseAngles = [
     Math.random() * Math.PI * 2,
@@ -146,9 +149,8 @@ export function endByGuards(){
   audio.beep(110, 0.5, 0.08, 'sawtooth');
   audio.beep(80, 0.7, 0.06, 'sawtooth');
 
-  $('endTitle').textContent = '被 保 安 抓 走';
-  $('endSub').textContent = '两名保安一左一右架住了你，你被拖出了考场。';
-  showEnding(0, '你在考场上公然殴打监考老师，性质恶劣。\n' +
-    '本次比赛成绩作废，并记入诚信档案。\n\n' +
-    '遵守考场纪律，人人有责。\n下次别再打老师了。');
+  /* 违规开关先落地，结算时 immediate 阶段的结局才判得出来；
+     标题 / 副标题 / 正文都写在 data/endings/caught.js 里 */
+  flag('caughtByGuards', true);
+  showViolationEnding();
 }

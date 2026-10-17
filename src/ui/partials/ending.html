@@ -2,7 +2,9 @@
      由原 index.html 第 638-650 行拆出，通过 build/vite-plugin-html-partials.mjs
      在开发与构建时原样内联回 index.html。
      分两阶段：#sysTest（赛后系统测试，20 点逐点揭晓）→ #endResult（揭榜）。
-     system test 的分数才是最终成绩，所以揭榜必须等它跑完。 -->
+     system test 的分数才是最终成绩，所以揭榜必须等它跑完。
+     揭榜内容由「统计系统 + 结局系统」生成：#endBadge 是结局徽章、
+     #endStats 是统计格子、#endEvents 是本场事件回顾（见 ui/ending.js）。 -->
 <!-- ===================== 结算 ===================== -->
 <div id="ending" class="screen hidden">
   <div class="box">
@@ -20,10 +22,17 @@
     </div>
 
     <div id="endResult">
+      <!-- 结局徽章：文案与语气由 src/data/endings/<id>.js 提供，
+           语气（good/bad/warn/fun/neutral）打在 #ending 的 data-tone 上 -->
+      <div class="end-badge" id="endBadge"></div>
       <div class="big" id="endScore">0</div>
       <div class="stat-grid" id="endStats"></div>
       <div id="endDetail"></div>
       <div id="endAch" class="ach-list"></div>
+      <div class="end-events">
+        <h4>本场事件回顾</h4>
+        <ul id="endEvents"></ul>
+      </div>
       <button class="btn primary" id="btnRestart"
               style="margin-top:24px;padding:11px 40px">再来一场</button>
     </div>

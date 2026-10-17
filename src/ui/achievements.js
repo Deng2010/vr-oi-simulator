@@ -4,6 +4,7 @@
    ========================================================= */
 import { audio } from '../audio/audio.js';
 import { state } from '../core/state.js';
+import { recordAchievement } from '../systems/profile.js';
 import { achNotify } from './dom.js';
 
 /* 成就通知条的定时器（原先与 toastTimer 挤在同一个 let 声明里） */
@@ -30,6 +31,10 @@ export function unlockAch(id){
   state.achievements.add(id);
   const a = ACHIEVEMENTS[id];
   if (!a) return;
+  /* 同时写进跨场次的图鉴（启动屏展示墙读它）。
+     state.achievements 是**本场**的，交卷后随存档一起清掉 ——
+     两者不是一回事，别拿一个当另一个用。 */
+  recordAchievement(id);
   clearTimeout(achTimer);
   achNotify.innerHTML = `<div class="at">\u{1F3C6} 成就解锁</div><div class="an">${a.name}</div>
                          <div style="font-size:11.5px;opacity:.85;margin-top:4px">${a.desc}</div>`;

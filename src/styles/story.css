@@ -1,0 +1,59 @@
+/* =========================================================
+   结局正文（全屏分段打字机）
+   ---------------------------------------------------------
+   新增分片：按 AGENTS §4.8 追加在 src/styles/index.css 的末尾。
+   覆盖层本体复用 components.css 的 .screen，这里只管排版与节奏。
+   z-index 比 #ending（50）高一档：正文播完才揭榜，两者不会同时在场，
+   但万一将来要叠在一起，正文应该在前面。
+   ========================================================= */
+#endingStory{z-index:60;}
+#endingStory .story-box{
+  width:min(92vw,760px);max-height:82vh;
+  display:flex;flex-direction:column;gap:16px;
+  padding:26px 30px;border:1px solid #232b3a;border-radius:14px;
+  background:rgba(10,13,19,.74);box-shadow:0 30px 80px -20px #000;
+  animation:story-in .4s ease-out;
+}
+@keyframes story-in{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:none;}
+}
+
+/* 顶部的小徽章：沿用结局语气色（data-tone 来自 data/endings/<id>.js 的 tone） */
+#endingStory .story-badge{
+  align-self:flex-start;
+  font-family:monospace;font-size:11.5px;letter-spacing:2px;
+  padding:4px 14px;border-radius:20px;
+  background:#161c26;border:1px solid #2a3346;color:#8ea6d8;
+}
+#endingStory[data-tone="good"] .story-badge{background:#0f2e26;border-color:#1f6b52;color:#3ddc9a;}
+#endingStory[data-tone="bad"] .story-badge{background:#331a1d;border-color:#7a2a30;color:#ff8f96;}
+#endingStory[data-tone="warn"] .story-badge{background:#33290f;border-color:#7a5f1c;color:#ffc857;}
+#endingStory[data-tone="fun"] .story-badge{background:#2a2340;border-color:#5b4a94;color:#c3a8ff;}
+
+/* 正文：留出固定高度，避免逐字出现时文字上下跳 */
+#endingStory .story-text{
+  min-height:7.6em;
+  font-size:17px;line-height:2.15;letter-spacing:.6px;color:#e2e8f4;
+  white-space:pre-wrap;text-align:left;text-shadow:0 1px 12px rgba(0,0,0,.6);
+}
+/* 打字光标 */
+#endingStory .story-text::after{
+  content:'▍';color:#7aa2ff;margin-left:2px;
+  animation:story-caret 1s steps(1) infinite;
+}
+#endingStory .story-text.done::after{content:'';}
+@keyframes story-caret{0%,49%{opacity:1;}50%,100%{opacity:0;}}
+
+#endingStory .story-foot{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  border-top:1px solid #1e2532;padding-top:12px;
+}
+#endingStory .story-hint{
+  font-size:12px;letter-spacing:2px;color:#7aa2ff;
+  animation:story-breathe 1.8s ease-in-out infinite;
+}
+@keyframes story-breathe{0%,100%{opacity:.5;}50%{opacity:1;}}
+#endingStory .story-progress{
+  font-family:monospace;font-size:11.5px;color:#5d6880;letter-spacing:1px;
+}

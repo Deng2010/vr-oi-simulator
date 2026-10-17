@@ -1,0 +1,17 @@
+<!-- 结局正文（全屏分段打字机）
+     由原 index.html 的结算界面之后追加，通过 build/vite-plugin-html-partials.mjs
+     在开发与构建时原样内联回 index.html。
+     它和 #ending（成绩单）是**两个**覆盖层：先播正文，播完才揭榜。
+     正文内容来自 data/endings/<id>.js 的 story 分段，逐段由 ui/story.js 打出来。
+     交互只有两条：打字中按键显示完整本段；本段完整后按键进下一段。 -->
+<!-- ===================== 结局正文 ===================== -->
+<div id="endingStory" class="screen hidden">
+  <div class="story-box">
+    <div class="story-badge" id="storyBadge"></div>
+    <p class="story-text" id="storyText"></p>
+    <div class="story-foot">
+      <span class="story-hint" id="storyHint">按任意键继续</span>
+      <span class="story-progress" id="storyProgress"></span>
+    </div>
+  </div>
+</div>

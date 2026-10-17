@@ -31,10 +31,11 @@ export let forceRedraw = false;
 export function requestRedraw(){ forceRedraw = true; }
 
 /* 这些视图下，3D 世界不可见（被全屏覆盖层盖住），可以跳过 render；
-   其中 code/paper/corridor/bathroom/npcComputer 也跳过世界逻辑更新。 */
+   其中 code/paper/corridor/bathroom/npcComputer 也跳过世界逻辑更新。
+   story 是结局正文的播放器：全屏，世界冻在最后一帧当背景。 */
 
 export const VIEW_NO_RENDER = new Set([
-  'code','paper','corridor','bathroom','npcComputer','ending','pause','dialog'
+  'code','paper','corridor','bathroom','npcComputer','ending','story','pause','dialog'
 ]);
 
 export function animate(){

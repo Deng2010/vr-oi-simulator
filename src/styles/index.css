@@ -11,3 +11,7 @@
 @import './npc-computer.css';
 @import './dialog.css';
 @import './ending.css';
+/* 新增分片一律追加在末尾（顺序 = 层叠结果，见 AGENTS §4.8） */
+@import './endings.css';
+@import './wall.css';
+@import './story.css';

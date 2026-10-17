@@ -10,6 +10,7 @@ import { scheduleDeskScreensUpdate } from '../render/screen-textures.js';
 import { containsBannedWord, showBannedWordDialog } from '../systems/banned.js';
 import { recalcScore } from '../systems/score.js';
 import { judgePretest, PRETEST_CASES } from '../systems/scoring.js';
+import { bump, recordEvent } from '../systems/stats.js';
 import { verdictEl } from './dom.js';
 import { renderProblemList, saveCode } from './editor.js';
 
@@ -51,6 +52,11 @@ export function submitCode(){
       const res = judgeCode(code, prob);
       state.score[prob.id] = Math.max(state.score[prob.id] || 0, res.score);
       state.submitCount[prob.id] = (state.submitCount[prob.id] || 0) + 1;
+      /* 提交次数与 AC 题数的真源仍是 core/state.js（存档、HUD 都在读它），
+         统计系统只补一件它没有的事：**满分提交**出现过几次。
+         同一道题重复提交会合并成一条事件（「提交了 P14962 ×3」）。 */
+      if (res.score >= prob.max) bump('acceptedSubmits');
+      recordEvent('submit:' + prob.id, `提交了 ${prob.id}（预测试 ${res.score} 分）`);
       recalcScore();
       renderVerdict(prob, res);
       renderProblemList();

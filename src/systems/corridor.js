@@ -8,6 +8,7 @@ import { $ } from '../core/util.js';
 import { unlockAch } from '../ui/achievements.js';
 import { corrBar, corridorUI, crosshair, promptEl } from '../ui/dom.js';
 import { toast } from '../ui/toast.js';
+import { bump, recordEvent } from './stats.js';
 
 export let corridorPhase = 'toilet';
 
@@ -79,6 +80,10 @@ export function updateCorridor(realDt){
         state.wanderTimer = 0;
         state.teacherWarnActive = false;
         toast('你回到了座位上，继续答题。', 2000);
+        /* 走到这里才是完整的一趟（走廊 → 洗手间 → 走廊 → 座位）：
+           按 E 离开考场、走进洗手间又折返，中间任何一步都不会记 */
+        bump('bathroomTrips');
+        recordEvent('bathroom', '完整地去了一趟洗手间');
         unlockAch('explorer');
       }
     }, 500);
