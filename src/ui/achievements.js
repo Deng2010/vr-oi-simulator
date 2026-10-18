@@ -6,6 +6,7 @@ import { audio } from '../audio/audio.js';
 import { state } from '../core/state.js';
 import { recordAchievement } from '../systems/profile.js';
 import { achNotify } from './dom.js';
+import { showIslandAchievement } from './hud.js';
 
 /* 成就通知条的定时器（原先与 toastTimer 挤在同一个 let 声明里） */
 let achTimer = null;
@@ -35,11 +36,20 @@ export function unlockAch(id){
      state.achievements 是**本场**的，交卷后随存档一起清掉 ——
      两者不是一回事，别拿一个当另一个用。 */
   recordAchievement(id);
-  clearTimeout(achTimer);
-  achNotify.innerHTML = `<div class="at">\u{1F3C6} 成就解锁</div><div class="an">${a.name}</div>
-                         <div style="font-size:11.5px;opacity:.85;margin-top:4px">${a.desc}</div>`;
-  achNotify.classList.add('show');
-  achTimer = setTimeout(() => achNotify.classList.remove('show'), 3200);
+  /* 比赛进行中、且 HUD 可见（世界视图）时，成就走灵动岛的时间下方那一行；
+     走廊 / 洗手间 / 结算等全屏覆盖层下 HUD 被盖住，继续用右下角通知条。 */
+  const inWorld = state.started && !state.ended && state.view === 'world';
+  if (inWorld && showIslandAchievement(a.name)){
+    /* 上岛时把可能还在飘的旧通知条收掉，避免同一件事提示两遍 */
+    clearTimeout(achTimer);
+    achNotify.classList.remove('show');
+  } else {
+    clearTimeout(achTimer);
+    achNotify.innerHTML = `<div class="at">\u{1F3C6} 成就解锁</div><div class="an">${a.name}</div>
+                           <div style="font-size:11.5px;opacity:.85;margin-top:4px">${a.desc}</div>`;
+    achNotify.classList.add('show');
+    achTimer = setTimeout(() => achNotify.classList.remove('show'), 3200);
+  }
   audio.beep(880, 0.12, 0.05);
   setTimeout(() => audio.beep(1174, 0.15, 0.04), 110);
 }

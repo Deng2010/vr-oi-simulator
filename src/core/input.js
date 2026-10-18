@@ -11,7 +11,10 @@ import { getLoadedProblem } from '../data/problems/index.js';
 import { STARTER_TEMPLATE } from '../data/problems/template.js';
 import { clock, renderer, resizeViewport } from '../render/gfx.js';
 import { BATHROOM_STEPS, bathroomStepIdx, finishBathroom } from '../systems/bathroom.js';
-import { attackNow, beginInteractHold, cancelInteractHold, endInteractHold } from '../systems/interaction.js';
+import { drinkFromCup, isHoldingCup, throwCup } from '../systems/cup.js';
+import {
+  attackNow, beginInteractHold, cancelInteractHold, cycleTarget, endInteractHold
+} from '../systems/interaction.js';
 import { closeNPCComputer } from '../systems/npc.js';
 import { KEYMAP } from '../systems/player.js';
 import { clearSave, persistSave, tryLoadSave } from '../systems/save.js';
@@ -28,10 +31,19 @@ import { submitCode } from '../ui/verdict.js';
 
 export function bindEvents(){
   /* 鼠标左键与 E 键同义：都要按住才确认（VR 指针手感）。
+     例外：手里拿着水杯时，左键是**投掷**（按下即出手，不蓄力）；
+     右键是喝水（同样按下即生效，有 0.55s 冷却）。
      松开统一挂在 window 上 —— 鼠标可能拖出画布之后才松开。 */
   renderer.domElement.addEventListener('mousedown', e => {
-    if (e.button === 0) beginInteractHold('e');
+    if (e.button === 0){
+      if (isHoldingCup()) throwCup();
+      else beginInteractHold('e');
+    } else if (e.button === 2){
+      drinkFromCup();
+    }
   });
+  /* 右键已经用来喝水，别再弹浏览器菜单 */
+  renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
   window.addEventListener('mouseup', e => {
     if (e.button === 0) endInteractHold('e');
   });
@@ -71,6 +83,17 @@ export function bindEvents(){
       return;
     }
     if (state.view !== 'world') return;
+
+    /* 右上角「可交互对象」列表：Tab 正序、Shift+Tab 倒序。
+       只在比赛进行中接管 Tab，否则会把启动屏 / 暂停菜单的焦点切换吃掉。
+       编辑器里的 Tab 由 codeArea 自己的 keydown 处理并 stopPropagation，
+       不会走到这里。 */
+    if (e.code === 'Tab' && !e.repeat &&
+        state.started && !state.ended && !state.frozen){
+      e.preventDefault();
+      cycleTarget(e.shiftKey ? -1 : 1);
+      return;
+    }
 
     const k = KEYMAP[e.code];
     if (k){

@@ -6,7 +6,7 @@ import { scene } from '../render/gfx.js';
 import { box, getBoxGeo, mat } from '../render/materials.js';
 import { deskScreens, drawDeskScreen } from '../render/screen-textures.js';
 import { getKeyboardMaterial } from '../render/static-textures.js';
-import { drinkWater } from '../systems/interaction.js';
+import { registerCup } from '../systems/cup.js';
 import { openCode } from '../ui/panels.js';
 import { openPaper } from '../ui/paper.js';
 import { interactables } from '../world/entities.js';
@@ -74,8 +74,10 @@ export function buildDesk(x, z, withMonitor){
     );
     cup.position.set(0.66, 0.82, -0.02);
     g.add(cup);
-    cup.userData.interact = { label: '喝水', action: () => drinkWater() };
-    interactables.push(cup);
+    /* 登记进杯子系统：同时挂上「捡起水杯」的交互。
+       桌面世界坐标要在这里算出来 —— 杯子被拿走后会重新挂到 scene 根，
+       放回时按这个坐标落回桌面。 */
+    registerCup(cup, new THREE.Vector3(x + 0.66, 0.82, z - 0.02));
 
     /* 草稿纸 */
     const paper = new THREE.Mesh(
@@ -88,7 +90,10 @@ export function buildDesk(x, z, withMonitor){
     paper.rotation.z = 0.14;
     paper.position.set(-0.62, 0.772, 0.06);
     g.add(paper);
-    paper.userData.interact = { label: '查看草稿纸', action: () => openPaper() };
+    /* name / emoji 给右上角可交互列表用；label 保留给按住 E 的提示 */
+    paper.userData.interact = {
+      name: '草稿纸', emoji: '\u{1F4DD}', label: '查看草稿纸', action: () => openPaper()
+    };
     interactables.push(paper);
 
     /* 笔 */
@@ -101,7 +106,9 @@ export function buildDesk(x, z, withMonitor){
     pen.position.set(-0.62, 0.782, 0.20);
     g.add(pen);
 
-    face.userData.interact = { label: '使用电脑', action: () => openCode() };
+    face.userData.interact = {
+      name: '电脑', emoji: '\u{1F5A5}\u{FE0F}', label: '使用电脑', action: () => openCode()
+    };
     interactables.push(face);
   }
 

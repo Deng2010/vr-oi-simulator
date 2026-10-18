@@ -16,7 +16,7 @@
 ## 0. 三十秒交代
 
 - 纯前端 3D 游戏：**Three.js r128 + Vite 5**，无后端、无 UI 框架、无 TypeScript。
-- `src/` 下 **89 个 ESM 模块 / 约 6200 行**，全部是浏览器端代码。
+- `src/` 下 **94 个 ESM 模块 / 约 7400 行**，全部是浏览器端代码。
 - 界面拆成 11 个 HTML 局部模板（`src/ui/partials/*.html`）：1 个常驻层（画布 + HUD + Toast）
   + 10 个互斥的全屏覆盖层；由 `build/vite-plugin-html-partials.mjs` 在开发与构建时
   内联回 `index.html`（语法：`<!--#include src/ui/partials/xxx.html -->`）。
@@ -42,9 +42,9 @@ Node 20 在 2026-04 已 EOL，不必再兼容。
 | `npm run build` | 生产构建 | 产物在 `dist/`；`three` 单独成一个 chunk |
 | `npm run preview` | 预览 `dist/` | <http://127.0.0.1:4173> |
 | `npm run lint` | ESLint | **0 error / 0 warning** |
-| `npm test` | Node 回归测试（无需浏览器） | **329 项断言全部通过** |
-| `npm run smoke` | 真浏览器端到端（需先 build） | **44 项断言 + 控制台零错误** |
-| `npm run smoke:dev` | 同上但跑源码 | **51 项断言**（需另开 `npm run dev`） |
+| `npm test` | Node 回归测试（无需浏览器） | **389 项断言全部通过** |
+| `npm run smoke` | 真浏览器端到端（需先 build） | **50 项断言 + 控制台零错误** |
+| `npm run smoke:dev` | 同上但跑源码 | **68 项断言**（需另开 `npm run dev`） |
 | `npm run bake:assets` | 重新烘焙静态贴图 | 幂等；产出 `assets/textures/*.webp` |
 | `npm run verify` | lint + test + build | 无需浏览器的门禁 |
 | `npm run verify:full` | verify + smoke | 完整门禁 |
@@ -64,16 +64,16 @@ Node 20 在 2026-04 已 EOL，不必再兼容。
 
 ```bash
 npm run lint          # 0 error / 0 warning
-npm test              # 329 项断言
+npm test              # 389 项断言
 npm run build
-npm run smoke         # 44 项断言 + 控制台零错误
+npm run smoke         # 50 项断言 + 控制台零错误
 ```
 
 **按改动类型追加**：
 
 | 你改了什么 | 必须额外做 |
 |------------|-----------|
-| 场景 / 模型 / AI / 动效 | 跑一次 `npm run smoke:dev`（多出的 7 项是 dev-only 的场景完整性检查，`npm run smoke` 里不存在） |
+| 场景 / 模型 / AI / 动效 / HUD | 跑一次 `npm run smoke:dev`（多出的 18 项是 dev-only 的场景完整性、水杯链路、喝水反馈、成就上岛与多目标 Tab 检查，`npm run smoke` 里不存在） |
 | `src/render/texture-painters.js` 或 `assets/textures/` | `npm run bake:assets`，**并把新的 `.webp` 一起提交** |
 | `src/data/problems/*.md` | `npm test` 会比对题面 SHA-256；**有意改题**要同步更新 `tests/problem-hashes.json` |
 | 评分 / 随机数相关 | 见 §4.1，改之前先想清楚要不要更新 `tests/baseline.json` |
@@ -104,8 +104,8 @@ index.html ── 42 行外壳：meta + 首屏关键样式 + 11 条 include
 | `src/render/` | 渲染核心、材质缓存、**静态合批**、屏幕与烘焙贴图 | `gfx.js` `batch.js` `materials.js` |
 | `src/models/` | 3D 模型构建（房间 / 课桌 / 人物 / 保安） | `person.js` `desk.js` |
 | `src/world/` | 场景组装、实体注册表、碰撞 | `world.js` `entities.js` |
-| `src/systems/` | 评分、NPC 代码生成、存档、**图鉴**、交互、**统计**、**结局正文状态机**、各类 AI、过场 | `scoring.js` `stats.js` `story.js` `profile.js` |
-| `src/ui/` | 各界面模块 + `partials/*.html` | `editor.js` `verdict.js` `ending.js` `story.js` `wall.js` |
+| `src/systems/` | 评分、NPC 代码生成、存档、**图鉴**、交互、**统计**、**结局正文状态机**、水杯、各类 AI、过场 | `scoring.js` `stats.js` `interaction.js` `targeting.js` `cup.js` `story.js` `profile.js` |
+| `src/ui/` | 各界面模块 + `partials/*.html` | `hud.js` `feedback.js` `editor.js` `verdict.js` `ending.js` `story.js` `wall.js` |
 | `src/data/` | 关键字表、题库、**结局配置** | `problems/selection.js` `endings/index.js` `endings/select.js` |
 | `src/audio/` | WebAudio 程序化音效（**仓库里没有任何音频文件**） | `audio.js` |
 | `tests/` | 回归测试与行为基线 | `run.mjs` `baseline.json` `problem-hashes.json` |
@@ -126,8 +126,8 @@ index.html ── 42 行外壳：meta + 首屏关键样式 + 11 条 include
 - 结算与结局：交卷时 `ui/ending.js` 先用**赛中快照**解析 `stage='immediate'` 的结局
   （屏蔽词 / 被保安抓走 / 五次走动 / 作弊 → **不跑系统测试**，成绩当场作废）；
   没有违规才跑系统测试，跑完再用带上最终分数的快照解析 `stage='final'` 的结局
-  （AK / 白卷 / 零分 / 神速 / 考场战神 / 时间到 / 完赛兜底）。
-  揭榜界面上的统计格子与「本场事件回顾」也来自同一个快照（非主线的数据为 0 时整格不显示，所以是 4~9 格）。
+  （AK / 白卷 / 零分 / 神速 / 考场战神 / 时间到 / 喝水彩蛋 / 完赛兜底）。
+  揭榜界面上的统计格子与「本场事件回顾」也来自同一个快照（非主线的数据为 0 时整格不显示，所以是 4~10 格）。
 - 结局正文：裁决出结局后**先播全屏正文**（`ui/story.js` 按 `data/endings/<id>.js` 的
   `story` 分段逐字打出来），玩家按任意键推进，播完才揭榜 —— 顺序反了的话，
   玩家会先看到分数再看故事，情绪就散了。
@@ -266,7 +266,7 @@ index.html ── 42 行外壳：meta + 首屏关键样式 + 11 条 include
 - **约束 3（配置）**：每个结局一个文件；`final` 阶段必须**恰好一个**兜底
   （不写 `condition` 的那个），`immediate` 阶段的结局**必须都有 `condition`**
   且 `voidScore: true`。忘了注册文件（`endings/index.js` 少一行）也会被测试抓到。
-- **守卫**：`tests/run.mjs`「结局系统」「统计系统」「图鉴存档与展示墙」三节共 81 项断言
+- **守卫**：`tests/run.mjs`「结局系统」「统计系统」「图鉴存档与展示墙」三节共 86 项断言
   （配置自检的反向判据、每个结局一条正向判据、阶段隔离、事件去重/上限、
   快照副本、存档宽容恢复、未解锁条目绝不渲染），以及 `npm run smoke` 的 11 条端到端断言
   （结局徽章 / 统计格子与「0 不显示」 / 事件回顾 / 展示墙开局空态与揭榜后落库 /
@@ -321,6 +321,27 @@ index.html ── 42 行外壳：meta + 首屏关键样式 + 11 条 include
 > 另外环的 `stroke-dasharray` 由 `crosshair.js` 按 `getTotalLength()` 现算：
 > 改准星尺寸时若只改 CSS 宽高、忘了改 SVG 的 `viewBox`/`r`，弧长就会对不上，
 > 没按任何键也常驻一小段弧（冒烟测试有一条断言钉这个不变量）。
+>
+> **水杯是例外中的例外**（`systems/cup.js`）：它会跟着视角移动，但**不要**打
+> `userData.dynamic`。它靠「可交互 + `noBatch` + 半透明」三条判据避开合批；
+> 打了 dynamic 之后，dev 的场景完整性自检会把它当成第 7 个「人物根」，
+> 把 `dynamicRoots === 6` / `skippedDynamic === 66` 这两条健康指标带偏。
+> 投掷碰撞的纯函数在 `systems/cup-physics.js`，`npm test` 直接单测。
+>
+> **可交互对象列表 / 新版 HUD**：
+> - `systems/interaction.js` 每 80ms 构建一次候选并选默认项，
+>   `systems/targeting.js` 只放纯函数（朝向点积 / Tab 循环 / 射线-球体辅助 / 择优）。
+>   考生与监考老师必须正对（`FACE_MIN_DOT`）才进列表；**保安不受朝向限制**；
+>   电脑 / 草稿纸 / 水杯**只有准星真正指向时才进列表**；前两者用精确射线，
+>   水杯因为体积小，额外有一条 16cm / 3.4m 的射线-球体辅助判定。
+>   不要再加「身前够得着就进列表」的附近扫描 —— 那会让 Tab 能隔空选中桌上的东西。
+> - `Tab` / `Shift+Tab` → `cycleTarget()`；切换会取消正在走的蓄力。
+>   新增可交互物件时除了 `userData.interact = { label, action }`，再补 `name` / `emoji`
+>   给列表展示；不是射线拾取物（人物 / 出口）的动作要接进 `buildTargets()`。
+> - 边缘反馈在 `ui/feedback.js`：警告→黄、击倒老师/保安→红、喝水→蓝 + 喝水次数短暂上岛。
+>   比赛中的成就由 `ui/achievements.js` 调 `ui/hud.js` 的 `showIslandAchievement()`，
+>   在灵动岛时间下方短暂多出一行；走廊 / 结算等 HUD 被盖住的视图仍走右下角通知条。
+>   `npm test` 有静态接线判据，`smoke:dev` 有成就上岛、Tab 切换与喝水胶囊的端到端断言。
 
 ### 5.3 新增一个界面面板
 
@@ -401,7 +422,7 @@ recordEvent('npc-computer', '偷看了其他选手的电脑'); // 事件流：�
 ```
 
 - 只埋**别处没有真源**的数据（§4.10）。已有的计数器不要去 `state` 里再抄一份。
-- 展示用不上的就别埋：统计格子最多 9 格（`statRows()`；主线 4 项恒显示，
+- 展示用不上的就别埋：统计格子最多 10 格（`statRows()`；主线 4 项恒显示，
   **非主线为 0 时整格隐藏**），事件流有 120 条上限，
   加字段要同时想清楚「哪一格 / 哪条事件」显示它。
 - 事件文案会进 innerHTML，`ui/ending.js` 会转义；埋点里不要自己拼 HTML。
@@ -444,7 +465,7 @@ recordEvent('npc-computer', '偷看了其他选手的电脑'); // 事件流：�
 - **打字机用 `setTimeout` 而不是 rAF**：无头 Chromium 里 rAF 一次都不触发（§6 第 2 条），
   而冒烟测试要真的看见「字一个一个冒出来」—— `npm run smoke` 有 4 条断言钉这一步。
 - 播放期间 `state.view = 'story'`（在 `VIEW_NO_RENDER` 里，世界冻在最后一帧当背景），
-  播完恢复 `'world'` 再揭榜；右上角的成就通知条会在这时收起来，免得盖住第一段。
+  播完恢复 `'world'` 再揭榜；成就通知条会在这时收起来，免得盖住第一段。
 - 改正文只改 `story` 数组：**别在 UI 里拼文案**，也别把 `detail` 那套字段搬回来
   （成绩单的明细现在只放系统测试的逐题结果）。
 
@@ -467,7 +488,7 @@ recordEvent('npc-computer', '偷看了其他选手的电脑'); // 事件流：�
 6. **首屏代码不能读 `problem.desc` / `problem.starter`**（§3 数据流）。
    需要起手模板时 import `src/data/problems/template.js` 的 `STARTER_TEMPLATE`。
 7. **`import.meta.env.DEV` 守卫的探针在生产构建里必须消失**，冒烟测试对此有断言
-   （dist 跑 44 项、dev 跑 51 项，差的就是这些 dev-only 检查）。
+   （dist 跑 50 项、dev 跑 68 项，差的就是这些 dev-only 检查）。
 8. **合批发生在保安生成之前**，所以保安从来不会被合批；但 `guard.js` 仍保留
    `userData.dynamic` 标记，以防以后多合批一次。
 9. **`src/` 里不要用 Node API**，也不要往 ESLint 的 `globals` 里加名字来蒙混过关。
@@ -570,9 +591,11 @@ git push origin --tags   # 只跑 ci.yml 校验「tag ≡ package.json 版本」
 | 一局抽几道题 / 按难度排序 / 难度字段 | `src/data/problems/selection.js` + `manifest.js` → §5.1 |
 | 房间 / 课桌 / 人物 / 保安外观 | `src/models/` → §4.4 |
 | 人物腿、姿态、走路 | `src/models/person.js` + `src/systems/npc.js` → §4.4 |
+| 水杯 / 投掷 / 喝水 | `src/systems/cup.js` + `cup-physics.js` → §5.2 |
 | 场景里东西太多、卡 | `src/render/batch.js` → §5.5 |
 | 贴图（黑板/出口牌/键盘） | `src/render/texture-painters.js` → §5.4 |
 | 界面面板 / HUD | `src/ui/` + `src/styles/` → §5.3、§4.8 |
+| HUD 三块布局 / 可交互列表 / 边缘反馈 | `ui/hud.js` + `ui/feedback.js` + `systems/interaction.js` + `systems/targeting.js` → §5.2 |
 | 过场（走廊/洗手间） | `src/systems/corridor.js` + `bathroom.js` → §4.7 |
 | 结算界面 / 结局文案 | `src/ui/ending.js` + `src/data/endings/` → §5.6、§4.10 |
 | 结局正文（全屏打字机） | `src/systems/story.js` + `src/ui/story.js` → §5.9 |

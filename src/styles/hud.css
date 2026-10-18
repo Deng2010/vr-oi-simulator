@@ -3,28 +3,144 @@
    在 src/styles/index.css 中按原顺序 @import，样式层叠顺序保持不变。 */
   /* ---------- HUD ---------- */
   #hud{position:fixed;inset:0;pointer-events:none;z-index:10;}
-  #hudTimer{
-    position:absolute;top:18px;left:50%;transform:translateX(-50%);
-    font-family:"SF Mono",Consolas,monospace;font-size:26px;font-weight:600;
-    letter-spacing:2px;padding:8px 26px;border-radius:10px;
-    background:rgba(10,13,20,.72);border:1px solid #2a3448;
-    text-shadow:0 0 18px #5b8cff66;backdrop-filter:blur(6px);
-  }
-  #hudTimer.warn{color:#ff8f8f;border-color:#5a2b2b;text-shadow:0 0 18px #ff5f6d88;}
+
+  /* 左上：总分 + 每题得分（预测试口径） */
   #hudScore{
-    position:absolute;top:18px;left:20px;font-size:13px;color:#9aa5bb;
-    background:rgba(10,13,20,.72);border:1px solid #2a3448;border-radius:10px;
-    padding:10px 16px;backdrop-filter:blur(6px);
+    position:absolute;top:18px;left:20px;width:268px;
+    padding:13px 15px 9px;border-radius:15px;
+    background:linear-gradient(180deg,rgba(18,23,35,.9),rgba(9,12,19,.78));
+    border:1px solid rgba(86,105,145,.38);
+    box-shadow:0 16px 40px -22px #000,inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter:blur(12px);font-size:12px;color:#95a0b6;
   }
-  #hudScore b{color:#eaeffb;font-size:18px;font-family:monospace;}
-  #hudProbs{
-    position:absolute;top:18px;right:20px;font-size:12px;
-    background:rgba(10,13,20,.72);border:1px solid #2a3448;border-radius:10px;
-    padding:10px 14px;min-width:160px;backdrop-filter:blur(6px);
+  #hudScore .sc-total{display:flex;align-items:baseline;gap:7px;}
+  #hudScore .sc-label{font-size:12px;letter-spacing:1px;color:#8b96ad;}
+  #hudTotal{
+    font-family:"SF Mono",Consolas,monospace;font-size:26px;line-height:1;
+    font-weight:700;color:#f2f6ff;text-shadow:0 0 20px #5b8cff66;
+    font-variant-numeric:tabular-nums;
   }
-  #hudProbs .row{display:flex;justify-content:space-between;gap:14px;padding:2px 0;color:#8e99ae;}
-  #hudProbs .row b{color:#e2e8f5;font-family:monospace;}
-  #hudProbs .row.ac b{color:var(--green);}
+  #hudScore .sc-max{font-family:monospace;font-size:12px;color:#67728a;}
+  #hudScore .sc-tag{
+    margin-left:auto;font-size:10px;letter-spacing:1px;color:#7fb2ff;
+    border:1px solid #2f4770;background:#16233a;border-radius:999px;
+    padding:2px 7px;font-style:normal;
+  }
+  #hudScore .sc-sub{
+    margin-top:11px;padding-top:9px;border-top:1px solid rgba(96,116,156,.22);
+    font-size:10px;letter-spacing:2px;color:#65718a;
+  }
+  #hudProbs{margin-top:3px;}
+  #hudProbs .row{
+    display:flex;align-items:center;gap:8px;padding:4px 0;
+    color:#8e99ae;font-size:11.5px;
+  }
+  #hudProbs .row .p-id{font-family:monospace;font-size:10px;color:#66738c;flex:0 0 auto;}
+  #hudProbs .row .p-name{
+    flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  #hudProbs .row b{
+    margin-left:auto;min-width:24px;text-align:right;
+    font-family:monospace;font-size:13px;color:#dfe6f5;
+  }
+  #hudProbs .row.ac b{color:var(--green);text-shadow:0 0 12px #38d39f55;}
+
+  /* 正上：灵动岛。第一行时间 + 状态胶囊，第二行是短暂出现的成就 */
+  #hudIsland{
+    position:absolute;top:16px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:0;
+    padding:8px 16px;border-radius:22px;
+    max-width:min(92vw,560px);
+    background:rgba(8,11,17,.82);border:1px solid rgba(96,116,156,.4);
+    box-shadow:0 14px 36px -20px #000,inset 0 1px 0 rgba(255,255,255,.05);
+    backdrop-filter:blur(14px);
+    transition:padding .25s cubic-bezier(.2,.8,.3,1),border-color .25s;
+  }
+  .island-main{display:flex;align-items:center;gap:9px;}
+  .island-time{display:flex;align-items:center;gap:9px;}
+  .island-live{
+    width:7px;height:7px;border-radius:50%;background:#38d39f;
+    box-shadow:0 0 10px #38d39f;animation:islandPulse 2.2s ease-in-out infinite;
+  }
+  #hudTimer{
+    font-family:"SF Mono",Consolas,monospace;font-size:23px;font-weight:600;
+    letter-spacing:2.5px;color:#eef3ff;text-shadow:0 0 18px #5b8cff55;
+    font-variant-numeric:tabular-nums;
+  }
+  #hudTimer.warn{color:#ff8f8f;text-shadow:0 0 18px #ff5f6d88;}
+  .island-stats{display:flex;align-items:center;gap:6px;}
+  .island-chip{
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+    padding:3px 9px;border-radius:999px;font-size:11px;letter-spacing:.5px;
+    border:1px solid transparent;
+    animation:islandIn .34s cubic-bezier(.2,1.2,.4,1);
+  }
+  .island-chip .chip-ico{font-size:12px;line-height:1;}
+  .island-chip b{font-family:monospace;font-size:13px;font-weight:700;}
+  .island-chip.warn{color:#ffd97a;background:rgba(255,204,87,.1);border-color:rgba(255,204,87,.32);}
+  .island-chip.danger{color:#ff9aa2;background:rgba(255,95,109,.1);border-color:rgba(255,95,109,.32);}
+  .island-chip.drink{color:#7fc4ff;background:rgba(91,140,255,.12);border-color:rgba(91,140,255,.35);}
+  .island-chip.bump{animation:islandBump .42s cubic-bezier(.2,1.4,.4,1);}
+
+  /* 时间下面那一行：成就解锁。只在 .show 期间出现一次入场动画。 */
+  .island-ach{
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    width:100%;margin-top:7px;padding-top:7px;
+    border-top:1px solid rgba(255,204,87,.2);
+    white-space:nowrap;overflow:hidden;
+  }
+  .island-ach.show{animation:islandAchIn .32s cubic-bezier(.2,.9,.3,1);}
+  .island-ach .ach-ico{font-size:12px;line-height:1;}
+  .island-ach .ach-tag{
+    font-size:9.5px;letter-spacing:1.6px;color:#9c8348;
+  }
+  .island-ach b{
+    font-size:12.5px;color:#ffe3a0;font-weight:600;
+    text-overflow:ellipsis;overflow:hidden;
+  }
+  @keyframes islandPulse{0%,100%{opacity:.45;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+  @keyframes islandIn{from{opacity:0;transform:translateY(-5px) scale(.8)}to{opacity:1;transform:none}}
+  @keyframes islandBump{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+  @keyframes islandAchIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+
+  /* 右上：当前可交互对象，Tab / Shift+Tab 切换高亮项 */
+  #hudTargets{
+    position:absolute;top:18px;right:20px;width:236px;
+    max-height:calc(100vh - 110px);overflow:hidden;
+    padding:11px 12px 9px;border-radius:15px;
+    background:linear-gradient(180deg,rgba(18,23,35,.9),rgba(9,12,19,.78));
+    border:1px solid rgba(86,105,145,.38);
+    box-shadow:0 16px 40px -22px #000,inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter:blur(12px);
+  }
+  .tg-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .tg-title{font-size:11px;letter-spacing:2px;color:#8b96ad;}
+  .tg-tab{font-size:9.5px;color:#5d6a83;letter-spacing:.5px;}
+  .tg-tab i{font-style:normal;color:#3d475c;}
+  .tg-list{display:flex;flex-direction:column;gap:3px;margin-top:8px;}
+  .tg-item{
+    display:flex;align-items:center;gap:8px;
+    padding:6px 8px;border-radius:9px;
+    color:#94a0b7;font-size:12px;line-height:1.2;
+    border:1px solid transparent;
+    transition:background .15s,border-color .15s,color .15s,transform .18s;
+  }
+  .tg-item .tg-emoji{font-size:14px;width:18px;text-align:center;filter:saturate(.85);}
+  .tg-item .tg-name{flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tg-item kbd{
+    font-family:inherit;font-size:9.5px;color:#77839a;
+    border:1px solid #35415a;background:#141a27;border-radius:5px;
+    padding:1px 5px;min-width:18px;text-align:center;
+  }
+  .tg-item.on{
+    color:#eef4ff;background:linear-gradient(90deg,rgba(91,140,255,.22),rgba(91,140,255,.07));
+    border-color:rgba(91,140,255,.45);transform:translateX(-2px);
+    box-shadow:inset 3px 0 0 #5b8cff;
+  }
+  .tg-item.on kbd{color:#cfe0ff;border-color:#4a6ea8;background:#1a2a45;}
+  .tg-item.off{opacity:.45;}
+  .tg-item.off kbd{display:none;}
+  .tg-empty{padding:7px 8px;font-size:11px;color:#5d6880;letter-spacing:.5px;}
   #btnEnd,#btnSettings{
     position:absolute;bottom:20px;pointer-events:auto;
     background:rgba(30,36,50,.8);border:1px solid #333d52;color:#9aa5bb;
@@ -35,6 +151,15 @@
   #btnEnd:hover{background:#3a2a2a;border-color:#6b3a3a;color:#ffb3b3;}
   #btnSettings{right:118px;}
   #btnSettings:hover{background:#243048;border-color:#3d5278;color:#c3d3f5;}
+
+  /* 窄屏：三块 HUD 同时收窄，状态胶囊只留图标 + 数字，避免互相压住 */
+  @media (max-width: 1000px){
+    #hudScore{width:230px;}
+    #hudTargets{width:206px;}
+    #hudIsland{padding:7px 13px;}
+    #hudTimer{font-size:20px;letter-spacing:2px;}
+    .island-chip .chip-label{display:none;}
+  }
 
   /* 准星：十字 + 交互/攻击 45° 旋转 + 按住确认进度环（VR 指针手感）
      外层 #crosshair 负责定位与攻击态放大；十字本体包在 .ch-cross 里单独变换，

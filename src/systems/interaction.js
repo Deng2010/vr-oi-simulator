@@ -1,23 +1,35 @@
 /* =========================================================
-   交互判定：准星射线拾取 + 距离判定，生成 E / F / 空格动作
+   交互判定：准星射线拾取 + 候选目标列表，生成 E / F / 空格动作
    ---------------------------------------------------------
    动作不是「按下就执行」，而是**按住确认**（VR 指针手感）：
    按住对应按键后准星进度环开始走，走满一圈才真正触发；
    中途松手 / 目标变了 / 动作消失，一律取消。
    由 index.html 内联脚本第 850-1604 行拆出。
+
+   目标模型（本版新增）：
+     · 每 80ms 收集一次「当前可交互对象」，推到右上角列表；
+     · 默认选中项由权重决定（保安 > 精准瞄准的物件 > 水杯辅助瞄准
+       > 老师 > 考生 > 出口），玩家也可以按 Tab / Shift+Tab 手动切换；
+     · 考生 / 监考老师必须**正对着**才进列表（保安不在此列）；
+     · 电脑 / 草稿纸 / 水杯必须**准星真正指向**才进列表 ——
+       前两者用精确射线，水杯因为体积小，额外给一条略宽的射线-球体辅助。
    ========================================================= */
-import { audio } from '../audio/audio.js';
+import * as THREE from 'three';
 import { state } from '../core/state.js';
 import { CENTER, camera, raycaster } from '../render/gfx.js';
+import { canPutDownCup, isHoldingCup, putDownCup } from './cup.js';
 import { enterCorridor } from './corridor.js';
 import { securityGuards } from '../world/entities.js';
 import { GUARD_PUNCH_RANGE, punchGuard } from './guards.js';
 import { disturbNPC, useNPCComputer } from './npc.js';
 import { punchTeacher } from './teacher.js';
-import { bump, recordEvent } from './stats.js';
 import { promptEl } from '../ui/dom.js';
 import { confirmCrosshair, setCrosshairHold, setCrosshairTarget } from '../ui/crosshair.js';
-import { toast } from '../ui/toast.js';
+import { renderTargets } from '../ui/hud.js';
+import {
+  CUP_AIM_RADIUS, CUP_AIM_RANGE, FACE_MIN_DOT,
+  bestTarget, cycleIndex, facingDot, raySphereHit
+} from './targeting.js';
 import { interactables, npcs, teacher } from '../world/entities.js';
 
 /* E / F 按住多久算确认。原来这里是「凝视 0.9s」的停留判定，
@@ -30,6 +42,25 @@ export const HOLD_SECONDS = 0.3;
    保安把游戏拖死（旧版就是每次 keydown 都打）。0.25s 与挥拳音效 + 红闪同节奏。 */
 export const ATTACK_INTERVAL = 0.25;
 
+/* 老师 / 考生 / 出口的判定半径。考生与老师另加「正对着」的朝向门槛。 */
+const TEACHER_RANGE = 2.4;
+const NPC_RANGE = 2.3;
+const DOOR_RANGE = 3.0;
+const DOOR_X = 7.85, DOOR_Z = 0;
+
+/* 通用射线射程。水杯另有一条 3.4m 的辅助判定（见 targeting.js）。 */
+const RAY_FAR = 3.2;
+
+/* 默认选中的权重。数值只影响「同时有好几个目标时先选谁」，
+   与操作优先级无关：E / F / 空格各自只认自己那条动作。 */
+const W_GUARD = 100;
+const W_AIMED_ITEM = 90;
+const W_CUP_AIM = 80;
+const W_TEACHER = 70;
+const W_HELD_CUP = 65;
+const W_NPC = 60;
+const W_DOOR = 40;
+
 export let actionE = null;       // E 键动作：交互（电脑/水杯/草稿纸/出口）
 
 export let actionF = null;       // F 键动作：干扰同学
@@ -38,10 +69,19 @@ export let actionSpace = null;   // 空格键动作：打老师 / 打保安
 
 export let lastInteractKey = '';
 
+/* 当前候选列表与选中项。列表项同时带展示字段（emoji / name / hint）
+   与执行字段（actionE / actionF / actionSpace），UI 只读展示字段。 */
+export let targetList = [];
+export let selectedTargetKey = '';
+
 /* 当前瞄到的目标标识（与准星共用同一份）。
    开始蓄力时记一份，蓄力途中一变就取消 ——
    否则「按着 E 转头」会把动作打到别的物体上。 */
 let aimKey = '';
+
+/* 玩家是否用 Tab 手动选过目标。手动选择会一直保留到
+   目标离开列表（走远 / 背对 / 被拿走）为止。 */
+let manualSelection = false;
 
 /* 蓄力状态。放在模块里而不是 DOM 上：主循环每帧推进它、
    准星每帧读它，两边都不该去问 DOM。 */
@@ -54,6 +94,9 @@ let holdFired = false;  // 这一次按住是否已经触发过
    用时间戳而不是「每帧减 dt 的计数器」：攻击不需要逐帧推进，
    自给自足就不必再去 loop.js 多挂一个每帧钩子。 */
 let lastAttackAt = -Infinity;
+
+/* 复用的临时向量：候选扫描每 80ms 跑一次，别在热路径里 new */
+const _itemPos = new THREE.Vector3();
 
 /* 命中目标时同时更新准星与本地记录 */
 function aim(mode, key){
@@ -68,6 +111,256 @@ function actionFor(key){
   return null;
 }
 
+function makeTarget(opts){
+  return {
+    key: opts.key,
+    emoji: opts.emoji || '\u2726',
+    name: opts.name || '可交互对象',
+    hint: opts.hint || '',
+    weight: opts.weight || 0,
+    dist: Number.isFinite(opts.dist) ? opts.dist : 0,
+    auto: !!opts.auto,
+    disabled: !!opts.disabled,
+    mode: opts.mode || 'interact',
+    actionE: opts.actionE || null,
+    actionF: opts.actionF || null,
+    actionSpace: opts.actionSpace || null,
+    prompt: opts.prompt || ''
+  };
+}
+
+function itemTarget(obj, weight, dist, auto){
+  const it = obj && obj.userData && obj.userData.interact;
+  if (!it || typeof it.action !== 'function') return null;
+  return makeTarget({
+    key: 'item:' + obj.uuid,
+    emoji: it.emoji || '\u2726',
+    name: it.name || '桌面物品',
+    hint: 'E',
+    weight,
+    dist,
+    auto,
+    mode: 'interact',
+    actionE: it.action,
+    prompt: '[ 按住 E ] ' + it.label
+  });
+}
+
+/**
+ * 收集当前所有可交互对象。
+ * @returns {{list: object[]}}
+ */
+function buildTargets(){
+  const list = [];
+  const seenItems = new Set();
+
+  /* 1. 保安：距离内就能打，不要求朝向。
+        玩家被追着跑的时候不该还得先「看准」保安。 */
+  for (const g of securityGuards){
+    if (!g.userData.alive) continue;
+    const d = Math.hypot(state.pos.x - g.group.position.x,
+                         state.pos.z - g.group.position.z);
+    if (d >= GUARD_PUNCH_RANGE) continue;
+    list.push(makeTarget({
+      key: 'guard:' + g.uuid,
+      emoji: '\u{1F46E}',
+      name: '保安',
+      hint: '空格',
+      weight: W_GUARD,
+      dist: d,
+      auto: true,
+      mode: 'attack',
+      actionSpace: () => punchGuard(g),
+      prompt: `[ 空格 ] 殴打保安（距离 ${d.toFixed(1)}m）`
+    }));
+  }
+
+  /* 2. 监考老师：必须正对着（本版新增），且不在警告对话里 */
+  if (teacher && !teacher.userData.leaving){
+    const tp = teacher.group.position;
+    const d = Math.hypot(state.pos.x - tp.x, state.pos.z - tp.z);
+    const facing = facingDot(state.pos.x, state.pos.z, state.yaw, tp.x, tp.z);
+    if (d < TEACHER_RANGE && facing >= FACE_MIN_DOT && teacher.userData.mode !== 'warn'){
+      list.push(makeTarget({
+        key: 'teacher',
+        emoji: '\u{1F468}\u200D\u{1F3EB}',
+        name: '监考老师',
+        hint: '空格',
+        weight: W_TEACHER,
+        dist: d,
+        auto: true,
+        mode: 'attack',
+        actionSpace: punchTeacher,
+        prompt: '[ 空格 ] 殴打监考老师（后果自负）'
+      }));
+    }
+  }
+
+  /* 3. 手里拿着水杯：只保留「放回桌面」与攻击目标，
+        其它桌面物件 / 考生 / 出口暂时锁住（与旧版手感一致）。 */
+  if (isHoldingCup()){
+    const put = canPutDownCup();
+    list.push(makeTarget({
+      key: 'held-cup',
+      emoji: '\u{1F964}',
+      name: '手中的水杯',
+      hint: put ? 'E' : '',
+      weight: W_HELD_CUP,
+      dist: 0,
+      auto: true,
+      disabled: !put,
+      mode: put ? 'interact' : 'idle',
+      actionE: put ? putDownCup : null,
+      prompt: put
+        ? '[ 按住 E ] 放回桌面　·　左键投掷　·　右键喝水'
+        : '水杯在手上：左键投掷 · 右键喝水 · 走回桌边按住 E 放下'
+    }));
+    return { list };
+  }
+
+  /* 4. 其他选手：坐着的 → F 干扰；离座的 → E 用电脑。
+        必须正对着才能进列表（本版新增）。 */
+  for (let i = 0; i < npcs.length; i++){
+    const n = npcs[i];
+    const ud = n.userData;
+    if (!ud) continue;
+    const d = Math.hypot(state.pos.x - ud.seatX, state.pos.z - ud.seatZ);
+    if (d >= NPC_RANGE) continue;
+    const facing = facingDot(state.pos.x, state.pos.z, state.yaw, ud.seatX, ud.seatZ);
+    if (facing < FACE_MIN_DOT) continue;
+
+    if (ud.state === 'seated'){
+      list.push(makeTarget({
+        key: 'npc:' + i,
+        emoji: '\u{1F9D1}\u200D\u{1F393}',
+        name: ud.name,
+        hint: 'F',
+        weight: W_NPC,
+        dist: d,
+        auto: true,
+        mode: 'interact',
+        actionF: () => disturbNPC(i),
+        prompt: `[ 按住 F ] 干扰${ud.name}（他可能会报告老师）`
+      }));
+    } else if (ud.state === 'walking_away' || ud.state === 'away'){
+      list.push(makeTarget({
+        key: 'npc:' + i,
+        emoji: '\u{1F4BB}',
+        name: `${ud.name}的电脑`,
+        hint: 'E',
+        weight: W_NPC,
+        dist: d,
+        auto: true,
+        mode: 'interact',
+        actionE: () => useNPCComputer(i),
+        prompt: `[ 按住 E ] 使用${ud.name}的电脑`
+      }));
+    }
+  }
+
+  /* 5. 出口：距离够就能看到。没获批准时只给提示、不给动作。 */
+  const dDoor = Math.hypot(state.pos.x - DOOR_X, state.pos.z - DOOR_Z);
+  if (dDoor < DOOR_RANGE){
+    const approved = !!state.bathroomApproved;
+    list.push(makeTarget({
+      key: 'door',
+      emoji: '\u{1F6AA}',
+      name: '考场出口',
+      hint: approved ? 'E' : '',
+      weight: W_DOOR,
+      dist: dDoor,
+      auto: true,
+      disabled: !approved,
+      mode: approved ? 'interact' : 'idle',
+      actionE: approved ? () => enterCorridor('toilet') : null,
+      prompt: approved
+        ? '[ 按住 E ] 离开考场去洗手间'
+        : '离开考场需要先按 H 举手征得老师同意'
+    }));
+  }
+
+  /* 6. 准星精准命中的桌面物件：优先进入自动选中 */
+  raycaster.setFromCamera(CENTER, camera);
+  raycaster.far = RAY_FAR;
+  const hits = raycaster.intersectObjects(interactables, false);
+  if (hits.length && hits[0].object.userData.interact){
+    const obj = hits[0].object;
+    const t = itemTarget(obj, W_AIMED_ITEM, hits[0].distance, true);
+    if (t){ seenItems.add(t.key); list.push(t); }
+  }
+
+  /* 7. 水杯辅助瞄准：比通用射线略宽、略远（玩家反馈杯子太小不好点）。
+        已经在第 6 步精准命中的杯子不重复加入。 */
+  const ro = raycaster.ray.origin;
+  const rd = raycaster.ray.direction;
+  for (const obj of interactables){
+    if (!obj.userData.cup) continue;
+    const key = 'item:' + obj.uuid;
+    if (seenItems.has(key)) continue;
+    obj.getWorldPosition(_itemPos);
+    const hit = raySphereHit(
+      ro.x, ro.y, ro.z, rd.x, rd.y, rd.z,
+      _itemPos.x, _itemPos.y, _itemPos.z,
+      CUP_AIM_RANGE, CUP_AIM_RADIUS
+    );
+    if (!hit) continue;
+    const t = itemTarget(obj, W_CUP_AIM, hit.dist, true);
+    if (t){ seenItems.add(key); list.push(t); }
+  }
+
+  /* 电脑 / 草稿纸 / 水杯只认上面两步：没被准星指到的桌面物件不进列表，
+     也就不能用 Tab 隔空选中 —— 与「光标对着才能交互」保持一致。 */
+
+  return { list };
+}
+
+/**
+ * 根据候选列表决定当前选中项：
+ *   · 手动选择还在列表里 → 保留；
+ *   · 否则 → 权重最高的自动候选（没有自动候选就不选）。
+ * @param {object[]} list
+ * @returns {object|null}
+ */
+function chooseSelected(list){
+  let selected = null;
+  if (manualSelection && selectedTargetKey){
+    selected = list.find(t => t.key === selectedTargetKey) || null;
+    if (!selected) manualSelection = false;
+  }
+  if (!selected) selected = bestTarget(list.filter(t => t.auto));
+  selectedTargetKey = selected ? selected.key : '';
+  return selected;
+}
+
+/* 把选中项翻译成动作 / 提示 / 准星状态。Tab 切换与每 80ms 的自动判定共用。 */
+function applySelected(selected, list){
+  /* actionE / actionF 是「{ fn }」形状（沿用旧接口）；目标里存的是裸函数，
+     这里统一包一层，别让 beginInteractHold 拿到一个没有 .fn 的函数。 */
+  actionE = selected && selected.actionE ? { fn: selected.actionE } : null;
+  actionF = selected && selected.actionF ? { fn: selected.actionF } : null;
+
+  /* 空格始终能用：如果手动选中的是水杯 / 电脑（没有攻击动作），
+     保安走进范围时仍然要能一拳打出去，所以回退到最近的攻击目标。 */
+  const attackBest = bestTarget(list.filter(t => t.actionSpace));
+  const spaceTarget = selected && selected.actionSpace ? selected : attackBest;
+  actionSpace = spaceTarget ? { fn: spaceTarget.actionSpace } : null;
+
+  if (selected){
+    if (selected.prompt && selected.prompt !== lastInteractKey){
+      lastInteractKey = selected.prompt;
+      promptEl.textContent = selected.prompt;
+    }
+    promptEl.classList.remove('hidden');
+    if (selected.mode === 'attack') aim('attack', selected.key);
+    else if (selected.mode === 'interact') aim('interact', selected.key);
+    else aim('idle', '');
+  } else {
+    aim('idle', '');
+  }
+
+  renderTargets(list, selectedTargetKey);
+}
+
 export function updateInteract(){
   actionE = null;
   actionF = null;
@@ -75,97 +368,50 @@ export function updateInteract(){
   promptEl.classList.add('hidden');
 
   if (state.view !== 'world' || !state.started || state.ended || state.frozen){
+    resetInteractTargets();
     aim('idle', '');
     return;
   }
 
-  /* 优先：保安 → 空格 */
-  for (let i = 0; i < securityGuards.length; i++){
-    const g = securityGuards[i];
-    if (!g.userData.alive) continue;
-    const d = Math.hypot(state.pos.x - g.group.position.x, state.pos.z - g.group.position.z);
-    if (d < GUARD_PUNCH_RANGE){
-      actionSpace = { fn: () => punchGuard(g) };
-      const txt = `[ 空格 ] 殴打保安（距离 ${d.toFixed(1)}m）`;
-      if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-      promptEl.classList.remove('hidden');
-      aim('attack', 'guard:' + i);
-      return;
-    }
-  }
+  const { list } = buildTargets();
+  targetList = list;
+  const selected = chooseSelected(list);
+  applySelected(selected, list);
+}
 
-  /* 老师 → 空格 */
-  if (teacher && !teacher.userData.leaving){
-    const d = Math.hypot(state.pos.x - teacher.group.position.x,
-                         state.pos.z - teacher.group.position.z);
-    if (d < 2.4 && teacher.userData.mode !== 'warn'){
-      actionSpace = { fn: punchTeacher };
-      const txt = '[ 空格 ] 殴打监考老师（后果自负）';
-      if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-      promptEl.classList.remove('hidden');
-      aim('attack', 'teacher');
-      return;
-    }
-  }
+/**
+ * 清空目标列表与选中项（离开世界视图时用）。
+ * 与 updateInteract 的「无效状态」分支共用，避免两处逻辑分叉。
+ */
+export function resetInteractTargets(){
+  targetList = [];
+  selectedTargetKey = '';
+  manualSelection = false;
+  lastInteractKey = '';
+  actionE = null;
+  actionF = null;
+  actionSpace = null;
+  promptEl.classList.add('hidden');
+  renderTargets([], '');
+}
 
-  /* 其他选手：坐着的 → F 干扰；离开的 → E 用电脑 */
-  for (let i = 0; i < npcs.length; i++){
-    const n = npcs[i];
-    const ud = n.userData;
-    if (!ud) continue;
-    const d = Math.hypot(state.pos.x - ud.seatX, state.pos.z - ud.seatZ);
-    if (d < 2.3){
-      if (ud.state === 'seated'){
-        actionF = { fn: () => disturbNPC(i) };
-        const txt = `[ 按住 F ] 干扰${ud.name}（他可能会报告老师）`;
-        if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-        promptEl.classList.remove('hidden');
-        aim('interact', 'npcSeated:' + i);
-        return;
-      } else if (ud.state === 'walking_away' || ud.state === 'away'){
-        actionE = { fn: () => useNPCComputer(i) };
-        const txt = `[ 按住 E ] 使用${ud.name}的电脑`;
-        if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-        promptEl.classList.remove('hidden');
-        aim('interact', 'npcAway:' + i);
-        return;
-      }
-    }
-  }
+/**
+ * Tab / Shift+Tab：在右上角列表里切换选中项。
+ * @param {number} dir +1 = Tab，-1 = Shift+Tab
+ */
+export function cycleTarget(dir){
+  if (state.view !== 'world' || !state.started || state.ended || state.frozen) return;
+  if (!targetList.length) return;
 
-  /* 出口 → E */
-  const dDoor = Math.hypot(state.pos.x - 7.85, state.pos.z - 0);
-  if (dDoor < 3.0){
-    if (state.bathroomApproved){
-      actionE = { fn: () => enterCorridor('toilet') };
-      const txt = '[ 按住 E ] 离开考场去洗手间';
-      if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-      /* 未获批准时这里只有一句提示、没有可执行动作，所以不给交互态 */
-      aim('interact', 'door');
-    } else {
-      const txt = '离开考场需要先按 H 举手征得老师同意';
-      if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-    }
-    promptEl.classList.remove('hidden');
-    return;
-  }
+  const cur = targetList.findIndex(t => t.key === selectedTargetKey);
+  const next = cycleIndex(cur, targetList.length, dir);
+  if (next < 0) return;
 
-  /* 桌上物品（射线拾取） → E */
-  raycaster.setFromCamera(CENTER, camera);
-  raycaster.far = 3.2;
-  const hits = raycaster.intersectObjects(interactables, false);
-  if (hits.length && hits[0].object.userData.interact){
-    const it = hits[0].object.userData.interact;
-    actionE = { fn: it.action };
-    const txt = '[ 按住 E ] ' + it.label;
-    if (lastInteractKey !== txt){ promptEl.textContent = txt; lastInteractKey = txt; }
-    promptEl.classList.remove('hidden');
-    /* 用 uuid 而不是 label：6 张桌子上都有「喝水」，label 会串台 */
-    aim('interact', 'item:' + hits[0].object.uuid);
-  } else {
-    /* 走到这里说明什么都没瞄到（另一条待机出口在函数开头） */
-    aim('idle', '');
-  }
+  selectedTargetKey = targetList[next].key;
+  manualSelection = true;
+  /* 换目标时正在走的蓄力作废：否则松手前会打到新目标上 */
+  cancelInteractHold();
+  applySelected(targetList[next], targetList);
 }
 
 /* =========================================================
@@ -250,12 +496,4 @@ export function attackNow(){
   if (now - lastAttackAt < ATTACK_INTERVAL * 1000) return;
   lastAttackAt = now;
   actionSpace.fn();
-}
-
-export function drinkWater(){
-  bump('drinkWater');
-  recordEvent('drink', '喝了一杯水');
-  audio.beep(520, 0.08, 0.05);
-  setTimeout(() => audio.beep(420, 0.1, 0.04), 110);
-  toast('\u{1F964} 你喝了一口水，感觉清醒了一些。', 1600);
 }

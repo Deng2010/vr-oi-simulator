@@ -25,7 +25,7 @@
 #ending[data-tone="bad"] h2{color:#ff8f96;}
 #ending[data-tone="warn"] h2{color:#ffc857;}
 
-/* ---------- 统计格子：固定 9 格 ---------- */
+/* ---------- 统计格子：3 列网格，最多 10 格（4~10 动态） ---------- */
 #endStats{margin:18px 0 4px;}
 #endStats .sv{font-size:17px;}
 

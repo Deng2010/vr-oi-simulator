@@ -226,11 +226,13 @@ function pageScript(opts = {}){
   const expectProbe = !!opts.expectProbe;
   const failures = [];
   const steps = [];
+  /* dev-only：把水杯留到「Tab 多目标」那一段用（见 3.6） */
+  let testCup = null;
   const t = {
     sleep: ms => new Promise(r => setTimeout(r, ms)),
-    key(code, type){
+    key(code, type, opts = {}){
       document.dispatchEvent(new KeyboardEvent(type, {
-        code, bubbles: true, cancelable: true
+        code, bubbles: true, cancelable: true, shiftKey: !!opts.shiftKey
       }));
     },
     async hold(code, ms){
@@ -325,6 +327,113 @@ function pageScript(opts = {}){
     t.click('#btnStart');
     await t.sleep(400);
     check('#start 隐藏 / #hud 显示', !t.visible('#start') && t.visible('#hud'));
+
+    /* 2.1 新版 HUD 的三块布局：
+       · 左上 = 总分 + 每题得分（4 行）；
+       · 正上 = 灵动岛（时间常驻，警告 / 击倒保安为 0 时不上岛）；
+       · 右上 = 可交互对象列表。桌面物件必须等准星对着才进列表，
+         所以开局（平视前方）应该只有空态，而不是提前列出桌上的三件东西。
+       这几条只验「结构与初始空态」；交互联动在下面的 Tab 一段。 */
+    const scoreRows = t.el('#hudProbs')
+      ? t.el('#hudProbs').querySelectorAll('.row').length : 0;
+    check('左上分数卡：总分 + 4 道题各自的得分',
+      /总分/.test(t.text('#hudScore')) && scoreRows === 4 &&
+      !!t.el('#hudTotal'),
+      `行数=${scoreRows} ｜ ${t.text('#hudScore').slice(0, 80)}`);
+    check('正上灵动岛：时间常驻，警告 / 击倒保安为 0 时不上岛',
+      t.visible('#hudTimer') && !t.visible('#islandWarn') &&
+      !t.visible('#islandGuards') && !t.visible('#islandDrink') &&
+      !t.visible('#islandAch'),
+      `warn=${t.visible('#islandWarn')} guards=${t.visible('#islandGuards')} ` +
+      `drink=${t.visible('#islandDrink')} ach=${t.visible('#islandAch')}`);
+    const tgStart = t.el('#tgList')
+      ? Array.from(t.el('#tgList').querySelectorAll('.tg-item')) : [];
+    const tgStartText = t.text('#tgList');
+    check('右上可交互列表：未瞄准桌面物件时只显示空态',
+      t.visible('#hudTargets') && tgStart.length === 0 &&
+      /环顾四周/.test(tgStartText),
+      `${tgStart.length} 项 ｜ ${tgStartText}`);
+
+    /* 2.15 成就上岛（dev-only）：直接调真实 hud 模块，验证
+       「比赛中的成就在时间下方多出一行」以及「不再重复弹右下角通知条」。
+       unlockAch → showIslandAchievement 的接线由 npm test 的静态判据钉住。 */
+    if (expectProbe){
+      const loaded = performance.getEntriesByType('resource').map(e => e.name);
+      const hudUrl = loaded.find(n => /\/src\/ui\/hud\.js(\?|$)/.test(n)) ||
+        '/src/ui/hud.js';
+      const { showIslandAchievement } = await import(hudUrl);
+      const shown = showIslandAchievement('初次 AC');
+      await t.sleep(160);
+      check('比赛中解锁成就：灵动岛在时间下方短暂显示一行',
+        shown && t.visible('#islandAch') &&
+        /初次 AC/.test(t.text('#islandAch')) &&
+        /成就解锁/.test(t.text('#islandAch')),
+        `shown=${shown} 文本="${t.text('#islandAch')}"`);
+      check('成就行走灵动岛时不再重复弹右下角通知条',
+        !t.el('#achNotify').classList.contains('show'));
+    }
+
+    /* 2.2 水杯（dev-only）：通过真实模块入口驱动，验证「拿起 → 右键喝 →
+       左键扔 → 落地 → 放回桌面」整条链路。这里不靠准星瞄准，因为后面
+       的显示器步骤依赖初始视角；交互接线本身由 npm test 的静态判据钉住。
+       生产构建里没有 /src/... 路径，所以整段只在 --dev 下运行。 */
+    if (expectProbe){
+      /* dev 里 Vite 会给改过的模块加 HMR 时间戳；直接 import 裸路径会拿到
+         另一个模块实例（持杯状态、统计器都各有一份）。这里从浏览器已经
+         加载过的资源里取 cup.js / stats.js 的**同一个 URL**，保证测试读到的
+         就是游戏真正在用的那两个实例。 */
+      const loaded = performance.getEntriesByType('resource').map(e => e.name);
+      const cupUrl = loaded.find(n => /\/src\/systems\/cup\.js(\?|$)/.test(n)) ||
+        '/src/systems/cup.js';
+      const statsUrl = loaded.find(n => /\/src\/systems\/stats\.js(\?|$)/.test(n)) ||
+        '/src/systems/stats.js';
+      const cupMod = await import(cupUrl);
+      const entitiesUrl = loaded.find(n => /\/src\/world\/entities\.js(\?|$)/.test(n)) ||
+        '/src/world/entities.js';
+      const { interactables } = await import(entitiesUrl);
+      const { stats } = await import(statsUrl);
+      const cup = interactables.find(o => o.userData && o.userData.cup);
+      testCup = cup || null;
+      check('水杯已登记为可交互物（桌上有杯子）', !!cup);
+
+      if (cup){
+        const picked = cupMod.pickUpCup(cup);
+        await t.sleep(150);
+        check('拿水杯：进入持杯状态并从交互列表里移除',
+          picked && cupMod.isHoldingCup() &&
+          cup.userData.cup.mode === 'held' && !interactables.includes(cup));
+        check('持杯时提示改为放回桌面 / 投掷 / 喝水',
+          /放回桌面/.test(t.text('#prompt')), t.text('#prompt'));
+
+        const beforeDrink = stats.drinkWater;
+        const canvas = t.el('#scene');
+        canvas.dispatchEvent(new MouseEvent('mousedown', {
+          button: 2, bubbles: true, cancelable: true
+        }));
+        await t.sleep(150);
+        check('右键喝水把次数记进统计并启动喝水动作',
+          stats.drinkWater === beforeDrink + 1 &&
+          cup.userData.cup.mode === 'held' &&
+          cup.userData.cup.drinkT > 0,
+          `${beforeDrink} → ${stats.drinkWater}，mode=${cup.userData.cup.mode}，` +
+          `drinkT=${cup.userData.cup.drinkT.toFixed(2)}`);
+        /* 喝水反馈：边缘亮蓝光 + 喝水次数短暂上岛（2.6s 后自动收起）。
+           这里在触发后 150ms 检查，动画与胶囊都还没到收尾时间。 */
+        const edgeDrinkOn = !!t.el('#edgeDrink') &&
+          t.el('#edgeDrink').classList.contains('on');
+        check('喝水时边缘亮蓝光，喝水次数短暂上岛',
+          edgeDrinkOn && t.visible('#islandDrink') &&
+          /喝水/.test(t.text('#islandDrink')) &&
+          new RegExp(String(stats.drinkWater)).test(t.text('#islandDrink')),
+          `边缘光=${edgeDrinkOn} 胶囊="${t.text('#islandDrink')}"`);
+
+        const put = cupMod.putDownCup();
+        await t.sleep(120);
+        check('按住 E 的放回路径：恢复为可交互的桌上水杯',
+          put && cup.userData.cup.mode === 'desk' && interactables.includes(cup),
+          cup.userData.cup.mode);
+      }
+    }
 
     /* 主循环探针：计时器必须持续推进。
        只跑一帧就停是无头环境最常见的坑，单独报出来便于定位。 */
@@ -439,6 +548,75 @@ function pageScript(opts = {}){
     check('瞄到可交互物时准星进入交互态（45° 旋转）', chInteract,
       chEl ? `class="${chEl.className}"` : '找不到 #crosshair');
 
+    /* 3.6 右上角列表 + Tab / Shift+Tab：
+       · 准星指向电脑时，列表里的「电脑」应自动高亮；
+       · 未瞄准的草稿纸 / 水杯不能进列表（本版收紧的核心规则）；
+       · 再制造一个「水杯也在辅助判定内」的瞬间，验证 Tab / Shift+Tab
+         真的能在两个目标之间切换。
+       这里只按 DOM 的 .on 类判断，不依赖列表顺序。 */
+    const selectedTgText = () => {
+      const on = t.el('#tgList .tg-item.on');
+      return on ? on.textContent : '';
+    };
+    const tgBefore = selectedTgText();
+    const tgText = t.el('#tgList').textContent;
+    check('准星指到电脑时，右上列表自动高亮「电脑」',
+      /电脑/.test(tgBefore), `高亮="${tgBefore}"`);
+    check('只有准星指着的桌面物件才进列表（电脑在，草稿纸/水杯不在）',
+      /电脑/.test(tgText) && !/草稿纸/.test(tgText) && !/水杯/.test(tgText),
+      tgText);
+
+    if (expectProbe && testCup){
+      /* 把水杯临时放到准星射线旁边 9cm：射线本身不会打中杯子（杯半径约 3.5cm），
+         但落在 16cm 的辅助半径内。于是「电脑」和「水杯」会同时进列表，
+         正好用来驱动 Tab / Shift+Tab。测完立刻把杯子放回桌面。 */
+      const loaded = performance.getEntriesByType('resource').map(e => e.name);
+      const gfxUrl = loaded.find(n => /\/src\/render\/gfx\.js(\?|$)/.test(n)) ||
+        '/src/render/gfx.js';
+      const { camera } = await import(gfxUrl);
+      const cupHome = testCup.position.clone();
+      const fwd = cupHome.clone();
+      camera.getWorldDirection(fwd);
+      const right = cupHome.clone().set(
+        camera.matrixWorld.elements[0],
+        camera.matrixWorld.elements[1],
+        camera.matrixWorld.elements[2]
+      );
+      testCup.position.copy(camera.position)
+        .addScaledVector(fwd, 1.5)
+        .addScaledVector(right, 0.09);
+      await t.sleep(300);
+      check('水杯进入辅助判定后与电脑同时出现在列表',
+        /电脑/.test(selectedTgText()) && /水杯/.test(t.el('#tgList').textContent),
+        `高亮="${selectedTgText()}" ｜ ${t.el('#tgList').textContent}`);
+
+      t.key('Tab', 'keydown');
+      await t.sleep(280);
+      const tgCup = selectedTgText();
+      check('Tab 切换到水杯（提示同步变化）',
+        /水杯/.test(tgCup) && /水杯/.test(t.text('#prompt')),
+        `高亮="${tgCup}" prompt="${t.text('#prompt')}"`);
+
+      t.key('Tab', 'keydown', { shiftKey: true });
+      await t.sleep(280);
+      check('Shift+Tab 切回电脑',
+        /电脑/.test(selectedTgText()) && /电脑/.test(t.text('#prompt')),
+        `高亮="${selectedTgText()}" prompt="${t.text('#prompt')}"`);
+
+      testCup.position.copy(cupHome);
+      await t.sleep(280);
+      check('水杯移回桌面后离开列表（不能隔空选中）',
+        !/水杯/.test(t.el('#tgList').textContent),
+        t.el('#tgList').textContent);
+    } else {
+      /* 生产构建里没有 /src 模块可注入，只验证「单目标时 Tab 不会把选中项切丢」 */
+      t.key('Tab', 'keydown');
+      await t.sleep(240);
+      check('单目标时 Tab 不会把选中项切丢',
+        /电脑/.test(selectedTgText()) && /电脑/.test(t.text('#prompt')),
+        `高亮="${selectedTgText()}" prompt="${t.text('#prompt')}"`);
+    }
+
     /* 没蓄力时环必须是空的。判据取「dashoffset ≥ 真实路径长度」而不是某个写死的数：
        改准星尺寸时如果漏改 viewBox / r，弧长就会和真实路径对不上，
        于是没按任何键也常驻一小段弧 —— 这个 bug 只能靠这条断言钉住。 */
@@ -472,7 +650,9 @@ function pageScript(opts = {}){
     check('中途松手即取消：仍然不开 IDE', !t.visible('#codeUI'));
 
     t.key('KeyE', 'keydown');
-    await t.sleep(700);
+    /* 1.2s 而不是刚过 0.3s：SwiftShader 下渲染一帧可能要 100ms+，
+       主循环的 dt 又有 0.1s 上限，留足 4 帧以上才不会被机器速度坑成随机失败。 */
+    await t.sleep(1200);
     const ideOpened = t.visible('#codeUI');
     check('按住 E 走满一圈后打开代码界面', ideOpened);
     t.key('KeyE', 'keyup');
@@ -616,14 +796,14 @@ function pageScript(opts = {}){
     check('揭榜带结局徽章（结局系统生效）',
       (t.text('#endBadge') || '').length > 0, `#endBadge="${t.text('#endBadge')}"`);
     const statCells = t.el('#endStats') ? t.el('#endStats').children.length : 0;
-    check('结算统计格子渲染出来（主线 4 项恒显示，最多 9 项）',
-      statCells >= 4 && statCells <= 9, `格子数=${statCells}`);
+    check('结算统计格子渲染出来（主线 4 项恒显示，最多 10 项）',
+      statCells >= 4 && statCells <= 10, `格子数=${statCells}`);
     /* 非主线的数据为 0 时整格不渲染 —— 所以格子里绝不会出现
        「0警告次数」这种文本。这条不依赖本局跑出什么数据，换一局照样成立。 */
     const statsText = t.text('#endStats') || '';
-    const zeroShown = ['警告次数', '击倒保安', '干扰同学', '偷用电脑', '触发事件']
+    const zeroShown = ['警告次数', '击倒保安', '喝水', '干扰同学', '偷用电脑', '触发事件']
       .filter(l => statsText.includes('0' + l));
-    check('非主线统计为 0 时该格不显示（警告/保安/干扰/偷用电脑/事件）',
+    check('非主线统计为 0 时该格不显示（警告/保安/喝水/干扰/偷用电脑/事件）',
       zeroShown.length === 0, `${zeroShown.join('、')} ｜ ${statsText.slice(0, 100)}`);
     const evCount = t.el('#endEvents') ? t.el('#endEvents').children.length : 0;
     check('结算渲染本场事件回顾（事件流非空）', evCount > 0, `事件条数=${evCount}`);

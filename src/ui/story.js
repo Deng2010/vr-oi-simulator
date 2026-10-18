@@ -97,7 +97,7 @@ export function playEndingStory(opts, done){
   finishCb = done || null;
   storyBadgeEl.textContent = (opts && opts.badge) || '';
   storyUI.dataset.tone = (opts && opts.tone) || 'neutral';
-  /* 收掉右上角的成就通知条：它会在正文上飘三秒，把第一段盖住。
+  /* 收掉成就通知条：它会在正文上飘三秒，把第一段盖住。
      成就本身不会丢 —— 正文播完的成绩单里还会再列一遍。 */
   achNotify.classList.remove('show');
   storyBodyEl.textContent = '';

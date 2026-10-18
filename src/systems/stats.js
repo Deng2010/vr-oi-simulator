@@ -133,10 +133,10 @@ export function restoreStats(raw){
  * 分两类，别混：
  *   · **主线**（用时 / 提交 / 预测试 AC / 系统测试 AC）恒显示，哪怕是 0 ——
  *     它们回答「这一局打得怎么样」，缺了就不成账。
- *   · **非主线**（警告 / 保安 / 干扰 / 偷用电脑 / 事件数）为 0 时整格隐藏 ——
+ *   · **非主线**（警告 / 保安 / 喝水 / 干扰 / 偷用电脑 / 事件数）为 0 时整格隐藏 ——
  *     「0 次警告、0 名保安、0 条事件」是「什么都没发生」，
  *     占着格子反而把真正发生的那些挤小了。
- * 所以行数是 4~9 动态的，调用方（与冒烟测试）不要按固定 9 格来断言。
+ * 所以行数是 4~10 动态的，调用方（与冒烟测试）不要按固定格数来断言。
  */
 export function statRows(s){
   const total = s.problemCount || 0;
@@ -147,6 +147,7 @@ export function statRows(s){
     { label: '系统测试 AC', value: `${s.finalSolves || 0} / ${total}` },
     { label: '警告次数',   value: s.warns || 0,           optional: true },
     { label: '击倒保安',   value: s.guardKills || 0,      optional: true },
+    { label: '喝水',       value: s.drinkWater || 0,      optional: true },
     { label: '干扰同学',   value: s.npcDisturbed || 0,    optional: true },
     { label: '偷用电脑',   value: s.npcComputersUsed || 0, optional: true },
     { label: '触发事件',   value: (s.events || []).length, optional: true }

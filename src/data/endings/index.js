@@ -20,6 +20,7 @@ import disqualified from './disqualified.js';
 import finished from './finished.js';
 import speedrun from './speedrun.js';
 import timeup from './timeup.js';
+import water from './water.js';
 import zero from './zero.js';
 
 /* 声明顺序不影响判定：select.js 按 priority 降序挑第一个命中的。
@@ -27,5 +28,5 @@ import zero from './zero.js';
 export const ENDINGS = [
   banned, caught, cheat, disqualified,
   ak, blank, zero, speedrun, brawler,
-  timeup, finished
+  timeup, water, finished
 ];

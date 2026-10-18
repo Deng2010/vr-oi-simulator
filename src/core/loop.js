@@ -9,17 +9,20 @@ import { $, fmtTime } from './util.js';
 import { camera, clock, renderer, scene } from '../render/gfx.js';
 import { startBathroom, takePendingExit, updateBathroom } from '../systems/bathroom.js';
 import { enterCorridor, takePendingArrival, updateCorridor } from '../systems/corridor.js';
+import { updateCup } from '../systems/cup.js';
 import { updateGuards } from '../systems/guards.js';
-import { cancelInteractHold, updateInteract, updateInteractHold } from '../systems/interaction.js';
+import {
+  cancelInteractHold, resetInteractTargets, updateInteract, updateInteractHold
+} from '../systems/interaction.js';
 import { applyLook } from '../systems/look.js';
 import { updateNPCs } from '../systems/npc.js';
 import { updatePlayer } from '../systems/player.js';
 import { applyWanderPenalty, showTeacherWarning, triggerTeacherWarning } from '../systems/warn.js';
-import { hudScore, hudTimer } from '../ui/dom.js';
+import { renderHudTimer, renderHudTotal, renderIslandState } from '../ui/hud.js';
 import { resetCrosshair, updateCrosshair } from '../ui/crosshair.js';
 import { endContest } from '../ui/ending.js';
 import { drawMinimap } from '../ui/minimap.js';
-import { aliveGuardCount, securityGuards, teacher } from '../world/entities.js';
+import { securityGuards, teacher } from '../world/entities.js';
 import { collides } from '../world/obstacles.js';
 
 export let lastInteractUpdate = 0;
@@ -132,6 +135,10 @@ export function animate(){
     /* 保安 */
     updateGuards(realDt, t);
 
+    /* 水杯：持杯跟随视角 + 飞行中的物理与命中判定。
+       放在人物 / 老师 / 保安更新之后，碰撞用的是本帧最新的位置。 */
+    updateCup(realDt);
+
     /* 走动警告检测 */
     if (state.started && !state.ended && !state.frozen
         && !state.bathroomApproved && !state.teacherWarnActive && teacher
@@ -165,34 +172,25 @@ export function animate(){
     updateInteractHold(realDt);
     updateCrosshair(realDt);
   } else {
-    /* IDE / 走廊 / 结算等视图下准星虽然被 .hidden 藏了，
-       蓄力与进度仍要清零，否则回到世界会带着一个满环 / 卡住的按键 */
+    /* IDE / 走廊 / 暂停 / 结算等视图下：准星、蓄力、目标列表都要清零，
+       否则回到世界会带着一个满环 / 一份过期的可交互列表 */
     resetCrosshair();
     cancelInteractHold();
+    resetInteractTargets();
   }
 
-  /* HUD */
+  /* HUD：左上分数卡 / 正上灵动岛 / 小地图。
+     每个渲染函数内部都比过签名，这里的逐帧调用不会真的重排 DOM。 */
   if (state.started && !state.ended){
     const remain = CONTEST_LEN - state.elapsed;
     const txt = fmtTime(remain);
-    if (hudTimer.textContent !== txt){
-      hudTimer.textContent = txt;
-      const ideTime = $('ideTime');
-      if (ideTime) ideTime.textContent = txt;
-      hudTimer.classList.toggle('warn', remain < 1800);
-    }
-    const alive = aliveGuardCount();
-    const key = `${state.totalScore}|${state.warnCount}|${alive}`;
-    if (hudScore.dataset.key !== key){
-      hudScore.dataset.key = key;
-      const guardInfo = alive > 0
-        ? `　<span style="color:#ff6b78;font-size:11px">\u26A0 保安 ${alive}</span>`
-        : '';
-      hudScore.innerHTML =
-        `总分 <b>${state.totalScore}</b> / 400　` +
-        `<span style="color:#5b8cff;font-size:11px">预测试</span>　` +
-        `<span style="color:#5d6880;font-size:11px">警告 ${state.warnCount} 次</span>${guardInfo}`;
-    }
+    renderHudTimer(txt, remain < 1800);
+    const ideTime = $('ideTime');
+    if (ideTime && ideTime.textContent !== txt) ideTime.textContent = txt;
+
+    renderHudTotal(state.totalScore);
+    /* 警示次数 / 击倒保安数为 0 时整块不上岛（渲染函数负责隐藏） */
+    renderIslandState(state.warnCount, state.guardKills);
     drawMinimap();
   }
 

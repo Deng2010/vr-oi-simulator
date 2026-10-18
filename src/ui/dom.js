@@ -9,7 +9,23 @@ export const hud = $('hud'), promptEl = $('prompt'), crosshair = $('crosshair');
 /* 准星蓄力进度环（准星内部的 SVG 圆环，见 partials/hud.html） */
 export const chRingFill = document.querySelector('#crosshair .ch-ring-fill');
 
-export const hudTimer = $('hudTimer'), hudScore = $('hudScore'), hudProbs = $('hudProbs');
+export const hudTimer = $('hudTimer'), hudScore = $('hudScore'), hudProbs = $('hudProbs'),
+      hudTotal = $('hudTotal');
+
+/* 正上「灵动岛」里的状态胶囊：警告 / 击倒保安 / 喝水。
+   前两个为 0 时由 ui/hud.js 隐藏；喝水胶囊由 ui/feedback.js 短暂显示。 */
+export const islandWarnEl = $('islandWarn'), islandGuardsEl = $('islandGuards'),
+      islandDrinkEl = $('islandDrink');
+
+/* 灵动岛第二行：比赛中解锁成就时短暂显示（见 ui/hud.js 的 showIslandAchievement） */
+export const islandAchEl = $('islandAch'), islandAchNameEl = $('islandAchName');
+
+/* 右上「可交互对象」列表（由 systems/interaction.js 提供候选与选中项） */
+export const hudTargets = $('hudTargets'), tgList = $('tgList');
+
+/* 屏幕边缘的交互反馈光（黄 / 红 / 蓝），见 ui/feedback.js */
+export const edgeWarnEl = $('edgeWarn'), edgeAlertEl = $('edgeAlert'),
+      edgeDrinkEl = $('edgeDrink');
 
 export const codeUI = $('codeUI'), codeArea = $('codeArea'), verdictEl = $('verdict');
 

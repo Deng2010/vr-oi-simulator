@@ -4,6 +4,11 @@
 <canvas id="scene"></canvas>
 <div id="redFlash"></div>
 <div id="dangerVignette"></div>
+<!-- 交互反馈：屏幕四边的短暂染色（警告=黄 / 击倒=红 / 喝水=蓝）。
+     三层分开，互不覆盖；由 src/ui/feedback.js 加/去 .on 触发动画。 -->
+<div id="edgeWarn" class="edge-flash warn" aria-hidden="true"></div>
+<div id="edgeAlert" class="edge-flash alert" aria-hidden="true"></div>
+<div id="edgeDrink" class="edge-flash drink" aria-hidden="true"></div>
 <!-- 准星：十字 4 条线 + 中心点 + 蓄力进度环（SVG）。
      显隐仍由各模块加/去 .hidden 控制；.interact / .attack / .ready
      由 src/ui/crosshair.js 每帧维护。 -->
@@ -22,9 +27,60 @@
 </div>
 
 <div id="hud" class="hidden">
-  <div id="hudTimer">04:00:00</div>
-  <div id="hudScore">总分 <b>0</b> / 400</div>
-  <div id="hudProbs"></div>
+  <!-- 左上：总分 + 每题得分（预测试口径，和结算的系统测试区分开） -->
+  <div id="hudScore">
+    <div class="sc-total">
+      <span class="sc-label">总分</span>
+      <b id="hudTotal">0</b>
+      <span class="sc-max">/ 400</span>
+      <span class="sc-tag">预测试</span>
+    </div>
+    <div class="sc-sub">每题得分</div>
+    <div id="hudProbs"></div>
+  </div>
+
+  <!-- 正上：灵动岛。第一行时间（警告 / 击倒保安为 0 时不上岛），
+       第二行是比赛中解锁的成就 —— 短暂出现，不挤占第一行的状态胶囊。 -->
+  <div id="hudIsland">
+    <div class="island-main">
+      <div class="island-time">
+        <span class="island-live" aria-hidden="true"></span>
+        <span id="hudTimer">04:00:00</span>
+      </div>
+      <div id="islandStats" class="island-stats">
+        <span id="islandWarn" class="island-chip warn hidden">
+          <span class="chip-ico" aria-hidden="true">&#x26A0;&#xFE0F;</span>
+          <span class="chip-label">警告</span><b>0</b>
+        </span>
+        <span id="islandGuards" class="island-chip danger hidden">
+          <span class="chip-ico" aria-hidden="true">&#x1F44A;</span>
+          <span class="chip-label">击倒保安</span><b>0</b>
+        </span>
+        <span id="islandDrink" class="island-chip drink hidden">
+          <span class="chip-ico" aria-hidden="true">&#x1F4A7;</span>
+          <span class="chip-label">喝水</span><b>0</b>
+        </span>
+      </div>
+    </div>
+    <!-- 时间下面这一行：比赛中解锁成就时短暂滚出 -->
+    <div id="islandAch" class="island-ach hidden">
+      <span class="ach-ico" aria-hidden="true">&#x1F3C6;</span>
+      <span class="ach-tag">成就解锁</span>
+      <b id="islandAchName"></b>
+    </div>
+  </div>
+
+  <!-- 右上：当前可交互对象。Tab / Shift+Tab 切换高亮项 -->
+  <div id="hudTargets">
+    <div class="tg-head">
+      <span class="tg-title">可交互对象</span>
+      <span class="tg-tab">Tab <i>/</i> Shift+Tab</span>
+    </div>
+    <div id="tgList" class="tg-list">
+      <div class="tg-empty">环顾四周，寻找可交互对象</div>
+    </div>
+  </div>
+
   <button id="btnSettings">&#x2699; 设置</button>
   <button id="btnEnd">交卷离场</button>
 </div>

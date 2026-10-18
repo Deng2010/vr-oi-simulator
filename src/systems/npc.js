@@ -45,11 +45,50 @@ export function disturbNPC(i){
   if (npcs.filter(x => x.userData.anger > 0).length >= 3) unlockAch('trouble');
 
   if (ud.anger >= 3){
-    ud.state = 'walking_away';
-    ud.timer = 0;
-    toast(`${ud.name} 猛地站起来，朝监考老师走去了……`, 2200);
-    audio.beep(660, 0.1, 0.05);
+    sendToTeacher(n, `${ud.name} 猛地站起来，朝监考老师走去了……`);
   }
+}
+
+/* 离座投诉的共用收尾：`F` 干扰三次与水杯砸中走同一条路。
+   水杯那条不能只加 anger —— 玩家扔中一次就该看到与「离座干扰」
+   完全相同的后果（起身 → 走到监考处 → 投诉）。 */
+function sendToTeacher(n, text){
+  const ud = n.userData;
+  ud.state = 'walking_away';
+  ud.timer = 0;
+  toast(text, 2200);
+  audio.beep(660, 0.1, 0.05);
+}
+
+/**
+ * 被水杯砸中的选手：视为一次干扰，直接起身去找监考老师。
+ * 只对还坐在座位上的选手生效；已经在走路 / 离座的只做物理反弹。
+ * @param {number} i npcs 下标
+ * @returns {boolean} 是否触发了「起身找老师」
+ */
+export function cupHitNPC(i){
+  const n = npcs[i];
+  if (!n || !n.userData) return false;
+  const ud = n.userData;
+  if (ud.state !== 'seated') return false;
+  if (state.view !== 'world' || state.ended || state.frozen) return false;
+
+  ud.anger = Math.max(ud.anger + 1, 3);
+  bump('npcDisturbed');
+  recordEvent('npc-cup-hit', `用水杯砸中了${ud.name}`);
+
+  audio.beep(240, 0.09, 0.05, 'square');
+  audio.beep(180, 0.14, 0.04, 'triangle');
+
+  const dx = state.pos.x - n.group.position.x;
+  const dz = state.pos.z - n.group.position.z;
+  n.group.rotation.y = Math.atan2(dx, dz);
+  n.head.rotation.x = -0.45;
+  setTimeout(() => { n.head.rotation.x = 0; }, 350);
+
+  if (npcs.filter(x => x.userData.anger > 0).length >= 3) unlockAch('trouble');
+  sendToTeacher(n, `${n.userData.name}：“谁拿水杯砸我？！” 他捂着脑袋站起来，朝监考老师走去了……`);
+  return true;
 }
 
 export function useNPCComputer(i){

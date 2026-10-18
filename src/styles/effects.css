@@ -21,9 +21,18 @@
     box-shadow:inset 0 0 160px 40px rgba(255,40,40,.45);
   }
 
-  /* 成就通知 */
+  /* 交互反馈的边缘光：警告=黄、击倒=红、喝水=蓝。
+     三层独立叠加，一次触发只播 .9s 的呼吸动画（不改变常驻状态）。 */
+  .edge-flash{position:fixed;inset:0;pointer-events:none;z-index:145;opacity:0;}
+  .edge-flash.warn{box-shadow:inset 0 0 130px 28px rgba(255,204,87,.8);}
+  .edge-flash.alert{box-shadow:inset 0 0 140px 30px rgba(255,55,70,.85);}
+  .edge-flash.drink{box-shadow:inset 0 0 130px 28px rgba(91,140,255,.8);}
+  .edge-flash.on{animation:edgePulse .9s ease-out;}
+  @keyframes edgePulse{0%{opacity:0}16%{opacity:1}100%{opacity:0}}
+
+  /* 成就通知：移到右下角，给右上角的可交互列表让位 */
   #achNotify{
-    position:fixed;top:80px;right:20px;z-index:70;
+    position:fixed;bottom:74px;right:20px;z-index:70;
     background:linear-gradient(135deg,rgba(59,109,240,.9),rgba(107,78,240,.9));
     border:1px solid #6b82ff;border-radius:10px;padding:12px 18px;
     color:#fff;font-size:13px;box-shadow:0 10px 30px -8px #000;

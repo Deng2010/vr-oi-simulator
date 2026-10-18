@@ -9,6 +9,7 @@ import { $ } from '../core/util.js';
 import { closeTeacherDialog } from './teacher.js';
 import { recordEvent } from './stats.js';
 import { crosshair, dlgActions, dlgHead, dlgText, promptEl, teacherDlg } from '../ui/dom.js';
+import { flashWarningEdge } from '../ui/feedback.js';
 import { toast } from '../ui/toast.js';
 import { teacher } from '../world/entities.js';
 
@@ -28,6 +29,8 @@ export function triggerTeacherWarning(){
   teacher.userData.mode = 'approach';
   /* 只记事件，不另记计数：警告次数的真源是 state.warnCount（HUD 也在读它） */
   recordEvent('warn', '监考老师提出了口头警告');
+  /* 警告发生的一瞬间让屏幕边缘亮一下黄光（次数上岛由 HUD 自己读 state） */
+  flashWarningEdge();
 }
 
 export function applyWanderPenalty(){

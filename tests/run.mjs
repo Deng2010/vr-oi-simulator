@@ -14,6 +14,8 @@
      6.   烘焙贴图资产存在且非空
      7.   自适应 pixelRatio 策略
      8.   静态合批的动态物体排除（人物 4 条腿 / 老师冻结）
+     8.5  水杯投掷物理（反射 / 线段命中 / 出手速度）
+     8.6  交互目标判定（朝向 / Tab 循环 / 水杯辅助瞄准 / 择优）
      9.   src/ 无循环 import
      10.  结局系统：配置自检 + 每个结局的触发判据 + 注册表与文件配对
      11.  统计系统：计数 / 开关 / 事件流（去重、上限、快照副本、存档恢复）
@@ -53,6 +55,13 @@ import { CHEAT_COMPUTER_USES } from '../src/data/endings/cheat.js';
 import {
   SPEEDRUN_MAX_SECONDS, SPEEDRUN_MIN_SCORE
 } from '../src/data/endings/speedrun.js';
+import { WATER_EGG_DRINKS } from '../src/data/endings/water.js';
+import {
+  CUP_RADIUS, FLOOR_RESTITUTION, THROW_SPEED, reflectVelocity, segmentHitsCylinder
+} from '../src/systems/cup-physics.js';
+import {
+  CUP_AIM_RADIUS, CUP_AIM_RANGE, bestTarget, cycleIndex, facingDot, isFacing, raySphereHit
+} from '../src/systems/targeting.js';
 import {
   EVENT_LIMIT, bump, eventList, flag, recordEvent, resetStats, restoreStats, statRows,
   stats, statsSnapshot
@@ -314,6 +323,120 @@ console.log('\n▸ 难度字段与抽题排序（src/data/problems/selection.js�
     !/Space[\s\S]{0,200}?e\.repeat/.test(inputSrc));
 }
 
+{
+  /* 水杯的接线同样只能用静态判据：E 的拾取 / 放回是真的按住确认，
+     鼠标投掷 / 喝水的完整链路要真跑一遍才能验，而放倒老师会放出保安，
+     把冒烟测试后面的步骤全打乱。这里钉住「输入 → 杯子系统 → 主循环」
+     这条接线，物理本身由上面 8.5 节的纯函数判据负责。 */
+  const inputSrc = readFileSync(path.join(ROOT, 'src/core/input.js'), 'utf8');
+  const cupSrc = readFileSync(path.join(ROOT, 'src/systems/cup.js'), 'utf8');
+  const actSrc = readFileSync(path.join(ROOT, 'src/systems/interaction.js'), 'utf8');
+  const loopSrc = readFileSync(path.join(ROOT, 'src/core/loop.js'), 'utf8');
+  const deskSrc = readFileSync(path.join(ROOT, 'src/models/desk.js'), 'utf8');
+
+  check('持杯时左键投掷（不是又走一遍 E 的蓄力）',
+    /e\.button === 0[\s\S]{0,200}?isHoldingCup\(\)[\s\S]{0,100}?throwCup\(\)/
+      .test(inputSrc));
+  check('右键喝水，且屏蔽浏览器的右键菜单',
+    /e\.button === 2[\s\S]{0,160}?drinkFromCup\(\)/.test(inputSrc) &&
+    /contextmenu[\s\S]{0,100}?preventDefault/.test(inputSrc));
+  check('持杯每帧跟随视角（写入相机位置与朝向）',
+    /function updateHeldCup[\s\S]{0,900}?camera\.quaternion/.test(cupSrc) &&
+    /applyQuaternion\(camera\.quaternion\)/.test(cupSrc));
+  check('砸中老师 / 考生分别走击倒与干扰路径',
+    /knockDownTeacher\('cup'\)/.test(cupSrc) && /cupHitNPC\(/.test(cupSrc));
+  check('命中后按法线反射速度（物理反弹）',
+    /reflectVelocity\(/.test(cupSrc));
+  check('放回桌面只落在附近的空桌面上',
+    /nearestFreeHome/.test(cupSrc) && /PUT_DOWN_RANGE/.test(cupSrc));
+  check('持杯时 E 的提示与动作是「放回桌面」',
+    /isHoldingCup\(\)[\s\S]{0,500}?putDownCup/.test(actSrc) &&
+    /放回桌面/.test(actSrc));
+  check('主循环每帧推进水杯物理', /updateCup\(realDt\)/.test(loopSrc));
+  check('课桌把水杯登记进杯子系统（而不是直接挂一个喝水 action）',
+    /registerCup\(/.test(deskSrc) && !/action: \(\) => drinkWater/.test(deskSrc));
+}
+
+{
+  /* 新版 HUD / 目标列表的接线。和上面两条一样，这些行为要真跑一遍
+     才能完整验（警告要等老师走过来、击倒老师会放出保安），
+     所以先钉住「输入 → 目标列表 → 反馈」这条源码接线；
+     纯几何判定在 8.6 节，端到端在 smoke 测试里。 */
+  const inputSrc = readFileSync(path.join(ROOT, 'src/core/input.js'), 'utf8');
+  const actSrc = readFileSync(path.join(ROOT, 'src/systems/interaction.js'), 'utf8');
+  const hudSrc = readFileSync(path.join(ROOT, 'src/ui/hud.js'), 'utf8');
+  const achSrc = readFileSync(path.join(ROOT, 'src/ui/achievements.js'), 'utf8');
+  const feedbackSrc = readFileSync(path.join(ROOT, 'src/ui/feedback.js'), 'utf8');
+  const loopSrc = readFileSync(path.join(ROOT, 'src/core/loop.js'), 'utf8');
+  const warnSrc = readFileSync(path.join(ROOT, 'src/systems/warn.js'), 'utf8');
+  const guardSrc = readFileSync(path.join(ROOT, 'src/systems/guards.js'), 'utf8');
+  const teacherSrc = readFileSync(path.join(ROOT, 'src/systems/teacher.js'), 'utf8');
+  const cupSrc = readFileSync(path.join(ROOT, 'src/systems/cup.js'), 'utf8');
+  const hudHtml = readFileSync(path.join(ROOT, 'src/ui/partials/hud.html'), 'utf8');
+
+  check('Tab / Shift+Tab 接到 cycleTarget（只在比赛中的世界视图接管）',
+    /e\.code === 'Tab'[\s\S]{0,220}?cycleTarget\(e\.shiftKey \? -1 : 1\)/.test(inputSrc));
+  check('切换目标会取消正在走的蓄力（不会打到新目标上）',
+    /function cycleTarget[\s\S]{0,900}?cancelInteractHold\(\)/.test(actSrc));
+
+  /* 老师和考生的朝向门槛必须各有一条；保安块里不许出现 facingDot */
+  const teacherFacing = /teacher[\s\S]{0,600}?facingDot\(state\.pos\.x, state\.pos\.z, state\.yaw, tp\.x, tp\.z\)/.test(actSrc);
+  const npcFacing = /ud\.seatX, state\.pos\.z - ud\.seatZ[\s\S]{0,200}?facingDot\(state\.pos\.x, state\.pos\.z, state\.yaw, ud\.seatX, ud\.seatZ\)/.test(actSrc) ||
+    /facingDot\(state\.pos\.x, state\.pos\.z, state\.yaw, ud\.seatX, ud\.seatZ\)/.test(actSrc);
+  const guardBlock = (actSrc.match(/1\. 保安[\s\S]*?\/\* 2\./) || [''])[0];
+  check('考生 / 监考老师进列表前要过朝向判定',
+    teacherFacing && npcFacing, `teacher=${teacherFacing} npc=${npcFacing}`);
+  check('保安不受朝向限制（只要在攻击距离内就能进列表）',
+    !!guardBlock && !/facingDot/.test(guardBlock));
+  check('朝向阈值走 targeting.js 的 FACE_MIN_DOT',
+    /FACE_MIN_DOT/.test(actSrc));
+
+  check('水杯走射线-球体辅助瞄准（比通用射线宽一点）',
+    /raySphereHit\(/.test(actSrc) && /CUP_AIM_RANGE/.test(actSrc) &&
+    /CUP_AIM_RADIUS/.test(actSrc));
+  /* 电脑 / 草稿纸 / 水杯只由「准星射线 + 水杯辅助」两步进入列表。
+     旧版那条「身前够得着就进列表、只是不自动选中」的附近扫描必须消失，
+     否则 Tab 又能隔空选中桌上的东西。 */
+  check('桌面物件只在光标对准时进列表（附近扫描已移除）',
+    !/nearby|ITEM_FACE_DOT|ITEM_RANGE|W_NEAR_ITEM/.test(actSrc) &&
+    /intersectObjects\(interactables/.test(actSrc));
+  check('候选列表交给 renderTargets 渲染，空列表也不会残留旧项',
+    /renderTargets\(list, selectedTargetKey\)/.test(actSrc) &&
+    /renderTargets\(\[\], ''\)/.test(actSrc));
+  check('离开世界视图会清空目标列表',
+    /resetInteractTargets\(\)/.test(loopSrc) &&
+    /function resetInteractTargets/.test(actSrc));
+
+  check('左上分数卡同时承载总分与每题得分',
+    /id="hudScore"[\s\S]*?id="hudTotal"[\s\S]*?id="hudProbs"/.test(hudHtml));
+  check('正上灵动岛包住计时器与三个状态胶囊',
+    /id="hudIsland"[\s\S]*?id="hudTimer"[\s\S]*?id="islandWarn"[\s\S]*?id="islandGuards"[\s\S]*?id="islandDrink"/.test(hudHtml));
+  check('右上可交互列表有独立容器',
+    /id="hudTargets"[\s\S]*?id="tgList"/.test(hudHtml));
+  check('警告 / 击倒保安为 0 时胶囊隐藏（正整数才上岛）',
+    /function renderIslandChip[\s\S]{0,400}?const show = n > 0[\s\S]{0,120}?classList\.toggle\('hidden', !show\)/
+      .test(hudSrc));
+  check('灵动岛读的是警告次数与击倒保安数（不是当前存活保安数）',
+    /renderIslandState\(state\.warnCount, state\.guardKills\)/.test(loopSrc));
+  check('灵动岛在时间下面预留了成就行',
+    /id="hudTimer"[\s\S]{0,1200}?id="islandAch"[\s\S]{0,200}?id="islandAchName"/.test(hudHtml));
+  check('比赛中的成就在世界视图走灵动岛（其它视图回退通知条）',
+    /function showIslandAchievement/.test(hudSrc) &&
+    /showIslandAchievement\(a\.name\)/.test(achSrc) &&
+    /state\.view === 'world'/.test(achSrc));
+
+  /* 三条边缘光与喝水胶囊的触发点 */
+  check('警告触发黄色边缘光', /flashWarningEdge\(\)/.test(warnSrc));
+  check('击倒老师 / 保安触发红色边缘光',
+    /flashKnockdownEdge\(\)/.test(teacherSrc) &&
+    /flashKnockdownEdge\(\)/.test(guardSrc));
+  check('喝水触发蓝色边缘光 + 短暂显示喝水次数',
+    /flashDrink\(stats\.drinkWater\)/.test(cupSrc) &&
+    /flashEdge\('drink'\)/.test(feedbackSrc) &&
+    /islandDrinkEl\.classList\.remove\('hidden'\)/.test(feedbackSrc) &&
+    /DRINK_CHIP_MS/.test(feedbackSrc));
+}
+
 /* ---------- 2. NPC 代码生成 ---------- */
 console.log('\n▸ NPC 代码生成（src/systems/npc-codegen.js vs 重构前 npc-gen.js）');
 for (const item of baseline.npc){
@@ -548,6 +671,115 @@ console.log('\n▸ 静态合批：动态物体排除（src/render/batch.js）');
   }
 }
 
+/* ---------- 8.5 水杯投掷物理 ---------- */
+/* 杯子是唯一个「会被玩家扔出去、还要和人物 / 墙 / 课桌碰撞」的物体。
+   这几条判据都直接跑纯函数，不依赖浏览器；其中「线段命中」专门防
+   低帧率下的穿模（只判末点会从人物身上直接穿过去）。 */
+console.log('\n▸ 水杯投掷物理（src/systems/cup-physics.js）');
+{
+  check('杯子有真实半径、出手速度足够让准星约等于落点',
+    CUP_RADIUS > 0 && THROW_SPEED >= 12,
+    `radius=${CUP_RADIUS} speed=${THROW_SPEED}`);
+
+  eq('撞墙反射：法线方向反向并保留一半速度',
+    reflectVelocity({ x: 4, y: 0, z: 0 }, -1, 0, 0, 0.5),
+    { x: -2, y: 0, z: 0 });
+  eq('已经朝外飞时不会被「吸」回表面',
+    reflectVelocity({ x: 1, y: 0, z: 0 }, 1, 0, 0, 0.5),
+    { x: 1, y: 0, z: 0 });
+  const floorBounce = reflectVelocity({ x: 0, y: -5, z: 0 }, 0, 1, 0, FLOOR_RESTITUTION);
+  check('落地反射用更小的能量保留比例',
+    Math.abs(floorBounce.x) < 1e-9 &&
+    Math.abs(floorBounce.y - 5 * FLOOR_RESTITUTION) < 1e-9 &&
+    Math.abs(floorBounce.z) < 1e-9,
+    JSON.stringify(floorBounce));
+
+  const hit = segmentHitsCylinder(
+    { x: 2, y: 1.2, z: 0 }, { x: -2, y: 1.2, z: 0 },
+    0, 0, 0.4, 0.1, 1.8);
+  check('线段穿过人物躯干 -> 命中，且命中点在线段中段',
+    !!hit && hit.t > 0.4 && hit.t < 0.6,
+    JSON.stringify(hit));
+  check('命中法线指向杯子来的一侧', !!hit && hit.nx > 0.99,
+    hit ? `nx=${hit.nx} nz=${hit.nz}` : 'null');
+  check('从头顶飞过不算命中',
+    segmentHitsCylinder(
+      { x: 2, y: 2.5, z: 0 }, { x: -2, y: 2.5, z: 0 },
+      0, 0, 0.4, 0.1, 1.8) === null);
+  check('从人物旁边飞过不算命中',
+    segmentHitsCylinder(
+      { x: 2, y: 1.2, z: 2 }, { x: -2, y: 1.2, z: 2 },
+      0, 0, 0.4, 0.1, 1.8) === null);
+}
+
+/* ---------- 8.6 交互目标判定 ---------- */
+/* 这一节钉住「谁能进右上角列表、Tab 怎么切、水杯为什么更好点」。
+   它们全是纯函数，不依赖 DOM；interaction.js 只负责把结果翻译成动作。 */
+console.log('\n▸ 交互目标判定（src/systems/targeting.js）');
+{
+  /* 坐标约定：yaw=0 时前方是 -Z。
+     正对 / 侧对 / 背对三种位置各来一条，避免把 sin/cos 写反还全绿。 */
+  const dotFront = facingDot(0, 0, 0, 0, -1);
+  const dotSide = facingDot(0, 0, 0, 1, 0);
+  const dotBack = facingDot(0, 0, 0, 0, 1);
+  check('朝向点积：正前方 = 1 / 侧方 = 0 / 正后方 = -1',
+    Math.abs(dotFront - 1) < 1e-9 &&
+    Math.abs(dotSide) < 1e-9 &&
+    Math.abs(dotBack + 1) < 1e-9,
+    `${dotFront} / ${dotSide} / ${dotBack}`);
+
+  check('正对着考生 / 老师才算可交互（正前方通过）',
+    isFacing(0, 0, 0, 0, -2));
+  check('侧后方的考生 / 老师不进入交互列表',
+    !isFacing(0, 0, 0, 0, 2) && !isFacing(0, 0, 0, 2, 0));
+  check('朝向判定与目标远近无关（只比方向）',
+    isFacing(0, 0, 0, 0, -0.01) && isFacing(0, 0, 0, 0, -100));
+  /* 玩家与目标完全重合时没有方向可言，必须退回正前方而不是 NaN */
+  const sameSpot = facingDot(3, 3, 1.2, 3, 3);
+  check('与目标重合时朝向判定退化为正前方（不会 NaN）',
+    Number.isFinite(sameSpot) && sameSpot === 1, String(sameSpot));
+
+  /* Tab / Shift+Tab：越界要绕回，未选中时要能落到首/末项。 */
+  eq('Tab 从 0 走到 1', cycleIndex(0, 3, 1), 1);
+  eq('Tab 在末项绕回首项', cycleIndex(2, 3, 1), 0);
+  eq('Shift+Tab 从 0 绕到末项', cycleIndex(0, 3, -1), 2);
+  eq('未选中时 Tab 落到首项', cycleIndex(-1, 3, 1), 0);
+  eq('未选中时 Shift+Tab 落到末项', cycleIndex(-1, 3, -1), 2);
+  eq('空列表不产生下标', cycleIndex(0, 0, 1), -1);
+
+  /* 水杯辅助瞄准：沿 +Z 发射，杯心在 (0.1, 0, 2)。
+     16cm 内应该命中；偏离 20cm、在身后、超出 3.4m 都不该命中。 */
+  const cupAim = raySphereHit(0, 0, 0, 0, 0, 1, 0.1, 0, 2, CUP_AIM_RANGE, CUP_AIM_RADIUS);
+  check('射线从杯心附近掠过即判定为「对着水杯」',
+    !!cupAim && Math.abs(cupAim.dist - 2) < 1e-9 && cupAim.off <= CUP_AIM_RADIUS,
+    JSON.stringify(cupAim));
+  check('偏出辅助半径就不算对准水杯',
+    raySphereHit(0, 0, 0, 0, 0, 1, 0.2, 0, 2, CUP_AIM_RANGE, CUP_AIM_RADIUS) === null);
+  check('水杯在身后不算对准',
+    raySphereHit(0, 0, 0, 0, 0, 1, 0, 0, -2, CUP_AIM_RANGE, CUP_AIM_RADIUS) === null);
+  check('超出水杯辅助距离不算对准',
+    raySphereHit(0, 0, 0, 0, 0, 1, 0, 0, 3.5, CUP_AIM_RANGE, CUP_AIM_RADIUS) === null);
+  check('水杯辅助范围比原来更宽（3.4m / 16cm）',
+    CUP_AIM_RANGE > 3.2 && CUP_AIM_RADIUS > 0.1,
+    `${CUP_AIM_RANGE}m / ${CUP_AIM_RADIUS}m`);
+
+  /* 默认选中：保安 > 精准瞄准的物件 > 朝向内的老师 > 考生 > 出口。
+     同权重时取近的，避免两个保安时默认目标随机跳。 */
+  const best = bestTarget([
+    { key: 'npc', weight: 60, dist: 1 },
+    { key: 'item', weight: 90, dist: 2 },
+    { key: 'guard', weight: 100, dist: 1.5 }
+  ]);
+  check('默认选中权重最高的目标（保安优先于瞄准物 / 考生）',
+    best && best.key === 'guard', JSON.stringify(best));
+  const nearest = bestTarget([
+    { key: 'far', weight: 100, dist: 2 },
+    { key: 'near', weight: 100, dist: 1 }
+  ]);
+  check('同权重时选距离最近的目标', nearest && nearest.key === 'near');
+  check('没有候选时返回 null', bestTarget([]) === null);
+}
+
 /* ---------- 9. 循环依赖 ---------- */
 console.log('\n▸ 模块依赖方向');
 {
@@ -661,6 +893,16 @@ console.log('\n▸ 结局系统（src/data/endings/：配置自检 + 触发判�
   eq('击倒 7 名保安 → 还不到战神',
     pickId({ guardKills: BRAWLER_KILLS - 1 }), 'finished');
 
+  /* 喝水彩蛋：阈值与 cup.js 共用同一个导出，不在两处各写一个数 */
+  eq('喝水达到阈值 → 饮水过量彩蛋',
+    pickId({ drinkWater: WATER_EGG_DRINKS }), 'water');
+  eq('喝水差一杯 → 不触发彩蛋',
+    pickId({ drinkWater: WATER_EGG_DRINKS - 1 }), 'finished');
+  eq('喝水彩蛋优先于 AK（彩蛋比满分稀有）',
+    pickId({ drinkWater: WATER_EGG_DRINKS, finalSolves: 4, finalScore: 400 }), 'water');
+  eq('喝水彩蛋是 final 阶段，不在交卷那一刻判',
+    idAt('immediate', { drinkWater: WATER_EGG_DRINKS }), null);
+
   /* --- 违规结局：都在 immediate 阶段（不跑系统测试） --- */
   eq('没有违规时 immediate 阶段不命中结局（照跑系统测试）',
     idAt('immediate', {}), null);
@@ -765,10 +1007,10 @@ console.log('\n▸ 统计系统（src/systems/stats.js：计数 / 开关 / 事�
 
   /* 统计格子：主线四项恒显示（哪怕全是 0），非主线为 0 时整格隐藏。
      为什么值得一条判据：「0 次警告」不该占一格 —— 但它很容易在重构里
-     变回「永远 9 格」，所以这条既钉隐藏、也钉主线不会被一起隐藏掉。
+     变回「永远 10 格」，所以这条既钉隐藏、也钉主线不会被一起隐藏掉。
      先清一次，否则上面存过的「坏事件」会让「触发事件」那一格一直非 0。 */
   resetStats();
-  const OPTIONAL_LABELS = ['警告次数', '击倒保安', '干扰同学', '偷用电脑', '触发事件'];
+  const OPTIONAL_LABELS = ['警告次数', '击倒保安', '喝水', '干扰同学', '偷用电脑', '触发事件'];
   const emptyRows = statRows(statsSnapshot({ problemCount: 4 }));
   eq('统计格子：主线四项恒显示（全是 0 也显示）',
     emptyRows.map(r => r.label),
@@ -776,12 +1018,12 @@ console.log('\n▸ 统计系统（src/systems/stats.js：计数 / 开关 / 事�
 
   const busySnapshot = statsSnapshot({
     problemCount: 4, submits: 3, solves: 1, finalSolves: 2,
-    warns: 1, guardKills: 5, npcDisturbed: 2, npcComputersUsed: 1,
+    warns: 1, guardKills: 5, drinkWater: 4, npcDisturbed: 2, npcComputersUsed: 1,
     events: [{ id: 'a', label: 'A', at: 0, n: 1 }]
   });
   const busyRows = statRows(busySnapshot);
-  eq('统计格子：非主线非 0 时全部显示（最多 9 格）', busyRows.length, 9);
-  check('统计格子：9 格时含全部非主线标签',
+  eq('统计格子：非主线非 0 时全部显示（最多 10 格）', busyRows.length, 10);
+  check('统计格子：10 格时含全部非主线标签',
     OPTIONAL_LABELS.every(l => busyRows.some(r => r.label === l)),
     busyRows.map(r => r.label).join(' '));
 
@@ -789,6 +1031,7 @@ console.log('\n▸ 统计系统（src/systems/stats.js：计数 / 开关 / 事�
   for (const [label, patch] of [
     ['警告次数', { warns: 2 }],
     ['击倒保安', { guardKills: 3 }],
+    ['喝水', { drinkWater: 2 }],
     ['干扰同学', { npcDisturbed: 1 }],
     ['偷用电脑', { npcComputersUsed: 2 }],
     ['触发事件', { events: [{ id: 'e', label: 'E', at: 1, n: 1 }] }]

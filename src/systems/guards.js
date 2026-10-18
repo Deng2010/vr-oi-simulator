@@ -10,6 +10,7 @@ import { scene } from '../render/gfx.js';
 import { unlockAch } from '../ui/achievements.js';
 import { dangerVig, redFlash } from '../ui/dom.js';
 import { showViolationEnding } from '../ui/ending.js';
+import { flashKnockdownEdge } from '../ui/feedback.js';
 import { hideAllPanels } from '../ui/panels.js';
 import { toast } from '../ui/toast.js';
 import { aliveGuardCount, pruneDeadGuards, securityGuards } from '../world/entities.js';
@@ -82,6 +83,8 @@ export function punchGuard(g){
   audio.punch();
   redFlash.style.opacity = '0.4';
   setTimeout(() => redFlash.style.opacity = '0', 130);
+  /* 击倒的红色边缘光：和中心红闪同时亮，但边缘光更慢、更「余韵」 */
+  flashKnockdownEdge();
 
   toast('\u{1F44A} 一拳撂倒了一个保安！', 1500);
   if (state.guardKills >= 5) unlockAch('guard_5');
